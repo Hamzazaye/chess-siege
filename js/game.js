@@ -66,6 +66,7 @@ class RoyalGambitGame {
     this.populateCodexModal();
     this.populateActsDrawer();
     this.startAct(0);
+    this.renderer.resize();
 
     requestAnimationFrame(ts => this.loop(ts));
   }
@@ -138,6 +139,9 @@ class RoyalGambitGame {
 
   bindEvents() {
     window.addEventListener('resize', () => this.renderer.resize());
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.renderer.resize(), 120);
+    });
 
     this.canvas.addEventListener('mousemove', e => {
       this.hoverCell = this.renderer.screenToBoard(e.clientX, e.clientY);
@@ -153,6 +157,25 @@ class RoyalGambitGame {
       }
     });
 
+    this.canvas.addEventListener(
+      'touchmove',
+      e => {
+        if (!e.touches || e.touches.length === 0) return;
+        const touch = e.touches[0];
+        this.hoverCell = this.renderer.screenToBoard(touch.clientX, touch.clientY);
+        for (const orb of this.manaOrbs) {
+          if (!orb.collected) {
+            const dx = this.hoverCell.x - orb.x;
+            const dy = this.hoverCell.y - orb.y;
+            if (Math.hypot(dx, dy) < 48) {
+              this.collectManaOrb(orb);
+            }
+          }
+        }
+      },
+      { passive: true }
+    );
+
     this.canvas.addEventListener('mouseleave', () => {
       this.hoverCell = null;
     });
@@ -164,7 +187,7 @@ class RoyalGambitGame {
       const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
 
       for (const orb of this.manaOrbs) {
-        if (!orb.collected && Math.hypot(pos.x - orb.x, pos.y - orb.y) < 38) {
+        if (!orb.collected && Math.hypot(pos.x - orb.x, pos.y - orb.y) < 44) {
           this.collectManaOrb(orb);
           return;
         }
@@ -196,6 +219,8 @@ class RoyalGambitGame {
         this.tryMergePawnLine(this.selectedBoardPiece);
       } else if (key === 's' || key === 'x') {
         this.toggleShovel();
+      } else if (key === 'f') {
+        this.toggleFullscreen();
       } else if (key === ' ') {
         e.preventDefault();
         this.triggerCheckmateUltimate();
@@ -224,11 +249,42 @@ class RoyalGambitGame {
     });
     bindBtn('pauseBtn', () => this.togglePause());
     bindBtn('restartBtn', () => this.startAct(this.actIndex));
+    bindBtn('fullscreenBtn', () => this.toggleFullscreen());
     bindBtn('audioMuteBtn', () => {
       const muted = window.RoyalAudio.toggleMute();
       const btn = document.getElementById('audioMuteBtn');
       if (btn) btn.setAttribute('aria-pressed', String(!muted));
       this.updateHUD();
+    });
+
+    // Royal Command Menu & Modals
+    bindBtn('openMenuBtn', () => this.openModal('commandMenuModal'));
+    bindBtn('closeMenuBtn', () => this.hideModals());
+    bindBtn('menuResumeBtn', () => this.hideModals());
+    bindBtn('menuRestartBtn', () => this.startAct(this.actIndex));
+    bindBtn('menuSpeedBtn', () => this.cycleGameSpeed());
+    bindBtn('menuAutoManaBtn', () => {
+      this.autoCollectMana = !this.autoCollectMana;
+      this.updateHUD();
+    });
+    bindBtn('menuGridCoordsBtn', () => {
+      this.showGridOverlay = !this.showGridOverlay;
+      this.updateHUD();
+    });
+    bindBtn('menuAudioBtn', () => {
+      const muted = window.RoyalAudio.toggleMute();
+      const btn = document.getElementById('audioMuteBtn');
+      if (btn) btn.setAttribute('aria-pressed', String(!muted));
+      this.updateHUD();
+    });
+    bindBtn('menuFullscreenBtn', () => this.toggleFullscreen());
+    bindBtn('menuOpenActsBtn', () => {
+      this.hideModals();
+      this.openModal('actsModal');
+    });
+    bindBtn('menuOpenCodexBtn', () => {
+      this.hideModals();
+      this.openModal('codexModal');
     });
 
     bindBtn('openCodexBtn', () => this.openModal('codexModal'));
@@ -240,6 +296,41 @@ class RoyalGambitGame {
       const next = (this.actIndex + 1) % window.CHESS_DATA.ACTS.length;
       this.startAct(next);
     });
+
+    // Close modals when clicking the dark backdrop outside the modal window
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', e => {
+        if (e.target === backdrop && backdrop.id !== 'resultModal') {
+          this.hideModals();
+        }
+      });
+    });
+
+    // Codex Filter Tabs
+    document.querySelectorAll('[data-codex-tab]').forEach(tabBtn => {
+      tabBtn.addEventListener('click', () => {
+        const filter = tabBtn.getAttribute('data-codex-tab');
+        document.querySelectorAll('[data-codex-tab]').forEach(b => b.classList.toggle('active', b === tabBtn));
+        const rulesSec = document.getElementById('codexRulesSection');
+        const piecesSec = document.getElementById('codexPiecesSection');
+        const enemiesSec = document.getElementById('codexEnemiesSection');
+        if (rulesSec) rulesSec.style.display = filter === 'all' ? '' : 'none';
+        if (piecesSec) piecesSec.style.display = filter === 'all' || filter === 'pieces' ? '' : 'none';
+        if (enemiesSec) enemiesSec.style.display = filter === 'all' || filter === 'enemies' ? '' : 'none';
+      });
+    });
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+    setTimeout(() => {
+      this.renderer.resize();
+      this.updateHUD();
+    }, 150);
   }
 
   countPiecesOfType(type) {
@@ -1228,17 +1319,17 @@ class RoyalGambitGame {
       if (piece.moveCd > 0) piece.moveCd = Math.max(0, piece.moveCd - dt);
       if (piece.hexTimer > 0) piece.hexTimer = Math.max(0, piece.hexTimer - dt);
 
-      // Phalanx Shield-Pawn Defender passive self-repair & Aegis Shield regeneration!
+      // Phalanx Shield-Pawn Defender: light synergy repair in Pawn Chain (balanced, not immortal!)
       if (piece.type === 'pawn') {
-        const hpRegen = piece.inPawnChain || piece.inReadyPawnLine ? 22 : 12;
-        if (piece.hp < piece.maxHp) {
+        const hpRegen = piece.inPawnChain || piece.inReadyPawnLine ? 4 : 0;
+        if (hpRegen > 0 && piece.hp < piece.maxHp) {
           piece.hp = Math.min(piece.maxHp, piece.hp + hpRegen * dt);
         }
-        if (piece.shieldHp < 220) {
-          piece.shieldHp = Math.min(220, piece.shieldHp + 10 * dt);
+        if (piece.shieldHp < 90) {
+          piece.shieldHp = Math.min(90, piece.shieldHp + 2.0 * dt);
         }
       } else if (piece.inPawnChain && piece.hp < piece.maxHp) {
-        piece.hp = Math.min(piece.maxHp, piece.hp + 7 * dt);
+        piece.hp = Math.min(piece.maxHp, piece.hp + 5 * dt);
       }
 
       let speedMult = 1.0;
@@ -1269,7 +1360,7 @@ class RoyalGambitGame {
       }
 
       case 'pawn': {
-        // Pure Stalwart Phalanx Defender (NO ranged projectiles!)
+        // Balanced Frontline Phalanx Defender (NO ranged projectiles!)
         // 1. Authentic Chess Forward-Diagonal Capture Counter-Strike (+1 col, ±1 row)
         const diagTargets = this.enemies.filter(
           e =>
@@ -1287,34 +1378,33 @@ class RoyalGambitGame {
             x2: tx,
             y2: ty,
             color: '#facc15',
-            width: 4,
+            width: 3.5,
             life: 0.2,
             maxLife: 0.2
           });
           this.damageEnemy(target, def.diagDamage * totalMult, true, 1.1);
-          this.addFloatingText('🛡 ضربة قطرية مدافعة!', tx, ty - 16, '#fde047', false);
-          piece.xp = Math.min(100, piece.xp + 22);
-          piece.shieldHp = Math.min(240, piece.shieldHp + 30);
+          this.addFloatingText('🛡 صدّ قطري!', tx, ty - 16, '#fde047', false);
+          piece.xp = Math.min(100, piece.xp + 20);
+          piece.shieldHp = Math.min(100, piece.shieldHp + 10);
           piece.recoilTimer = 0.16;
           window.RoyalAudio.playAttack('pawn');
           return true;
         }
 
-        // 2. Close-Quarters Phalanx Shield Bash against enemies chewing directly on or right in front of the Pawn
+        // 2. Light Close-Quarters Shield Nudge against enemies chewing directly on the Pawn
         const meleeEnemies = this.enemies.filter(
           e =>
             Math.round(e.row) === piece.row &&
             e.colPos >= piece.col &&
-            e.colPos <= piece.col + 1.35
+            e.colPos <= piece.col + 1.25
         );
         if (meleeEnemies.length === 0) return false;
 
-        this.spawnShockwave(center.x + 14, center.y, 8, 48, '#38bdf8');
+        this.spawnShockwave(center.x + 12, center.y, 6, 36, '#38bdf8');
         for (const target of meleeEnemies) {
           this.damageEnemy(target, def.damage * totalMult, false, 0.8);
-          target.colPos = Math.min(this.cols + 0.2, target.colPos + 0.24);
+          target.colPos = Math.min(this.cols + 0.2, target.colPos + 0.07);
         }
-        piece.shieldHp = Math.min(240, piece.shieldHp + 28);
         piece.xp = Math.min(100, piece.xp + 12);
         piece.recoilTimer = 0.16;
         window.RoyalAudio.playAttack('pawn');
@@ -1721,7 +1811,7 @@ class RoyalGambitGame {
   damagePiece(piece, amount) {
     let dmg = amount;
     if (piece.buffedByKing) dmg *= 0.75;
-    if (piece.inPawnChain || piece.inReadyPawnLine) dmg *= 0.72;
+    if (piece.inPawnChain || piece.inReadyPawnLine) dmg *= 0.85;
 
     if (piece.shieldHp > 0) {
       const absorbed = Math.min(piece.shieldHp, dmg);
@@ -2124,40 +2214,70 @@ class RoyalGambitGame {
 
   populateActsDrawer() {
     const container = document.getElementById('actsListContainer');
-    if (!container) return;
-    container.innerHTML = window.CHESS_DATA.ACTS.map(
-      (act, idx) => `
-      <div class="act-card" data-act-idx="${idx}">
+    const quickMenuContainer = document.getElementById('menuQuickActsGrid');
+
+    const renderActsHtml = () =>
+      window.CHESS_DATA.ACTS.map((act, idx) => {
+        const isCurrent = idx === this.actIndex;
+        const wavesTxt = act.isEndless ? '∞ موجات لا نهائية' : `${act.totalWaves} موجات`;
+        return `
+      <div class="act-card ${isCurrent ? 'active-act' : ''}" data-act-idx="${idx}">
         <div class="act-card-header">
-          <span class="act-code">${act.code}</span>
+          <span class="act-code">${act.code} ${isCurrent ? '• قيد اللعب' : ''}</span>
           <span class="act-diff">${act.difficulty}</span>
         </div>
         <h4>${act.name}</h4>
         <p>${act.description}</p>
+        <div class="act-meta-pills">
+          <span class="act-meta-pill">⚔ ${wavesTxt}</span>
+          <span class="act-meta-pill">☀ ${act.startingMana || 150} طاقة</span>
+        </div>
         <button type="button" class="launch-act-btn" data-launch-idx="${idx}">
-          Deploy to ${act.code} →
+          ${isCurrent ? '↻ إعادة المرحلة الحالية' : `⚔ انطلاق إلى ${act.code} ←`}
         </button>
       </div>
-    `
-    ).join('');
+    `;
+      }).join('');
 
-    container.querySelectorAll('[data-launch-idx]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = Number(btn.getAttribute('data-launch-idx'));
-        this.startAct(idx);
+    if (container) {
+      container.innerHTML = renderActsHtml();
+      container.querySelectorAll('[data-launch-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-launch-idx'));
+          this.startAct(idx);
+        });
       });
-    });
+    }
+
+    if (quickMenuContainer) {
+      quickMenuContainer.innerHTML = window.CHESS_DATA.ACTS.map((act, idx) => {
+        const isCurrent = idx === this.actIndex;
+        return `
+          <button type="button" class="menu-act-pill ${isCurrent ? 'active' : ''}" data-menu-act-idx="${idx}">
+            <strong>${act.code}</strong>
+            <span>${act.name}</span>
+          </button>
+        `;
+      }).join('');
+      quickMenuContainer.querySelectorAll('[data-menu-act-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-menu-act-idx'));
+          this.startAct(idx);
+        });
+      });
+    }
   }
 
   openModal(id) {
     this.paused = true;
+    this.populateActsDrawer();
     const el = document.getElementById(id);
     if (el) el.classList.remove('hidden');
     this.updateHUD();
   }
 
   hideModals() {
-    ['codexModal', 'actsModal', 'resultModal'].forEach(id => {
+    ['commandMenuModal', 'codexModal', 'actsModal', 'resultModal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     });
@@ -2447,11 +2567,21 @@ class RoyalGambitGame {
     const autoBtn = document.getElementById('autoManaBtn');
     if (autoBtn) {
       autoBtn.classList.toggle('active', this.autoCollectMana);
-      autoBtn.textContent = this.autoCollectMana ? '☀ جمع تلقائي: ON' : '☀ جمع تلقائي: OFF';
+      autoBtn.textContent = this.autoCollectMana ? '☀ تلقائي: ON' : '☀ تلقائي: OFF';
     }
 
     const pauseBtn = document.getElementById('pauseBtn');
-    if (pauseBtn) pauseBtn.textContent = this.paused ? '▶ استئناف' : '⏸ إيقاف';
+    if (pauseBtn) pauseBtn.textContent = this.paused ? '▶' : '⏸';
+
+    // Synchronize Royal Command Menu controls
+    setTxt('menuSpeedBtn', `⏩ السرعة: ${this.gameSpeed}x`);
+    setTxt('menuAutoManaBtn', this.autoCollectMana ? '☀ جمع الطاقة: تلقائي' : '☀ جمع الطاقة: يدوي');
+    setTxt('menuGridCoordsBtn', this.showGridOverlay ? '♟ إحداثيات الرقعة: مفعلة' : '♟ إحداثيات الرقعة: مخفية');
+    const isMuted = window.RoyalAudio && window.RoyalAudio.muted;
+    setTxt('menuAudioBtn', isMuted ? '🔇 الصوت: مكتوم' : '🔊 الصوت: مفعل');
+    setTxt('audioMuteBtn', isMuted ? '🔇' : '🔊');
+    const isFs = Boolean(document.fullscreenElement);
+    setTxt('menuFullscreenBtn', isFs ? '🗗 الخروج من ملء الشاشة' : '⛶ ملء الشاشة الكاملة');
   }
 }
 

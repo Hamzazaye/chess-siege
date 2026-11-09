@@ -82,25 +82,31 @@
 
       <!-- POD 3 (RIGHT): War-Council Controls -->
       <div class="hud-wing right-council-wing">
-        <button type="button" class="hud-btn gold-outline" id="openActsBtn" title="خريطة المراحل والطور اللانهائي">
+        <button type="button" class="hud-btn gold-outline" id="openMenuBtn" title="القائمة الملكية والإعدادات [Esc]">
+          ☰ القائمة
+        </button>
+        <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openActsBtn" title="خريطة المراحل والطور اللانهائي">
           🗺 المراحل
         </button>
-        <button type="button" class="hud-btn gold-outline" id="openCodexBtn" title="دليل حركات الشطرنج والوحوش">
+        <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openCodexBtn" title="دليل حركات الشطرنج والوحوش">
           📖 الدليل
         </button>
-        <button type="button" class="hud-btn active" id="autoManaBtn" title="تفعيل/إيقاف الجمع التلقائي للطاقة">
+        <button type="button" class="hud-btn active hide-on-tablet" id="autoManaBtn" title="تفعيل/إيقاف الجمع التلقائي للطاقة">
           ☀ تلقائي: ON
         </button>
         <button type="button" class="hud-btn" id="speedBtn" title="تغيير سرعة المعركة (1x / 1.5x / 2x)">
           ⏩ 1x
         </button>
+        <button type="button" class="hud-btn hide-on-mobile" id="fullscreenBtn" title="ملء الشاشة الكاملة [F]">
+          ⛶
+        </button>
         <button type="button" class="hud-btn" id="audioMuteBtn" aria-pressed="true" title="كتم/تشغيل الموسيقى والمؤثرات">
           🔊
         </button>
-        <button type="button" class="hud-btn" id="pauseBtn" title="إيقاف مؤقت [P]">
+        <button type="button" class="hud-btn hide-on-mobile" id="pauseBtn" title="إيقاف مؤقت [P]">
           ⏸
         </button>
-        <button type="button" class="hud-btn" id="restartBtn" title="إعادة المرحلة الحالية">
+        <button type="button" class="hud-btn hide-on-tablet" id="restartBtn" title="إعادة المرحلة الحالية">
           ↻
         </button>
       </div>
@@ -133,10 +139,10 @@
           <div class="inspector-meta">
             <div class="inspector-title-row">
               <strong id="inspectorName">الجندي المدرع • Phalanx Shield-Pawn</strong>
-              <span class="inspector-stat-chip" id="inspectorStats">HP 1150 (+160🛡) • 60☀</span>
+              <span class="inspector-stat-chip" id="inspectorStats">HP 640 (+65🛡) • 60☀</span>
             </div>
             <p class="inspector-rule" id="inspectorRule">
-              مدافع حصين بروح عالية ودرع متجدد (لا يطلق النار عن بعد) — كوّن سطراً من 5 جنود لدمجهم فوراً إلى وزير ملكي [M]!
+              مدافع أمامي متوازن (لا يطلق النار عن بعد) — كوّن سطراً من 5 جنود لدمجهم فوراً إلى وزير ملكي [M]!
             </p>
           </div>
 
@@ -163,27 +169,92 @@
     </footer>
   </div>
 
+  <!-- ================= ROYAL COMMAND MENU MODAL (UNIFIED PAUSE, SETTINGS & QUICK HUB) ================= -->
+  <div class="modal-backdrop hidden" id="commandMenuModal" role="dialog" aria-modal="true" aria-labelledby="commandMenuTitle">
+    <div class="modal-window command-menu-window">
+      <div class="modal-header">
+        <h3 id="commandMenuTitle">👑 القائمة الملكية • Royal Command Hub</h3>
+        <button type="button" class="hud-btn" id="closeMenuBtn">✕ إغلاق [Esc]</button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick Action Hero Row -->
+        <div class="menu-hero-actions">
+          <button type="button" class="launch-act-btn menu-primary-btn" id="menuResumeBtn">
+            ▶ استئناف المعركة
+          </button>
+          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuRestartBtn">
+            ↻ إعادة المرحلة الحالية
+          </button>
+          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenActsBtn">
+            🗺 خريطة المراحل الكاملة
+          </button>
+          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenCodexBtn">
+            📖 دليل الشطرنج والوحوش
+          </button>
+        </div>
+
+        <!-- Live Battle Settings Grid -->
+        <div>
+          <h4 class="codex-section-title">⚙ إعدادات المعركة والعرض • Battle &amp; Display Settings</h4>
+          <div class="menu-settings-grid">
+            <button type="button" class="menu-setting-card" id="menuSpeedBtn">⏩ السرعة: 1x</button>
+            <button type="button" class="menu-setting-card" id="menuAutoManaBtn">☀ جمع الطاقة: تلقائي</button>
+            <button type="button" class="menu-setting-card" id="menuGridCoordsBtn">♟ إحداثيات الرقعة: مفعلة</button>
+            <button type="button" class="menu-setting-card" id="menuAudioBtn">🔊 الصوت: مفعل</button>
+            <button type="button" class="menu-setting-card" id="menuFullscreenBtn">⛶ ملء الشاشة الكاملة</button>
+          </div>
+        </div>
+
+        <!-- Quick Campaign Act Switcher -->
+        <div>
+          <h4 class="codex-section-title">⚔ انتقال سريع بين المراحل • Quick Act Select</h4>
+          <div class="menu-quick-acts" id="menuQuickActsGrid"></div>
+        </div>
+
+        <!-- Controls & Synergies Cheat-Sheet -->
+        <div class="menu-shortcuts-box">
+          <h4 class="codex-section-title">🎮 اختصارات التحكم والدمج التكتيكي • Controls &amp; Synergies</h4>
+          <div class="shortcuts-chips">
+            <span><kbd>1</kbd>–<kbd>7</kbd> اختيار قطعة</span>
+            <span><kbd>M</kbd> دمج سطر 5 جنود لوزير ♛</span>
+            <span><kbd>S</kbd> تضحية بقطعة (+60%☀)</span>
+            <span><kbd>Space</kbd> كش مات الشاملة ⚡</span>
+            <span><kbd>F</kbd> ملء الشاشة</span>
+            <span><kbd>P</kbd> إيقاف مؤقت</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= ROYAL CODEX MODAL (CHESS GEOMETRY & BESTIARY) ================= -->
   <div class="modal-backdrop hidden" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
     <div class="modal-window">
       <div class="modal-header">
-        <h3 id="codexModalTitle">📖 الدليل الملكي • Royal Grandmaster Codex</h3>
+        <div class="modal-title-and-tabs">
+          <h3 id="codexModalTitle">📖 الدليل الملكي • Royal Grandmaster Codex</h3>
+          <div class="codex-tabs" role="tablist">
+            <button type="button" class="codex-tab-btn active" data-codex-tab="all">الكل</button>
+            <button type="button" class="codex-tab-btn" data-codex-tab="pieces">♟ قطع الشطرنج (7)</button>
+            <button type="button" class="codex-tab-btn" data-codex-tab="enemies">💀 جيش الظلام (7)</button>
+          </div>
+        </div>
         <button type="button" class="hud-btn" id="closeCodexBtn">✕ إغلاق [Esc]</button>
       </div>
       <div class="modal-body">
-        <div>
+        <div id="codexRulesSection">
           <h4 class="codex-section-title">قواعد الدمج بين الشطرنج والدفاع الاستراتيجي • Tactical Fusion Rules</h4>
           <p class="codex-desc">
-            ساحة المعركة عبارة عن رقعة شطرنج ملكية بحجم <strong>10×5 (من A إلى J)</strong>. كل قطعة تهاجم وفق <strong>هندسة حركتها الحقيقية في الشطرنج</strong>، ويمكنك <strong>النقر على أي قطعة لتحريكها لمربع جديد</strong>! <strong>الجندي المدرع (Phalanx Pawn)</strong> يعمل كمدافع حصين بروح عالية ودرع متجدد، وعند <strong>صفّ 5 جنود في نفس السطر (عمودياً أو أفقياً)</strong> يمكنك النقر عليهم أو ضغط <strong>[M]</strong> لدمج السطر بالكامل إلى <strong>وزير ملكي متوّج (Ascended Sovereign Queen)</strong>!
+            ساحة المعركة عبارة عن رقعة شطرنج ملكية بحجم <strong>10×5 (من A إلى J)</strong>. كل قطعة تهاجم وفق <strong>هندسة حركتها الحقيقية في الشطرنج</strong>، ويمكنك <strong>النقر أو اللمس على أي قطعة لتحريكها لمربع جديد</strong>! <strong>الجندي المدرع (Phalanx Pawn)</strong> يعمل كمدافع أمامي متوازن، وعند <strong>صفّ 5 جنود في نفس السطر (عمودياً أو أفقياً)</strong> يمكنك النقر عليهم أو ضغط <strong>[M]</strong> لدمج السطر بالكامل إلى <strong>وزير ملكي متوّج (Ascended Sovereign Queen)</strong>!
           </p>
         </div>
 
-        <div>
+        <div id="codexPiecesSection">
           <h4 class="codex-section-title">قطع الشطرنج الملكية (7 وحدات) • Royal Chess Defenders</h4>
           <div class="codex-grid" id="codexPiecesGrid"></div>
         </div>
 
-        <div>
+        <div id="codexEnemiesSection">
           <h4 class="codex-section-title">جيش الشطرنج الأسود الملعون • Corrupted Ebony Undead</h4>
           <div class="codex-grid" id="codexEnemiesGrid"></div>
         </div>

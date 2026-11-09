@@ -41,10 +41,10 @@ class RoyalBoardRenderer {
     if (!this.canvas) return;
     const rect = this.canvas.parentElement
       ? this.canvas.parentElement.getBoundingClientRect()
-      : { width: 1120, height: 640 };
+      : { width: window.innerWidth || 1120, height: window.innerHeight || 640 };
 
-    const targetW = Math.max(760, Math.floor(rect.width || 1120));
-    const targetH = Math.max(440, Math.floor(rect.height || 620));
+    const targetW = Math.max(320, Math.floor(rect.width || window.innerWidth || 1120));
+    const targetH = Math.max(240, Math.floor(rect.height || window.innerHeight || 640));
 
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = targetW * this.dpr;
@@ -52,17 +52,45 @@ class RoyalBoardRenderer {
     this.width = targetW;
     this.height = targetH;
 
-    // Fit 10x5 chessboard cleanly in the central cathedral courtyard between floating top & bottom HUD pods
-    const availW = this.width * 0.78;
-    const availH = this.height - 196;
-    this.tileSize = Math.max(60, Math.floor(Math.min(availW / this.cols, availH / this.rows)));
+    // Dynamically measure floating Top HUD and Bottom Reliquary Dock so the 10x5 board never overlaps on any screen
+    const topHud = document.querySelector('.floating-top-hud');
+    const bottomDock = document.querySelector('.floating-bottom-altar');
+    const topRect = topHud ? topHud.getBoundingClientRect() : null;
+    const botRect = bottomDock ? bottomDock.getBoundingClientRect() : null;
+
+    const safeTop = topRect && topRect.height > 0 ? Math.min(targetH * 0.28, topRect.bottom + 14) : Math.max(54, targetH * 0.14);
+    const bottomReserved =
+      botRect && botRect.height > 0
+        ? Math.min(targetH * 0.30, targetH - botRect.top + 12)
+        : Math.max(88, targetH * 0.17);
+    const safeBottom = Math.max(safeTop + 140, targetH - bottomReserved);
+
+    const availH = Math.max(130, safeBottom - safeTop);
+    // Reserve ~1.15 tile widths horizontally for Left Winged Rook Sentinels + Right Spawn Portal
+    const availW = Math.max(260, targetW * 0.92);
+
+    this.tileSize = Math.max(
+      26,
+      Math.min(110, Math.floor(Math.min(availW / (this.cols + 1.15), availH / (this.rows + 0.35))))
+    );
 
     const totalBoardW = this.tileSize * this.cols;
     const totalBoardH = this.tileSize * this.rows;
 
-    this.boardLeft = Math.floor((this.width - totalBoardW) * 0.52);
-    this.boardTop = Math.floor((this.height - totalBoardH) * 0.46);
+    // Shift board slightly right of true center to leave room on the left for the 5 Winged Golden Rook Sentinels
+    const sentinelRoom = Math.floor(this.tileSize * 0.72);
+    this.boardLeft = Math.max(
+      sentinelRoom + 12,
+      Math.floor((this.width - totalBoardW + sentinelRoom * 0.55) * 0.5)
+    );
+    this.boardTop = Math.floor(safeTop + (availH - totalBoardH) * 0.5);
     this.chariotX = this.boardLeft - Math.floor(this.tileSize * 0.62);
+
+    if (this.game && Array.isArray(this.game.chariots)) {
+      for (const c of this.game.chariots) {
+        if (!c.active) c.x = this.chariotX;
+      }
+    }
   }
 
   screenToBoard(clientX, clientY) {
@@ -865,7 +893,8 @@ class RoyalBoardRenderer {
       ctx.fill();
 
       if (piece.shieldHp > 0) {
-        const shRatio = Math.min(1, piece.shieldHp / 250);
+        const maxSh = piece.type === 'pawn' ? 100 : 250;
+        const shRatio = Math.min(1, piece.shieldHp / maxSh);
         ctx.fillStyle = '#38bdf8';
         this.roundRect(ctx, -barW / 2, barY - 4, barW * shRatio, 3.2, 1.5);
         ctx.fill();

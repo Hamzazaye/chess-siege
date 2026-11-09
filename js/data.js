@@ -12,10 +12,10 @@ const CHESS_PIECES = {
     hotkey: '1',
     symbol: '⚱',
     cost: 50,
-    cooldown: 6.0,
-    moveCooldown: 9.0,
+    cooldown: 2.2,
+    moveCooldown: 4.0,
     maxHp: 300,
-    attackInterval: 9.2, // produces mana every 9.2s
+    attackInterval: 7.5, // produces mana every 7.5s
     manaYield: 30,
     damage: 0,
     accentColor: '#fbbf24',
@@ -23,7 +23,7 @@ const CHESS_PIECES = {
     roleBadge: 'ECONOMY • +15% SPD',
     chessRule: 'Steps 1 Square Any Direction • Grants +15% Attack Speed to Adjacent Pieces',
     description:
-      'Sanctified golden reliquary that crystallizes +30 Crown Mana every 9.2s and inspires adjacent Chess Pieces (+15% Attack Speed). Can step 1 square in any direction to evade danger.',
+      'Sanctified golden reliquary that crystallizes +30 Crown Mana every 7.5s and inspires adjacent Chess Pieces (+15% Attack Speed). Can step 1 square in any direction to evade danger.',
     attackPatternText: 'Generates +30 Sovereign Mana & buffs 8 surrounding squares.',
     movePatternType: 'king_step'
   },
@@ -36,21 +36,21 @@ const CHESS_PIECES = {
     hotkey: '2',
     symbol: '♟',
     cost: 60,
-    cooldown: 3.2,
-    moveCooldown: 5.5,
-    maxHp: 1150,
-    startingShield: 160,
-    attackInterval: 1.6,
-    damage: 34, // Close-quarters shield bash only (never shoots ranged bullets!)
-    diagDamage: 68, // Authentic chess close-range diagonal capture counter-strike
+    cooldown: 1.5,
+    moveCooldown: 3.0,
+    maxHp: 640,
+    startingShield: 65,
+    attackInterval: 2.2,
+    damage: 12, // Light defensive shield nudge only (never shoots ranged bullets!)
+    diagDamage: 30, // Authentic chess close-range diagonal counter-strike
     promoteCost: 125,
     accentColor: '#38bdf8',
     secondaryColor: '#0284c7',
     roleBadge: 'DEFENDER • LINE MERGE → ♛',
-    chessRule: 'Pure Stalwart Defender (No Ranged Shots) • High HP + Shield Regen • Complete a 5-Pawn Line to Merge into a Queen!',
+    chessRule: 'Frontline Defender (No Ranged Shots) • 640 HP (+65🛡) • Complete a 5-Pawn Line to Merge into a Queen!',
     description:
-      'Unbreakable frontline Phalanx Defender with 1,150 HP + regenerating Aegis Shield. Does not shoot ranged projectiles — instead holds the rank like a fortress wall, bashes adjacent biters, and strikes adjacent diagonals (+1, ±1). Align 5 Pawns in a row or column to MERGE them into a Sovereign Queen!',
-    attackPatternText: 'Fortress Shield Wall + Adjacent Melee Bash + 5-Pawn Line Merge → Queen.',
+      'Balanced frontline Phalanx Defender with 640 HP + 65 Aegis Shield. Does not shoot ranged projectiles — holds the rank to buy time for your backline and gains light regen in a Pawn Chain. Align 5 Pawns in a row or column to MERGE them into a Sovereign Queen!',
+    attackPatternText: 'Frontline Shield Blocker + Light Melee Repel + 5-Pawn Line Merge → Queen.',
     movePatternType: 'pawn_move'
   },
 
@@ -62,8 +62,8 @@ const CHESS_PIECES = {
     hotkey: '3',
     symbol: '♜',
     cost: 125,
-    cooldown: 8.5,
-    moveCooldown: 8.5,
+    cooldown: 3.8,
+    moveCooldown: 4.2,
     maxHp: 1450,
     attackInterval: 2.35,
     damage: 46,
@@ -85,8 +85,8 @@ const CHESS_PIECES = {
     hotkey: '4',
     symbol: '♞',
     cost: 150,
-    cooldown: 8.0,
-    moveCooldown: 5.5,
+    cooldown: 3.5,
+    moveCooldown: 2.8,
     maxHp: 620,
     attackInterval: 1.7,
     damage: 54,
@@ -108,8 +108,8 @@ const CHESS_PIECES = {
     hotkey: '5',
     symbol: '♝',
     cost: 150,
-    cooldown: 8.5,
-    moveCooldown: 7.0,
+    cooldown: 3.6,
+    moveCooldown: 3.5,
     maxHp: 500,
     attackInterval: 1.9,
     damage: 42,
@@ -131,8 +131,8 @@ const CHESS_PIECES = {
     hotkey: '6',
     symbol: '♚',
     cost: 175,
-    cooldown: 12.0,
-    moveCooldown: 7.0,
+    cooldown: 5.0,
+    moveCooldown: 3.5,
     maxHp: 980,
     maxCount: 1, // Only 1 Sovereign King on the board!
     attackInterval: 2.0,
@@ -155,8 +155,8 @@ const CHESS_PIECES = {
     hotkey: '7',
     symbol: '♛',
     cost: 300, // Balanced high cost!
-    cooldown: 18.0, // Strategic deployment cooldown
-    moveCooldown: 7.5,
+    cooldown: 7.5, // Fast strategic deployment cooldown
+    moveCooldown: 3.8,
     maxHp: 540, // Glass-cannon royalty — needs protection from Shadow-Knight Assassins!
     maxCount: 2, // Max 2 Queens on the battlefield!
     maxRange: 3.6, // True line-of-sight range (3.5 squares) — must be positioned tactically!
