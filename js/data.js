@@ -32,7 +32,7 @@ const CHESS_PIECES = {
     id: 'pawn',
     name: 'Phalanx Shield-Pawn',
     arabicTitle: 'الجندي المدرع',
-    chessTitle: 'Frontline Bulwark Defender',
+    chessTitle: 'Frontline Shield Pusher',
     hotkey: '2',
     symbol: '♟',
     cost: 60,
@@ -40,17 +40,16 @@ const CHESS_PIECES = {
     moveCooldown: 3.0,
     maxHp: 640,
     startingShield: 65,
-    attackInterval: 2.2,
-    damage: 12, // Light defensive shield nudge only (never shoots ranged bullets!)
-    diagDamage: 30, // Authentic chess close-range diagonal counter-strike
+    attackInterval: 2.0,
+    damage: 12, // Physical shield push impact only (NEVER shoots lasers or bullets!)
     promoteCost: 125,
     accentColor: '#38bdf8',
     secondaryColor: '#0284c7',
-    roleBadge: 'DEFENDER • LINE MERGE → ♛',
-    chessRule: 'Frontline Defender (No Ranged Shots) • 640 HP (+65🛡) • Complete a 5-Pawn Line to Merge into a Queen!',
+    roleBadge: 'SHIELD PUSH • LINE MERGE → ♛',
+    chessRule: 'Pure Shield Pusher (No Lasers/Shots) • Physically Shoves Enemies Back • Align 5 Pawns for Cinematic Queen Merge!',
     description:
-      'Balanced frontline Phalanx Defender with 640 HP + 65 Aegis Shield. Does not shoot ranged projectiles — holds the rank to buy time for your backline and gains light regen in a Pawn Chain. Align 5 Pawns in a row or column to MERGE them into a Sovereign Queen!',
-    attackPatternText: 'Frontline Shield Blocker + Light Melee Repel + 5-Pawn Line Merge → Queen.',
+      'Frontline Phalanx Defender with 640 HP + 65 Aegis Shield. Never fires lasers or projectiles — physically shoves adjacent enemies backward with its heavy tower shield! Align 5 Pawns in a row or column for a Full-Screen Cinematic Merge into a Sovereign Queen!',
+    attackPatternText: 'Physical Shield Push (Repels adjacent enemies) + 5-Pawn Cinematic Merge → Queen.',
     movePatternType: 'pawn_move'
   },
 

@@ -154,6 +154,7 @@ class RoyalBoardRenderer {
     this.drawAmbientEmbers(ctx, timeSeconds);
     this.drawManaOrbs(ctx, timeSeconds);
     this.drawFloatingTexts(ctx, timeSeconds);
+    this.drawMergeCinematic(ctx, timeSeconds);
 
     ctx.restore();
   }
@@ -764,6 +765,7 @@ class RoyalBoardRenderer {
   }
 
   drawChessPiece(ctx, piece, t) {
+    if (piece.inMergeCinematic) return;
     const center = this.tileCenter(piece.col, piece.row);
 
     let drawX = center.x;
@@ -779,10 +781,11 @@ class RoyalBoardRenderer {
     }
 
     const recoil = piece.recoilTimer > 0 ? Math.sin((piece.recoilTimer / 0.18) * Math.PI) * -6 : 0;
+    const shoveLunge = piece.shoveTimer > 0 ? Math.sin((piece.shoveTimer / 0.30) * Math.PI) * 15 : 0;
     const bob = Math.sin(t * 3.0 + piece.id) * 2.2;
 
     ctx.save();
-    ctx.translate(drawX + recoil, drawY);
+    ctx.translate(drawX + recoil + shoveLunge, drawY);
 
     // 1. Synergy / King Aura / Ready Pawn-Line Merge Ring under base
     if (piece.inReadyPawnLine) {
@@ -805,17 +808,28 @@ class RoyalBoardRenderer {
       ctx.stroke();
     }
 
-    // Phalanx Shield-Pawn Frontal Bastion Arc (Facing Right toward Undead!)
+    // Phalanx Shield-Pawn Frontal Bastion Arc & Kinetic Shield-Push Wave (Facing Right toward Undead!)
     if (piece.type === 'pawn') {
       ctx.save();
       const arcPulse = 0.55 + Math.sin(t * 4 + piece.id) * 0.18;
       ctx.strokeStyle = piece.inReadyPawnLine
         ? `rgba(250, 204, 21, ${arcPulse + 0.25})`
         : `rgba(56, 189, 248, ${arcPulse})`;
-      ctx.lineWidth = 3.2;
+      ctx.lineWidth = piece.shoveTimer > 0 ? 4.8 : 3.2;
       ctx.beginPath();
       ctx.arc(6, -2, this.tileSize * 0.36, -Math.PI * 0.36, Math.PI * 0.36);
       ctx.stroke();
+
+      // Kinetic forward shield-push wave when shoving enemies back
+      if (piece.shoveTimer > 0) {
+        const pushProg = 1 - piece.shoveTimer / 0.30;
+        const waveX = 12 + pushProg * (this.tileSize * 0.55);
+        ctx.strokeStyle = `rgba(125, 211, 252, ${1 - pushProg})`;
+        ctx.lineWidth = 5 * (1 - pushProg * 0.5);
+        ctx.beginPath();
+        ctx.arc(waveX, -2, this.tileSize * (0.34 + pushProg * 0.18), -Math.PI * 0.42, Math.PI * 0.42);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
@@ -1158,6 +1172,174 @@ class RoyalBoardRenderer {
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.restore();
     }
+  }
+
+  // Full-Screen Cinematic 5-Pawn Merge Sequence into an Ascended Sovereign Queen
+  drawMergeCinematic(ctx, t) {
+    const mc = this.game.mergeCinematic;
+    if (!mc) return;
+
+    const prog = Math.min(1, mc.elapsed / mc.duration);
+    const fadeAlpha =
+      prog < 0.12
+        ? prog / 0.12
+        : prog > 0.85
+          ? Math.max(0, (1 - prog) / 0.15)
+          : 1;
+
+    ctx.save();
+
+    // 1. Full-Screen Royal Obsidian Spotlight Backdrop & Cinema Letterbox Bars
+    const radSpot = ctx.createRadialGradient(
+      mc.targetX,
+      mc.targetY,
+      this.tileSize * 0.6,
+      mc.targetX,
+      mc.targetY,
+      Math.max(this.width, this.height) * 0.75
+    );
+    radSpot.addColorStop(0, `rgba(250, 204, 21, ${0.18 * fadeAlpha})`);
+    radSpot.addColorStop(0.35, `rgba(10, 15, 30, ${0.46 * fadeAlpha})`);
+    radSpot.addColorStop(1, `rgba(3, 5, 12, ${0.78 * fadeAlpha})`);
+    ctx.fillStyle = radSpot;
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    // Top & Bottom Cinema Letterbox Bars
+    const barH = Math.round(48 * fadeAlpha);
+    if (barH > 2) {
+      ctx.fillStyle = 'rgba(4, 6, 14, 0.94)';
+      ctx.fillRect(0, 0, this.width, barH);
+      ctx.fillRect(0, this.height - barH, this.width, barH);
+
+      ctx.strokeStyle = `rgba(250, 204, 21, ${0.75 * fadeAlpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, barH);
+      ctx.lineTo(this.width, barH);
+      ctx.moveTo(0, this.height - barH);
+      ctx.lineTo(this.width, this.height - barH);
+      ctx.stroke();
+    }
+
+    // 2. Rotating Sacred Golden Astrolabe Circle at the Ascension Square
+    ctx.save();
+    ctx.translate(mc.targetX, mc.targetY);
+    ctx.rotate(t * 2.6);
+    const ringRadius = this.tileSize * (0.65 + Math.sin(prog * Math.PI) * 0.85);
+    ctx.strokeStyle = `rgba(250, 204, 21, ${0.88 * fadeAlpha})`;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([12, 8]);
+    ctx.beginPath();
+    ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.rotate(-t * 4.2);
+    ctx.strokeStyle = `rgba(56, 189, 248, ${0.75 * fadeAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.arc(0, 0, ringRadius * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Stage 1 (prog 0.0 -> 0.56): 5 Pawn Sprites Levitate & Fly Across the Screen into the Center!
+    if (prog < 0.58) {
+      const flyT = Math.min(1, prog / 0.55);
+      const easeIn = flyT * flyT * (3 - 2 * flyT);
+      const pawnSprite = window.RoyalSprites && window.RoyalSprites.pieceSprites.pawn;
+
+      for (const src of mc.sources) {
+        const arcLift = Math.sin(flyT * Math.PI) * 68;
+        const spiralAngle = flyT * Math.PI * 1.4 + src.idx * ((Math.PI * 2) / 5);
+        const spiralRadius = (1 - easeIn) * 28;
+
+        const px =
+          src.x + (mc.targetX - src.x) * easeIn + Math.cos(spiralAngle) * spiralRadius;
+        const py =
+          src.y + (mc.targetY - src.y) * easeIn - arcLift + Math.sin(spiralAngle) * (spiralRadius * 0.5);
+
+        // Glowing golden comet ribbon behind each flying Pawn
+        const tailGrad = ctx.createLinearGradient(src.x, src.y, px, py);
+        tailGrad.addColorStop(0, 'rgba(250, 204, 21, 0)');
+        tailGrad.addColorStop(1, 'rgba(254, 240, 138, 0.85)');
+        ctx.strokeStyle = tailGrad;
+        ctx.lineWidth = 5 * (1 - flyT * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(src.x, src.y);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+
+        // Glowing aura + Pawn sprite
+        const sz = this.tileSize * (0.95 - flyT * 0.25);
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 18;
+        if (pawnSprite && pawnSprite.complete && pawnSprite.naturalWidth > 0) {
+          ctx.drawImage(pawnSprite, -sz / 2, -sz / 2, sz, sz);
+        }
+        ctx.restore();
+      }
+    }
+
+    // 4. Stage 2 (prog >= 0.48): Celestial Pillar of Golden Light from the Top of the Screen & Ascended Queen!
+    if (prog >= 0.48) {
+      const pillarProg = Math.min(1, (prog - 0.48) / 0.52);
+      const pillarAlpha = Math.sin(pillarProg * Math.PI);
+      const pillarW = this.tileSize * (1.25 - pillarProg * 0.45);
+
+      // Vertical Celestial Pillar of Light from y=0 to targetY
+      const pillarGrad = ctx.createLinearGradient(mc.targetX - pillarW, 0, mc.targetX + pillarW, 0);
+      pillarGrad.addColorStop(0, 'rgba(250, 204, 21, 0)');
+      pillarGrad.addColorStop(0.3, `rgba(250, 204, 21, ${0.48 * pillarAlpha})`);
+      pillarGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.92 * pillarAlpha})`);
+      pillarGrad.addColorStop(0.7, `rgba(250, 204, 21, ${0.48 * pillarAlpha})`);
+      pillarGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+
+      ctx.fillStyle = pillarGrad;
+      ctx.fillRect(mc.targetX - pillarW, 0, pillarW * 2, mc.targetY + this.tileSize * 0.4);
+
+      // Full-screen supernova flash at the exact moment of fusion (prog 0.52 - 0.68)
+      if (prog >= 0.50 && prog <= 0.72) {
+        const flashAlpha = Math.sin(((prog - 0.50) / 0.22) * Math.PI) * 0.45;
+        ctx.fillStyle = `rgba(254, 249, 195, ${flashAlpha})`;
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
+
+      // Giant Ascended Sovereign Queen Descending inside the Golden Pillar
+      const queenSprite = window.RoyalSprites && window.RoyalSprites.pieceSprites.queen;
+      if (queenSprite && queenSprite.complete && queenSprite.naturalWidth > 0) {
+        const scaleMult = 1.85 - Math.min(1, pillarProg * 1.25) * 0.85;
+        const qSize = this.tileSize * 0.96 * scaleMult;
+        const liftY = (1 - Math.min(1, pillarProg * 1.3)) * 55;
+
+        ctx.save();
+        ctx.translate(mc.targetX, mc.targetY - liftY);
+        ctx.shadowColor = '#fef08a';
+        ctx.shadowBlur = 28;
+        ctx.drawImage(queenSprite, -qSize / 2, -qSize / 2 - 4, qSize, qSize);
+        ctx.restore();
+      }
+    }
+
+    // 5. Full-Screen Cinematic Royal Typography Banner
+    ctx.save();
+    ctx.globalAlpha = fadeAlpha;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 12;
+
+    const bannerY = Math.max(82, this.boardTop * 0.72);
+    ctx.font = '900 22px "Cairo", "Cinzel", serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText('👑 اندماج ملكي سينمائي • تحوّل الفيلق إلى الوزير المتوّج! 👑', this.width * 0.5, bannerY);
+
+    ctx.font = '700 13px "Orbitron", sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('5 PHALANX PAWNS ASCENDED INTO SOVEREIGN QUEEN (+300 ROYAL SHIELD)', this.width * 0.5, bannerY + 24);
+    ctx.restore();
+
+    ctx.restore();
   }
 
   roundRect(ctx, x, y, w, h, r) {

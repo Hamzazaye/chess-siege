@@ -459,6 +459,71 @@ body {
   margin-top: 3px;
 }
 
+/* Floating On-Screen Cinematic 5-Pawn Merge CTA Button */
+.screen-merge-cta {
+  position: fixed;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 2px solid #fef08a;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.96), rgba(202, 138, 4, 0.96));
+  color: #090d16;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.75), 0 12px 30px rgba(0, 0, 0, 0.75);
+  animation: mergeCtaPulse 1.15s infinite alternate ease-in-out;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.screen-merge-cta:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 0 38px rgba(254, 240, 138, 0.95), 0 14px 34px rgba(0, 0, 0, 0.85);
+}
+
+.screen-merge-cta.hidden {
+  display: none !important;
+}
+
+.merge-cta-crown {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.merge-cta-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.merge-cta-text strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: #090d16;
+}
+
+.merge-cta-text small {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+@keyframes mergeCtaPulse {
+  0% {
+    transform: translateX(-50%) scale(0.98);
+    box-shadow: 0 0 18px rgba(250, 204, 21, 0.6), 0 10px 24px rgba(0, 0, 0, 0.7);
+  }
+  100% {
+    transform: translateX(-50%) scale(1.04);
+    box-shadow: 0 0 36px rgba(254, 240, 138, 0.95), 0 14px 32px rgba(0, 0, 0, 0.85);
+  }
+}
+
 /* ================= FLOATING BOTTOM GRANDMASTER RELIQUARY ALTAR ================= */
 .floating-bottom-altar {
   position: fixed;

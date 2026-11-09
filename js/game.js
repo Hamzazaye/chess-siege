@@ -39,6 +39,7 @@ class RoyalGambitGame {
     this.batteryLinks = [];
     this.pawnChainLinks = [];
     this.readyPawnLines = [];
+    this.mergeCinematic = null;
 
     this.selectedDeckPieceId = 'pawn';
     this.selectedBoardPiece = null;
@@ -93,6 +94,7 @@ class RoyalGambitGame {
     this.batteryLinks = [];
     this.pawnChainLinks = [];
     this.readyPawnLines = [];
+    this.mergeCinematic = null;
 
     this.selectedBoardPiece = null;
     this.shovelMode = false;
@@ -241,6 +243,7 @@ class RoyalGambitGame {
 
     bindBtn('shovelBtn', () => this.toggleShovel());
     bindBtn('ultimateBtn', () => this.triggerCheckmateUltimate());
+    bindBtn('screenMergeCtaBtn', () => this.tryMergePawnLine(this.selectedBoardPiece));
     bindBtn('callWaveBtn', () => this.callNextWaveEarly());
     bindBtn('speedBtn', () => this.cycleGameSpeed());
     bindBtn('autoManaBtn', () => {
@@ -505,6 +508,8 @@ class RoyalGambitGame {
       xp: 0,
       hexTimer: 0,
       recoilTimer: 0,
+      shoveTimer: 0,
+      inMergeCinematic: false,
       moveAnimTimer: 0,
       moveAnimDuration: 0.25,
       moveFromX: 0,
@@ -770,8 +775,9 @@ class RoyalGambitGame {
     }
   }
 
-  // Merge a complete 5-Pawn Line (Column or Row) into an Ascended Sovereign Queen! (دمج سطر جنود لوزير)
+  // Full-Screen Cinematic 5-Pawn Line Merge into an Ascended Sovereign Queen! (دمج سطر جنود لوزير سينمائياً عبر الشاشة)
   tryMergePawnLine(anchorPawn = null) {
+    if (this.mergeCinematic) return false;
     if (!this.readyPawnLines || this.readyPawnLines.length === 0) return false;
 
     let chosenLine = this.readyPawnLines[0];
@@ -792,69 +798,102 @@ class RoyalGambitGame {
 
     const queenCenter = this.renderer.tileCenter(targetPawn.col, targetPawn.row);
 
-    // Draw 5 Golden Convergence Lightning Beams from every Pawn in the line into the new Queen!
-    for (const p of pawnsToMerge) {
+    const sources = pawnsToMerge.map((p, idx) => {
       const pc = this.renderer.tileCenter(p.col, p.row);
-      if (p.id !== targetPawn.id) {
-        this.beams.push({
-          x1: pc.x,
-          y1: pc.y,
-          x2: queenCenter.x,
-          y2: queenCenter.y,
-          color: '#facc15',
-          width: 6,
-          life: 0.45,
-          maxLife: 0.45,
-          isLightning: true
-        });
-      }
-      this.spawnParticles(pc.x, pc.y, '#facc15', 16);
-    }
+      this.spawnParticles(pc.x, pc.y, '#facc15', 14);
+      return {
+        x: pc.x,
+        y: pc.y,
+        col: p.col,
+        row: p.row,
+        idx
+      };
+    });
 
-    // Remove the other 4 Pawns in the line
+    // Remove the other 4 Pawns and hide the anchor Pawn while the Full-Screen Cinematic plays
     const removeIds = new Set(pawnsToMerge.filter(p => p.id !== targetPawn.id).map(p => p.id));
     this.pieces = this.pieces.filter(p => !removeIds.has(p.id));
+    targetPawn.inMergeCinematic = true;
 
-    // Transform the anchor Pawn into an Ascended Sovereign Queen with bonus Royal Aegis Shield!
-    const queenDef = window.CHESS_DATA.PIECES.queen;
-    targetPawn.type = 'queen';
-    targetPawn.maxHp = Math.round(queenDef.maxHp * 1.45); // 780 HP Ascended Queen!
-    targetPawn.hp = targetPawn.maxHp;
-    targetPawn.shieldHp = 300;
-    targetPawn.attackTimer = 0.25;
-    targetPawn.moveCd = 0;
-    targetPawn.hexTimer = 0;
+    window.RoyalAudio.playChessMove(true);
+    this.screenShake = 0.25;
 
-    // Holy Convergence Shockwave damages and pushes back nearby undead
-    this.spawnShockwave(queenCenter.x, queenCenter.y, 18, 195, '#facc15');
-    for (const enemy of this.enemies) {
-      const dist = Math.hypot(enemy.colPos - (targetPawn.col + 0.5), enemy.row - targetPawn.row);
-      if (dist <= 2.6) {
-        this.damageEnemy(enemy, 135, true, dist);
-        enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 0.85);
-      }
-    }
-
-    this.selectedBoardPiece = targetPawn;
-    window.RoyalAudio.playPromotion();
-    this.screenShake = 0.42;
-    this.score += 275;
-
-    this.addFloatingText(
-      '👑 اندماج سطر الجنود -> الوزير الملكي!',
-      queenCenter.x,
-      queenCenter.y - 26,
-      '#fef08a',
-      true
-    );
-    this.announceBanner(
-      '👑 اندماج سطر الجنود إلى وزير!',
-      '5 Phalanx Pawns Merged into an Ascended Sovereign Queen (+300 Shield)!'
-    );
+    this.mergeCinematic = {
+      elapsed: 0,
+      duration: 1.95,
+      climaxTriggered: false,
+      targetPawn,
+      targetCol: targetPawn.col,
+      targetRow: targetPawn.row,
+      targetX: queenCenter.x,
+      targetY: queenCenter.y,
+      sources
+    };
 
     this.recalculateSynergies();
     this.updateHUD();
     return true;
+  }
+
+  updateMergeCinematic(rawDt) {
+    const mc = this.mergeCinematic;
+    if (!mc) return;
+
+    mc.elapsed += rawDt;
+    const prog = Math.min(1, mc.elapsed / mc.duration);
+
+    // At 55% of the cinematic, the 5 flying Pawns collide at the center and ascend into the Sovereign Queen!
+    if (prog >= 0.55 && !mc.climaxTriggered) {
+      mc.climaxTriggered = true;
+      const targetPawn = mc.targetPawn;
+      const queenDef = window.CHESS_DATA.PIECES.queen;
+
+      if (targetPawn) {
+        targetPawn.inMergeCinematic = false;
+        targetPawn.type = 'queen';
+        targetPawn.maxHp = Math.round(queenDef.maxHp * 1.45); // 780 HP Ascended Queen!
+        targetPawn.hp = targetPawn.maxHp;
+        targetPawn.shieldHp = 300;
+        targetPawn.attackTimer = 0.2;
+        targetPawn.moveCd = 0;
+        targetPawn.hexTimer = 0;
+        this.selectedBoardPiece = targetPawn;
+      }
+
+      // Triple Golden Shockwave & Undead Repulsion
+      this.spawnShockwave(mc.targetX, mc.targetY, 16, 240, '#fef08a');
+      this.spawnShockwave(mc.targetX, mc.targetY, 10, 165, '#facc15');
+      this.spawnParticles(mc.targetX, mc.targetY, '#facc15', 36);
+
+      for (const enemy of this.enemies) {
+        const dist = Math.hypot(enemy.colPos - (mc.targetCol + 0.5), enemy.row - mc.targetRow);
+        if (dist <= 3.2) {
+          this.damageEnemy(enemy, 145, true, dist);
+          enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 1.05);
+        }
+      }
+
+      window.RoyalAudio.playPromotion();
+      this.screenShake = 0.55;
+      this.score += 300;
+
+      this.addFloatingText(
+        '👑 ارتقاء ملكي -> الوزير المتوّج!',
+        mc.targetX,
+        mc.targetY - 30,
+        '#fef08a',
+        true
+      );
+      this.recalculateSynergies();
+      this.updateHUD();
+    }
+
+    if (mc.elapsed >= mc.duration) {
+      if (mc.targetPawn) mc.targetPawn.inMergeCinematic = false;
+      this.mergeCinematic = null;
+      this.recalculateSynergies();
+      this.updateHUD();
+    }
   }
 
   tryPromotePawn(pawn) {
@@ -970,6 +1009,7 @@ class RoyalGambitGame {
     this.batteryLinks = [];
     this.pawnChainLinks = [];
     this.readyPawnLines = [];
+    this.mergeCinematic = null;
 
     for (const p of this.pieces) {
       p.buffedByKing = false;
@@ -1069,10 +1109,8 @@ class RoyalGambitGame {
         break;
 
       case 'pawn':
-        // Pure Frontline Defender: Close-quarters Shield Bash (col+1, row) & Diagonal Capture Counter (col+1, row±1)
+        // Pure Frontline Shield Pusher: Physical Shield Shove directly in front (col+1, row)
         addSq(col + 1, row, false);
-        addSq(col + 1, row - 1, true);
-        addSq(col + 1, row + 1, true);
         break;
 
       case 'rook':
@@ -1132,7 +1170,11 @@ class RoyalGambitGame {
     this.lastTimestamp = timestamp;
 
     if (!this.paused && !this.gameOver) {
-      const dt = rawDt * this.gameSpeed;
+      if (this.mergeCinematic) {
+        this.updateMergeCinematic(rawDt);
+      }
+      const simSpeed = this.mergeCinematic ? 0.12 : this.gameSpeed;
+      const dt = rawDt * simSpeed;
       this.update(dt);
     }
 
@@ -1314,7 +1356,9 @@ class RoyalGambitGame {
 
   updatePieces(dt) {
     for (const piece of this.pieces) {
+      if (piece.inMergeCinematic) continue;
       if (piece.recoilTimer > 0) piece.recoilTimer = Math.max(0, piece.recoilTimer - dt);
+      if (piece.shoveTimer > 0) piece.shoveTimer = Math.max(0, piece.shoveTimer - dt);
       if (piece.moveAnimTimer > 0) piece.moveAnimTimer = Math.max(0, piece.moveAnimTimer - dt);
       if (piece.moveCd > 0) piece.moveCd = Math.max(0, piece.moveCd - dt);
       if (piece.hexTimer > 0) piece.hexTimer = Math.max(0, piece.hexTimer - dt);
@@ -1360,53 +1404,29 @@ class RoyalGambitGame {
       }
 
       case 'pawn': {
-        // Balanced Frontline Phalanx Defender (NO ranged projectiles!)
-        // 1. Authentic Chess Forward-Diagonal Capture Counter-Strike (+1 col, ±1 row)
-        const diagTargets = this.enemies.filter(
-          e =>
-            Math.abs(Math.round(e.row) - piece.row) === 1 &&
-            Math.abs(e.colPos - (piece.col + 1.4)) <= 0.85
-        );
-        if (diagTargets.length > 0) {
-          const target = diagTargets[0];
-          const tx = this.renderer.boardLeft + target.colPos * this.renderer.tileSize;
-          const ty = this.renderer.boardTop + (target.row + 0.5) * this.renderer.tileSize;
-
-          this.beams.push({
-            x1: center.x,
-            y1: center.y,
-            x2: tx,
-            y2: ty,
-            color: '#facc15',
-            width: 3.5,
-            life: 0.2,
-            maxLife: 0.2
-          });
-          this.damageEnemy(target, def.diagDamage * totalMult, true, 1.1);
-          this.addFloatingText('🛡 صدّ قطري!', tx, ty - 16, '#fde047', false);
-          piece.xp = Math.min(100, piece.xp + 20);
-          piece.shieldHp = Math.min(100, piece.shieldHp + 10);
-          piece.recoilTimer = 0.16;
-          window.RoyalAudio.playAttack('pawn');
-          return true;
-        }
-
-        // 2. Light Close-Quarters Shield Nudge against enemies chewing directly on the Pawn
+        // Pure Physical Shield Pusher (NO lasers, NO beams, NO projectiles!)
         const meleeEnemies = this.enemies.filter(
           e =>
             Math.round(e.row) === piece.row &&
-            e.colPos >= piece.col &&
-            e.colPos <= piece.col + 1.25
+            e.colPos >= piece.col - 0.15 &&
+            e.colPos <= piece.col + 1.38
         );
         if (meleeEnemies.length === 0) return false;
 
-        this.spawnShockwave(center.x + 12, center.y, 6, 36, '#38bdf8');
+        // Forward physical shield lunge + dust & shockwave
+        piece.shoveTimer = 0.30;
+        this.spawnShockwave(center.x + 18, center.y, 8, 42, '#38bdf8');
+        this.spawnParticles(center.x + 22, center.y, '#38bdf8', 10);
+
         for (const target of meleeEnemies) {
           this.damageEnemy(target, def.damage * totalMult, false, 0.8);
-          target.colPos = Math.min(this.cols + 0.2, target.colPos + 0.07);
+          // Physically shove enemies backward down the rank!
+          target.colPos = Math.min(this.cols + 0.2, target.colPos + 0.42);
+          target.slowTimer = Math.max(target.slowTimer, 0.85);
         }
-        piece.xp = Math.min(100, piece.xp + 12);
-        piece.recoilTimer = 0.16;
+
+        this.addFloatingText('🛡 دفع!', center.x + 18, center.y - 18, '#7dd3fc', false);
+        piece.xp = Math.min(100, piece.xp + 14);
         window.RoyalAudio.playAttack('pawn');
         return true;
       }
@@ -2308,7 +2328,6 @@ class RoyalGambitGame {
               break;
             case 'pawn':
               if (dr === 0 && dc === 1) cls += ' attack-sq';
-              else if (dc === 1 && Math.abs(dr) === 1) cls += ' crit-sq';
               break;
             case 'rook':
               if (dc === 0 || dr === 0) cls += ' attack-sq';
@@ -2474,6 +2493,14 @@ class RoyalGambitGame {
         this.waveSpawnQueue.length === 0 &&
         (this.currentAct.isEndless || this.waveIndex < this.currentAct.waves.length);
       callWaveBtn.disabled = !canCall;
+    }
+
+    // Floating On-Screen Cinematic Merge CTA Button
+    const mergeCtaBtn = document.getElementById('screenMergeCtaBtn');
+    if (mergeCtaBtn) {
+      const showMergeCta =
+        Boolean(this.readyPawnLines && this.readyPawnLines.length > 0) && !this.mergeCinematic;
+      mergeCtaBtn.classList.toggle('hidden', !showMergeCta);
     }
 
     // Active Synergies Row
