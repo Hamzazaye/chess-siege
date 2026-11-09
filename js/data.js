@@ -30,26 +30,27 @@ const CHESS_PIECES = {
 
   pawn: {
     id: 'pawn',
-    name: 'Vanguard Pawn',
-    arabicTitle: 'جندي الطليعة',
-    chessTitle: 'Frontline Halberdier',
+    name: 'Phalanx Shield-Pawn',
+    arabicTitle: 'الجندي المدرع',
+    chessTitle: 'Frontline Bulwark Defender',
     hotkey: '2',
     symbol: '♟',
-    cost: 75,
-    cooldown: 4.5,
-    moveCooldown: 6.5,
-    maxHp: 480,
-    attackInterval: 1.4,
-    damage: 28,
-    diagDamage: 58, // Authentic chess diagonal capture crit!
-    promoteCost: 125, // Mana required to crown a 100-XP Pawn!
+    cost: 60,
+    cooldown: 3.2,
+    moveCooldown: 5.5,
+    maxHp: 1150,
+    startingShield: 160,
+    attackInterval: 1.6,
+    damage: 34, // Close-quarters shield bash only (never shoots ranged bullets!)
+    diagDamage: 68, // Authentic chess close-range diagonal capture counter-strike
+    promoteCost: 125,
     accentColor: '#38bdf8',
     secondaryColor: '#0284c7',
-    roleBadge: 'ASSAULT • PROMOTES',
-    chessRule: 'Advances 1 File • Diagonal Capture Crit • At 100 XP + 125 Mana: Crowns into Queen/Knight!',
+    roleBadge: 'DEFENDER • LINE MERGE → ♛',
+    chessRule: 'Pure Stalwart Defender (No Ranged Shots) • High HP + Shield Regen • Complete a 5-Pawn Line to Merge into a Queen!',
     description:
-      'Fires disciplined Halberd Bolts (3.5-square range) AND unleashes lethal Critical Slashes on its two forward-diagonal capture squares (+1 file, ±1 rank). At 100 XP, click to pay 125 Mana and Crown it!',
-    attackPatternText: 'Forward Lane Bolt (3.5 sq) + Forward-Diagonal Capture Crit.',
+      'Unbreakable frontline Phalanx Defender with 1,150 HP + regenerating Aegis Shield. Does not shoot ranged projectiles — instead holds the rank like a fortress wall, bashes adjacent biters, and strikes adjacent diagonals (+1, ±1). Align 5 Pawns in a row or column to MERGE them into a Sovereign Queen!',
+    attackPatternText: 'Fortress Shield Wall + Adjacent Melee Bash + 5-Pawn Line Merge → Queen.',
     movePatternType: 'pawn_move'
   },
 
@@ -431,12 +432,12 @@ const CAMPAIGN_ACTS = [
 ];
 
 const CHESS_TIPS = [
-  'BALANCE NOTE: Sovereign Queens (Max 2) require true Line-of-Sight within 3.5 squares and are hunted by Shadow-Knight Assassins!',
-  'PAWN CORONATION: When a Pawn reaches 100% XP, a Golden Crown appears — click it (125 Mana) to Promote it into a Queen or Knight!',
-  'ANTI-ASSASSIN TIP: Shadow-Knight Assassins take 45% less damage from afar. Block them with Aegis Rooks or Tempest Knight L-Slams!',
+  'PAWN-LINE MERGE (دمج سطر الجنود): Align 5 Phalanx Pawns in the same column or row, then click the Golden Crown [M] to fuse them into a Sovereign Queen!',
+  'PHALANX DEFENDER: The Phalanx Pawn does not shoot projectiles — it holds the line with 1,150 HP, regenerating Aegis shields, and close-quarters shield bashes!',
+  'BALANCE NOTE: Sovereign Queens require true Line-of-Sight within 3.5 squares and are hunted by Shadow-Knight Assassins!',
   'ROYAL BATTERY: Align an Aegis Rook, Radiant Bishop, or Sovereign Queen on the same line for a +30% Damage Golden Battery!',
   'HEX CLEANSE: Necro-Bishops curse your highest-cost pieces (-40% speed). Place a Radiant Bishop on their diagonal to cleanse them!',
-  'CASTLING: Place an Arcane King and Aegis Rook in the same Rank or File, then click CASTLE to swap them and shield the entire lane!'
+  'CASTLING: Place an Arcane King and Aegis Rook in the same Rank or Column, then click CASTLE to swap them and shield the entire lane!'
 ];
 
 window.CHESS_DATA = {

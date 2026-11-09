@@ -87,23 +87,31 @@ class RoyalSpriteAtlas {
       c.height = 160;
       const ctx = c.getContext('2d');
 
-      const grad = ctx.createRadialGradient(80, 65, 10, 80, 80, 120);
+      const grad = ctx.createRadialGradient(72, 56, 8, 80, 80, 128);
       if (isLight) {
-        grad.addColorStop(0, '#434d6e');
-        grad.addColorStop(0.55, '#2d354f');
-        grad.addColorStop(1, '#1e2438');
+        grad.addColorStop(0, '#515e86');
+        grad.addColorStop(0.5, '#35405e');
+        grad.addColorStop(1, '#21283d');
       } else {
-        grad.addColorStop(0, '#1e243a');
-        grad.addColorStop(0.6, '#121626');
-        grad.addColorStop(1, '#090c15');
+        grad.addColorStop(0, '#222942');
+        grad.addColorStop(0.55, '#13182a');
+        grad.addColorStop(1, '#080b14');
       }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 160, 160);
 
-      // Subtle marble veins
-      ctx.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.065)' : 'rgba(148, 163, 184, 0.04)';
-      ctx.lineWidth = 1.2;
-      for (let i = 0; i < 5; i++) {
+      // Diagonal specular marble sheen
+      const sheen = ctx.createLinearGradient(0, 0, 160, 160);
+      sheen.addColorStop(0, isLight ? 'rgba(254, 240, 138, 0.12)' : 'rgba(56, 189, 248, 0.06)');
+      sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+      sheen.addColorStop(1, 'rgba(0, 0, 0, 0.28)');
+      ctx.fillStyle = sheen;
+      ctx.fillRect(0, 0, 160, 160);
+
+      // Subtle marble & gold-leaf veins
+      ctx.strokeStyle = isLight ? 'rgba(254, 240, 138, 0.085)' : 'rgba(148, 163, 184, 0.05)';
+      ctx.lineWidth = 1.3;
+      for (let i = 0; i < 6; i++) {
         ctx.beginPath();
         ctx.moveTo((i * 37) % 160, 0);
         ctx.bezierCurveTo(
@@ -117,11 +125,23 @@ class RoyalSpriteAtlas {
         ctx.stroke();
       }
 
+      // Sacred Geometry Center Filigree Medallion
+      ctx.save();
+      ctx.translate(80, 80);
+      ctx.strokeStyle = isLight ? 'rgba(250, 204, 21, 0.14)' : 'rgba(56, 189, 248, 0.09)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 38, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.rotate(Math.PI / 4);
+      ctx.strokeRect(-22, -22, 44, 44);
+      ctx.restore();
+
       // Ornate corner gold filigree brackets
-      ctx.strokeStyle = isLight ? 'rgba(250, 204, 21, 0.26)' : 'rgba(56, 189, 248, 0.16)';
-      ctx.lineWidth = 1.5;
-      const m = 8;
-      const len = 15;
+      ctx.strokeStyle = isLight ? 'rgba(250, 204, 21, 0.34)' : 'rgba(56, 189, 248, 0.22)';
+      ctx.lineWidth = 1.6;
+      const m = 7;
+      const len = 16;
       ctx.beginPath();
       ctx.moveTo(m, m + len);
       ctx.lineTo(m, m);
@@ -137,9 +157,21 @@ class RoyalSpriteAtlas {
       ctx.lineTo(160 - m, 160 - m - len);
       ctx.stroke();
 
-      ctx.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(1.5, 1.5, 157, 157);
+      // 3D Beveled Top-Left Highlight & Bottom-Right Shadow
+      ctx.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.09)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(1, 159);
+      ctx.lineTo(1, 1);
+      ctx.lineTo(159, 1);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.beginPath();
+      ctx.moveTo(159, 1);
+      ctx.lineTo(159, 159);
+      ctx.lineTo(1, 159);
+      ctx.stroke();
 
       return c;
     };
@@ -313,14 +345,25 @@ class RoyalSpriteAtlas {
           ${commonDefs}
           <g filter="url(#dropGlow)">
             ${pedestal('#38bdf8')}
-            <path d="M66,152 C70,116 80,96 84,82 L116,82 C120,96 130,116 134,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <path d="M62,92 Q100,106 138,92 L128,78 Q100,88 72,78 Z" fill="url(#goldGrad)" stroke="#fef08a" stroke-width="1.5"/>
-            <circle cx="100" cy="56" r="24" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <path d="M84,54 L100,60 L116,54 L112,62 L100,66 L88,62 Z" fill="#38bdf8"/>
-            <circle cx="100" cy="28" r="6" fill="url(#goldGrad)"/>
-            <path d="M136,156 L146,34" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round"/>
-            <path d="M146,38 L172,52 L158,76 L143,66 Z" fill="url(#cyanGem)" stroke="#e0f2fe" stroke-width="2"/>
-            <polygon points="100,100 109,114 100,128 91,114" fill="url(#cyanGem)" stroke="#fef08a" stroke-width="1.5"/>
+            <!-- Phalanx Guardian Flowing Azure Cape -->
+            <path d="M52,82 L38,154 L76,148 L92,82 Z" fill="#0c4a6e" stroke="url(#goldGrad)" stroke-width="2"/>
+            <!-- Heavy Ivory & Gold Plate Cuirass -->
+            <path d="M58,152 C62,114 72,92 78,78 L112,78 C118,92 126,114 130,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
+            <!-- Layered Gold Pauldrons -->
+            <path d="M50,90 Q95,106 136,90 L124,74 Q95,86 62,74 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.8"/>
+            <!-- Crowned Pawn Great-Helm with Glowing Visor -->
+            <circle cx="94" cy="52" r="24" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <path d="M76,50 L94,57 L112,50 L108,60 L94,65 L80,60 Z" fill="#38bdf8"/>
+            <path d="M80,32 L88,20 L94,28 L100,20 L108,32 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.2"/>
+            <circle cx="94" cy="16" r="5" fill="#38bdf8" stroke="#fef9c3" stroke-width="1.5"/>
+            <!-- Colossal Imperial Fortress Tower Shield (Held Forward Facing Right!) -->
+            <path d="M104,44 L164,34 L170,116 L136,162 L102,138 Z" fill="url(#obsidianBase)" stroke="url(#goldGrad)" stroke-width="4.5"/>
+            <path d="M112,52 L156,44 L160,112 L136,148 L110,130 Z" fill="#0c4a6e" stroke="#38bdf8" stroke-width="2"/>
+            <!-- Shield Golden Cross & Starburst Aegis Core -->
+            <line x1="136" y1="48" x2="136" y2="146" stroke="url(#goldGrad)" stroke-width="4"/>
+            <line x1="112" y1="94" x2="160" y2="90" stroke="url(#goldGrad)" stroke-width="4"/>
+            <polygon points="136,70 150,92 136,114 122,92" fill="url(#cyanGem)" stroke="#fef9c3" stroke-width="2"/>
+            <circle cx="136" cy="92" r="6" fill="#ffffff"/>
           </g>
         </svg>
       `,

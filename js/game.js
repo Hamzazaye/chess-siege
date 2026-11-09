@@ -9,7 +9,7 @@
 class RoyalGambitGame {
   constructor() {
     this.canvas = document.getElementById('battleCanvas');
-    this.cols = 8;
+    this.cols = 10;
     this.rows = 5;
 
     this.actIndex = 0;
@@ -31,12 +31,14 @@ class RoyalGambitGame {
     this.enemies = [];
     this.projectiles = [];
     this.beams = [];
+    this.shockwaves = [];
     this.particles = [];
     this.manaOrbs = [];
     this.floatingTexts = [];
     this.chariots = [];
     this.batteryLinks = [];
     this.pawnChainLinks = [];
+    this.readyPawnLines = [];
 
     this.selectedDeckPieceId = 'pawn';
     this.selectedBoardPiece = null;
@@ -83,11 +85,13 @@ class RoyalGambitGame {
     this.enemies = [];
     this.projectiles = [];
     this.beams = [];
+    this.shockwaves = [];
     this.particles = [];
     this.manaOrbs = [];
     this.floatingTexts = [];
     this.batteryLinks = [];
     this.pawnChainLinks = [];
+    this.readyPawnLines = [];
 
     this.selectedBoardPiece = null;
     this.shovelMode = false;
@@ -188,6 +192,8 @@ class RoyalGambitGame {
         if (pieceKeys[idx]) {
           this.selectDeckPiece(pieceKeys[idx]);
         }
+      } else if (key === 'm') {
+        this.tryMergePawnLine(this.selectedBoardPiece);
       } else if (key === 's' || key === 'x') {
         this.toggleShovel();
       } else if (key === ' ') {
@@ -254,10 +260,10 @@ class RoyalGambitGame {
       (this.currentAct.isEndless || this.waveIndex < this.currentAct.waves.length);
     if (!canCall) return;
 
-    this.mana += 15;
+    this.mana += 35;
     window.RoyalAudio.playManaCollect();
     this.addFloatingText(
-      '+15☀ EARLY WAVE BONUS!',
+      '+35☀ EARLY WAVE BONUS!',
       this.renderer.width * 0.5,
       this.renderer.boardTop + 24,
       '#fef08a',
@@ -276,6 +282,12 @@ class RoyalGambitGame {
       }
       this.shovelMode = false;
       this.updateHUD();
+      return;
+    }
+
+    // One-click merge if clicking a Pawn that belongs to a ready 5-Pawn Line!
+    if (existing && existing.type === 'pawn' && existing.inReadyPawnLine) {
+      this.tryMergePawnLine(existing);
       return;
     }
 
@@ -396,7 +408,7 @@ class RoyalGambitGame {
       row,
       hp: def.maxHp,
       maxHp: def.maxHp,
-      shieldHp: 0,
+      shieldHp: def.startingShield || 0,
       attackTimer: isFreeStarter ? 2.5 : def.attackInterval * 0.5,
       moveCd: 0,
       xp: 0,
@@ -409,7 +421,8 @@ class RoyalGambitGame {
       buffedByKing: false,
       buffedByChalice: false,
       inBattery: false,
-      inPawnChain: false
+      inPawnChain: false,
+      inReadyPawnLine: false
     };
     this.pieces.push(piece);
     return piece;
@@ -578,13 +591,14 @@ class RoyalGambitGame {
       for (const enemy of this.enemies) {
         if (Math.round(enemy.row) === piece.row || Math.round(enemy.row) === rook.row) {
           this.damageEnemy(enemy, 85, true, 1.0);
-          enemy.colPos = Math.min(8.2, enemy.colPos + 0.95);
+          enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 0.95);
         }
       }
 
       window.RoyalAudio.playCastling();
       this.screenShake = 0.32;
       const newCenter = this.renderer.tileCenter(piece.col, piece.row);
+      this.spawnShockwave(newCenter.x, newCenter.y, 14, 150, '#facc15');
       this.addFloatingText('🏰 تبييت ملكي! +درع ذهبي!', newCenter.x, newCenter.y - 18, '#facc15', true);
       this.spawnParticles(newCenter.x, newCenter.y, '#facc15', 24);
       this.recalculateSynergies();
@@ -605,6 +619,7 @@ class RoyalGambitGame {
 
     if (piece.type === 'knight') {
       this.screenShake = 0.25;
+      this.spawnShockwave(newCenter.x, newCenter.y, 12, 125, '#c084fc');
       this.spawnParticles(newCenter.x, newCenter.y, '#a855f7', 20);
       this.addFloatingText('⚡ KNIGHT LEAP SLAM!', newCenter.x, newCenter.y - 18, '#c084fc', true);
       for (const enemy of this.enemies) {
@@ -614,7 +629,7 @@ class RoyalGambitGame {
         ) {
           this.damageEnemy(enemy, 75, true, 1.0);
           enemy.slowTimer = Math.max(enemy.slowTimer, 2.2);
-          enemy.colPos = Math.min(8.2, enemy.colPos + 0.45);
+          enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 0.45);
         }
       }
     } else if (piece.type === 'rook') {
@@ -623,7 +638,7 @@ class RoyalGambitGame {
       for (const enemy of this.enemies) {
         if (Math.round(enemy.row) === piece.row && Math.abs(enemy.colPos - (piece.col + 0.5)) <= 1.2) {
           this.damageEnemy(enemy, 80, false, 1.0);
-          enemy.colPos = Math.min(8.2, enemy.colPos + 0.65);
+          enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 0.65);
         }
       }
     } else if (piece.type === 'pawn' && move.isDiagonalCapture) {
@@ -635,7 +650,7 @@ class RoyalGambitGame {
           this.damageEnemy(enemy, 95, true, 1.0);
         }
       }
-    } else if (piece.type === 'pawn' && piece.col >= 6) {
+    } else if (piece.type === 'pawn' && piece.col >= this.cols - 2) {
       piece.xp = Math.min(100, piece.xp + 35);
     }
 
@@ -664,8 +679,100 @@ class RoyalGambitGame {
     }
   }
 
+  // Merge a complete 5-Pawn Line (Column or Row) into an Ascended Sovereign Queen! (دمج سطر جنود لوزير)
+  tryMergePawnLine(anchorPawn = null) {
+    if (!this.readyPawnLines || this.readyPawnLines.length === 0) return false;
+
+    let chosenLine = this.readyPawnLines[0];
+    if (anchorPawn) {
+      const match = this.readyPawnLines.find(line =>
+        line.pawns.some(p => p.id === anchorPawn.id)
+      );
+      if (match) chosenLine = match;
+    }
+
+    const pawnsToMerge = chosenLine.pawns.slice(0, 5);
+    if (pawnsToMerge.length < 5) return false;
+
+    const targetPawn =
+      anchorPawn && pawnsToMerge.some(p => p.id === anchorPawn.id)
+        ? anchorPawn
+        : pawnsToMerge[Math.floor(pawnsToMerge.length / 2)];
+
+    const queenCenter = this.renderer.tileCenter(targetPawn.col, targetPawn.row);
+
+    // Draw 5 Golden Convergence Lightning Beams from every Pawn in the line into the new Queen!
+    for (const p of pawnsToMerge) {
+      const pc = this.renderer.tileCenter(p.col, p.row);
+      if (p.id !== targetPawn.id) {
+        this.beams.push({
+          x1: pc.x,
+          y1: pc.y,
+          x2: queenCenter.x,
+          y2: queenCenter.y,
+          color: '#facc15',
+          width: 6,
+          life: 0.45,
+          maxLife: 0.45,
+          isLightning: true
+        });
+      }
+      this.spawnParticles(pc.x, pc.y, '#facc15', 16);
+    }
+
+    // Remove the other 4 Pawns in the line
+    const removeIds = new Set(pawnsToMerge.filter(p => p.id !== targetPawn.id).map(p => p.id));
+    this.pieces = this.pieces.filter(p => !removeIds.has(p.id));
+
+    // Transform the anchor Pawn into an Ascended Sovereign Queen with bonus Royal Aegis Shield!
+    const queenDef = window.CHESS_DATA.PIECES.queen;
+    targetPawn.type = 'queen';
+    targetPawn.maxHp = Math.round(queenDef.maxHp * 1.45); // 780 HP Ascended Queen!
+    targetPawn.hp = targetPawn.maxHp;
+    targetPawn.shieldHp = 300;
+    targetPawn.attackTimer = 0.25;
+    targetPawn.moveCd = 0;
+    targetPawn.hexTimer = 0;
+
+    // Holy Convergence Shockwave damages and pushes back nearby undead
+    this.spawnShockwave(queenCenter.x, queenCenter.y, 18, 195, '#facc15');
+    for (const enemy of this.enemies) {
+      const dist = Math.hypot(enemy.colPos - (targetPawn.col + 0.5), enemy.row - targetPawn.row);
+      if (dist <= 2.6) {
+        this.damageEnemy(enemy, 135, true, dist);
+        enemy.colPos = Math.min(this.cols + 0.2, enemy.colPos + 0.85);
+      }
+    }
+
+    this.selectedBoardPiece = targetPawn;
+    window.RoyalAudio.playPromotion();
+    this.screenShake = 0.42;
+    this.score += 275;
+
+    this.addFloatingText(
+      '👑 اندماج سطر الجنود -> الوزير الملكي!',
+      queenCenter.x,
+      queenCenter.y - 26,
+      '#fef08a',
+      true
+    );
+    this.announceBanner(
+      '👑 اندماج سطر الجنود إلى وزير!',
+      '5 Phalanx Pawns Merged into an Ascended Sovereign Queen (+300 Shield)!'
+    );
+
+    this.recalculateSynergies();
+    this.updateHUD();
+    return true;
+  }
+
   tryPromotePawn(pawn) {
-    if (!pawn || pawn.type !== 'pawn' || pawn.xp < 100) return;
+    if (!pawn || pawn.type !== 'pawn') return;
+    if (pawn.inReadyPawnLine) {
+      this.tryMergePawnLine(pawn);
+      return;
+    }
+    if (pawn.xp < 100) return;
 
     const promoteCost = window.CHESS_DATA.PIECES.pawn.promoteCost || 125;
     const center = this.renderer.tileCenter(pawn.col, pawn.row);
@@ -691,6 +798,7 @@ class RoyalGambitGame {
 
     window.RoyalAudio.playPromotion();
     this.screenShake = 0.3;
+    this.spawnShockwave(center.x, center.y, 12, 130, '#facc15');
     this.spawnParticles(center.x, center.y, '#facc15', 28);
     this.addFloatingText(
       targetType === 'queen'
@@ -770,12 +878,14 @@ class RoyalGambitGame {
   recalculateSynergies() {
     this.batteryLinks = [];
     this.pawnChainLinks = [];
+    this.readyPawnLines = [];
 
     for (const p of this.pieces) {
       p.buffedByKing = false;
       p.buffedByChalice = false;
       p.inBattery = false;
       p.inPawnChain = false;
+      p.inReadyPawnLine = false;
     }
 
     for (let i = 0; i < this.pieces.length; i++) {
@@ -824,6 +934,29 @@ class RoyalGambitGame {
         }
       }
     }
+
+    // Check Vertical Columns (5 Pawns across all 5 Ranks in column c)
+    const allPawns = this.pieces.filter(p => p.type === 'pawn');
+    for (let c = 0; c < this.cols; c++) {
+      const colPawns = allPawns.filter(p => p.col === c).sort((a, b) => a.row - b.row);
+      if (colPawns.length >= 5) {
+        this.readyPawnLines.push({ kind: 'col', index: c, pawns: colPawns.slice(0, 5) });
+        colPawns.slice(0, 5).forEach(p => {
+          p.inReadyPawnLine = true;
+        });
+      }
+    }
+
+    // Check Horizontal Rows (5+ Pawns in the same Rank r)
+    for (let r = 0; r < this.rows; r++) {
+      const rowPawns = allPawns.filter(p => p.row === r).sort((a, b) => a.col - b.col);
+      if (rowPawns.length >= 5) {
+        this.readyPawnLines.push({ kind: 'row', index: r, pawns: rowPawns.slice(0, 5) });
+        rowPawns.slice(0, 5).forEach(p => {
+          p.inReadyPawnLine = true;
+        });
+      }
+    }
   }
 
   getAttackVisionSquares(pieceType, col, row) {
@@ -845,7 +978,8 @@ class RoyalGambitGame {
         break;
 
       case 'pawn':
-        for (let step = 1; step <= 3; step++) addSq(col + step, row, false);
+        // Pure Frontline Defender: Close-quarters Shield Bash (col+1, row) & Diagonal Capture Counter (col+1, row±1)
+        addSq(col + 1, row, false);
         addSq(col + 1, row - 1, true);
         addSq(col + 1, row + 1, true);
         break;
@@ -927,7 +1061,7 @@ class RoyalGambitGame {
     this.skyManaTimer -= dt;
     if (this.skyManaTimer <= 0) {
       this.skyManaTimer = this.currentAct.skyDropInterval || 6.8;
-      const randCol = 1 + Math.floor(Math.random() * 6);
+      const randCol = 1 + Math.floor(Math.random() * (this.cols - 2));
       const randRow = Math.floor(Math.random() * this.rows);
       const target = this.renderer.tileCenter(randCol, randRow);
       this.spawnManaOrb(target.x, 18, target.y, 25);
@@ -1068,7 +1202,7 @@ class RoyalGambitGame {
       id: this.entityIdCounter++,
       type,
       row,
-      colPos: 7.95 + Math.random() * 0.25,
+      colPos: this.cols - 0.05 + Math.random() * 0.25,
       hp: Math.round(def.maxHp * scale),
       maxHp: Math.round(def.maxHp * scale),
       shieldHp: Math.round(def.shieldHp * scale),
@@ -1094,7 +1228,16 @@ class RoyalGambitGame {
       if (piece.moveCd > 0) piece.moveCd = Math.max(0, piece.moveCd - dt);
       if (piece.hexTimer > 0) piece.hexTimer = Math.max(0, piece.hexTimer - dt);
 
-      if (piece.inPawnChain && piece.hp < piece.maxHp) {
+      // Phalanx Shield-Pawn Defender passive self-repair & Aegis Shield regeneration!
+      if (piece.type === 'pawn') {
+        const hpRegen = piece.inPawnChain || piece.inReadyPawnLine ? 22 : 12;
+        if (piece.hp < piece.maxHp) {
+          piece.hp = Math.min(piece.maxHp, piece.hp + hpRegen * dt);
+        }
+        if (piece.shieldHp < 220) {
+          piece.shieldHp = Math.min(220, piece.shieldHp + 10 * dt);
+        }
+      } else if (piece.inPawnChain && piece.hp < piece.maxHp) {
         piece.hp = Math.min(piece.maxHp, piece.hp + 7 * dt);
       }
 
@@ -1126,10 +1269,12 @@ class RoyalGambitGame {
       }
 
       case 'pawn': {
+        // Pure Stalwart Phalanx Defender (NO ranged projectiles!)
+        // 1. Authentic Chess Forward-Diagonal Capture Counter-Strike (+1 col, ±1 row)
         const diagTargets = this.enemies.filter(
           e =>
             Math.abs(Math.round(e.row) - piece.row) === 1 &&
-            Math.abs(e.colPos - (piece.col + 1.5)) <= 0.9
+            Math.abs(e.colPos - (piece.col + 1.4)) <= 0.85
         );
         if (diagTargets.length > 0) {
           const target = diagTargets[0];
@@ -1143,38 +1288,34 @@ class RoyalGambitGame {
             y2: ty,
             color: '#facc15',
             width: 4,
-            life: 0.22,
-            maxLife: 0.22
+            life: 0.2,
+            maxLife: 0.2
           });
-          this.damageEnemy(target, def.diagDamage * totalMult, true, 1.2);
-          this.addFloatingText('⚔ PAWN CAPTURE CRIT!', tx, ty - 16, '#fde047', false);
+          this.damageEnemy(target, def.diagDamage * totalMult, true, 1.1);
+          this.addFloatingText('🛡 ضربة قطرية مدافعة!', tx, ty - 16, '#fde047', false);
           piece.xp = Math.min(100, piece.xp + 22);
-          piece.recoilTimer = 0.18;
+          piece.shieldHp = Math.min(240, piece.shieldHp + 30);
+          piece.recoilTimer = 0.16;
           window.RoyalAudio.playAttack('pawn');
           return true;
         }
 
-        const laneEnemy = this.enemies.find(
+        // 2. Close-Quarters Phalanx Shield Bash against enemies chewing directly on or right in front of the Pawn
+        const meleeEnemies = this.enemies.filter(
           e =>
             Math.round(e.row) === piece.row &&
             e.colPos >= piece.col &&
-            e.colPos - piece.col <= 3.8
+            e.colPos <= piece.col + 1.35
         );
-        if (!laneEnemy) return false;
+        if (meleeEnemies.length === 0) return false;
 
-        this.projectiles.push({
-          x: center.x + 18,
-          y: center.y,
-          vx: 500,
-          vy: 0,
-          row: piece.row,
-          originCol: piece.col,
-          damage: def.damage * totalMult,
-          color: '#38bdf8',
-          radius: 6,
-          fromPawn: piece
-        });
-        piece.xp = Math.min(100, piece.xp + 6);
+        this.spawnShockwave(center.x + 14, center.y, 8, 48, '#38bdf8');
+        for (const target of meleeEnemies) {
+          this.damageEnemy(target, def.damage * totalMult, false, 0.8);
+          target.colPos = Math.min(this.cols + 0.2, target.colPos + 0.24);
+        }
+        piece.shieldHp = Math.min(240, piece.shieldHp + 28);
+        piece.xp = Math.min(100, piece.xp + 12);
         piece.recoilTimer = 0.16;
         window.RoyalAudio.playAttack('pawn');
         return true;
@@ -1362,10 +1503,11 @@ class RoyalGambitGame {
         );
         if (nearby.length === 0) return false;
 
+        this.spawnShockwave(center.x, center.y, 10, 95, '#fb7185');
         this.spawnParticles(center.x, center.y, '#fb7185', 16);
         for (const e of nearby) {
           this.damageEnemy(e, def.damage * totalMult, true, 1.2);
-          e.colPos = Math.min(8.2, e.colPos + 0.25);
+          e.colPos = Math.min(this.cols + 0.2, e.colPos + 0.25);
         }
         piece.recoilTimer = 0.18;
         window.RoyalAudio.playAttack('king');
@@ -1486,7 +1628,7 @@ class RoyalGambitGame {
         }
       }
 
-      if (e.type === 'necro' && !blockingPiece && e.colPos <= 6.8 && e.colPos >= 2.0) {
+      if (e.type === 'necro' && !blockingPiece && e.colPos <= this.cols - 1.2 && e.colPos >= 2.0) {
         e.rangedTimer -= dt;
         if (e.rangedTimer <= 0) {
           e.rangedTimer = 2.8;
@@ -1579,7 +1721,7 @@ class RoyalGambitGame {
   damagePiece(piece, amount) {
     let dmg = amount;
     if (piece.buffedByKing) dmg *= 0.75;
-    if (piece.inPawnChain) dmg *= 0.75;
+    if (piece.inPawnChain || piece.inReadyPawnLine) dmg *= 0.72;
 
     if (piece.shieldHp > 0) {
       const absorbed = Math.min(piece.shieldHp, dmg);
@@ -1734,6 +1876,11 @@ class RoyalGambitGame {
       if (this.beams[i].life <= 0) this.beams.splice(i, 1);
     }
 
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      this.shockwaves[i].life -= dt;
+      if (this.shockwaves[i].life <= 0) this.shockwaves.splice(i, 1);
+    }
+
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx * dt;
@@ -1772,6 +1919,18 @@ class RoyalGambitGame {
       ft.life -= dt;
       if (ft.life <= 0) this.floatingTexts.splice(i, 1);
     }
+  }
+
+  spawnShockwave(x, y, startR = 10, endR = 90, color = '#facc15') {
+    this.shockwaves.push({
+      x,
+      y,
+      startR,
+      endR,
+      color,
+      life: 0.38,
+      maxLife: 0.38
+    });
   }
 
   spawnParticles(x, y, color, count = 12) {
@@ -2028,7 +2187,7 @@ class RoyalGambitGame {
               if (Math.abs(dc) <= 1 && Math.abs(dr) <= 1) cls += ' attack-sq';
               break;
             case 'pawn':
-              if (dr === 0 && dc > 0) cls += ' attack-sq';
+              if (dr === 0 && dc === 1) cls += ' attack-sq';
               else if (dc === 1 && Math.abs(dr) === 1) cls += ' crit-sq';
               break;
             case 'rook':
@@ -2077,18 +2236,38 @@ class RoyalGambitGame {
       portraitEl.setAttribute('src', url);
     }
 
+    const readyLinesCount = this.readyPawnLines ? this.readyPawnLines.length : 0;
+
     if (boardPiece) {
       const coord = this.renderer.algebraicLabel(boardPiece.col, boardPiece.row);
       nameEl.textContent = `${def.arabicTitle || def.name} [${coord.toUpperCase()}]`;
-      const extraXp = boardPiece.type === 'pawn' ? ` • XP ${Math.floor(boardPiece.xp)}%` : '';
-      statsEl.textContent = `HP ${Math.ceil(boardPiece.hp)}/${boardPiece.maxHp}${extraXp}`;
+
+      let extraInfo = '';
+      if (boardPiece.type === 'pawn') {
+        const colPawns = this.pieces.filter(p => p.type === 'pawn' && p.col === boardPiece.col).length;
+        const rowPawns = this.pieces.filter(p => p.type === 'pawn' && p.row === boardPiece.row).length;
+        const bestLine = Math.max(colPawns, rowPawns);
+        extraInfo = ` • سطر ${bestLine}/5 • XP ${Math.floor(boardPiece.xp)}%`;
+      }
+      const shieldTxt = boardPiece.shieldHp > 0 ? ` (+${Math.ceil(boardPiece.shieldHp)}🛡)` : '';
+      statsEl.textContent = `HP ${Math.ceil(boardPiece.hp)}/${boardPiece.maxHp}${shieldTxt}${extraInfo}`;
       ruleEl.textContent = def.chessRule;
 
       // Render context-sensitive one-click action buttons when a board piece is selected
-      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}`;
+      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}-${readyLinesCount}`;
       if (this.lastInspectedKey !== key) {
         this.lastInspectedKey = key;
         actionsEl.innerHTML = '';
+
+        // 0. One-click 5-Pawn Line Merge into Sovereign Queen! (دمج سطر جنود لوزير)
+        if (readyLinesCount > 0) {
+          const mergeBtn = document.createElement('button');
+          mergeBtn.type = 'button';
+          mergeBtn.className = 'quick-action-btn';
+          mergeBtn.textContent = '👑 دمج سطر الجنود -> وزير [M]';
+          mergeBtn.addEventListener('click', () => this.tryMergePawnLine(boardPiece));
+          actionsEl.appendChild(mergeBtn);
+        }
 
         // 1. One-click Pawn Promotion button!
         if (boardPiece.type === 'pawn') {
@@ -2123,11 +2302,21 @@ class RoyalGambitGame {
       }
     } else {
       nameEl.textContent = `${def.arabicTitle || ''} • ${def.name}`;
-      statsEl.textContent = `HP ${def.maxHp} • DMG ${def.damage || def.manaYield} • ${def.cost}☀`;
+      const shieldInfo = def.startingShield ? ` (+${def.startingShield}🛡)` : '';
+      statsEl.textContent = `HP ${def.maxHp}${shieldInfo} • ${def.cost}☀`;
       ruleEl.textContent = def.chessRule;
-      if (this.lastInspectedKey !== `deck-${typeId}`) {
-        this.lastInspectedKey = `deck-${typeId}`;
+      const deckKey = `deck-${typeId}-${readyLinesCount}`;
+      if (this.lastInspectedKey !== deckKey) {
+        this.lastInspectedKey = deckKey;
         actionsEl.innerHTML = '';
+        if (readyLinesCount > 0) {
+          const mergeBtn = document.createElement('button');
+          mergeBtn.type = 'button';
+          mergeBtn.className = 'quick-action-btn';
+          mergeBtn.textContent = '👑 دمج سطر الجنود -> وزير [M]';
+          mergeBtn.addEventListener('click', () => this.tryMergePawnLine(null));
+          actionsEl.appendChild(mergeBtn);
+        }
       }
     }
   }
@@ -2171,6 +2360,11 @@ class RoyalGambitGame {
     const synRow = document.getElementById('activeSynergiesRow');
     if (synRow) {
       const pills = [];
+      if (this.readyPawnLines && this.readyPawnLines.length > 0) {
+        pills.push(
+          `<span class="synergy-pill">👑 سطر جنود مكتمل (${this.readyPawnLines.length}) — اضغط [M] للدمج إلى وزير!</span>`
+        );
+      }
       if (this.batteryLinks.length > 0) {
         pills.push(`<span class="synergy-pill">⚡ بطارية ملكية (${this.batteryLinks.length}) +30%</span>`);
       }

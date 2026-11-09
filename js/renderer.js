@@ -12,7 +12,7 @@ class RoyalBoardRenderer {
     this.ctx = canvas.getContext('2d');
     this.game = game;
 
-    this.cols = 8; // Files a - h
+    this.cols = 10; // Columns A - J (10x5 Grandmaster Grid)
     this.rows = 5; // Ranks 5 - 1
 
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -20,8 +20,19 @@ class RoyalBoardRenderer {
     this.height = 640;
     this.boardLeft = 118;
     this.boardTop = 54;
-    this.tileSize = 104;
+    this.tileSize = 92;
     this.chariotX = 58;
+
+    // Procedural Ambient Golden Dust Motes & Arcane Embers
+    this.ambientMotes = Array.from({ length: 34 }, (_, i) => ({
+      xFrac: (i * 0.173) % 1,
+      yFrac: (i * 0.291) % 1,
+      speedY: 8 + (i % 5) * 4,
+      driftX: 12 + (i % 4) * 5,
+      size: 1.4 + (i % 3) * 0.9,
+      phase: i * 1.3,
+      isGold: i % 3 !== 0
+    }));
 
     this.resize();
   }
@@ -41,15 +52,15 @@ class RoyalBoardRenderer {
     this.width = targetW;
     this.height = targetH;
 
-    // Fit 8x5 chessboard cleanly in the central cathedral courtyard between floating top & bottom HUD pods
-    const availW = this.width * 0.66;
+    // Fit 10x5 chessboard cleanly in the central cathedral courtyard between floating top & bottom HUD pods
+    const availW = this.width * 0.78;
     const availH = this.height - 196;
-    this.tileSize = Math.max(72, Math.floor(Math.min(availW / this.cols, availH / this.rows)));
+    this.tileSize = Math.max(60, Math.floor(Math.min(availW / this.cols, availH / this.rows)));
 
     const totalBoardW = this.tileSize * this.cols;
     const totalBoardH = this.tileSize * this.rows;
 
-    this.boardLeft = Math.floor((this.width - totalBoardW) * 0.51);
+    this.boardLeft = Math.floor((this.width - totalBoardW) * 0.52);
     this.boardTop = Math.floor((this.height - totalBoardH) * 0.46);
     this.chariotX = this.boardLeft - Math.floor(this.tileSize * 0.62);
   }
@@ -109,8 +120,10 @@ class RoyalBoardRenderer {
       }
     }
 
+    this.drawShockwaves(ctx);
     this.drawProjectilesAndBeams(ctx, timeSeconds);
     this.drawParticles(ctx, timeSeconds);
+    this.drawAmbientEmbers(ctx, timeSeconds);
     this.drawManaOrbs(ctx, timeSeconds);
     this.drawFloatingTexts(ctx, timeSeconds);
 
@@ -143,13 +156,13 @@ class RoyalBoardRenderer {
       const vig = ctx.createRadialGradient(
         this.width * 0.5,
         this.height * 0.5,
-        this.tileSize * 2.5,
+        this.tileSize * 2.8,
         this.width * 0.5,
         this.height * 0.5,
-        this.width * 0.72
+        this.width * 0.74
       );
-      vig.addColorStop(0, 'rgba(6, 9, 18, 0.16)');
-      vig.addColorStop(1, 'rgba(5, 7, 14, 0.65)');
+      vig.addColorStop(0, 'rgba(6, 9, 18, 0.14)');
+      vig.addColorStop(1, 'rgba(4, 6, 12, 0.68)');
       ctx.fillStyle = vig;
       ctx.fillRect(0, 0, this.width, this.height);
     } else {
@@ -168,6 +181,25 @@ class RoyalBoardRenderer {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
+    // Volumetric Cathedral God-Rays slanting across the Sanctum
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const rayX = this.boardLeft + i * this.tileSize * 3.1 + Math.sin(t * 0.4 + i) * 18;
+      const rayGrad = ctx.createLinearGradient(rayX - 80, 0, rayX + 180, this.height * 0.85);
+      rayGrad.addColorStop(0, 'rgba(254, 240, 138, 0.055)');
+      rayGrad.addColorStop(0.5, 'rgba(250, 204, 21, 0.025)');
+      rayGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(rayX - 60, 0);
+      ctx.lineTo(rayX + 70, 0);
+      ctx.lineTo(rayX + 260, this.height);
+      ctx.lineTo(rayX + 90, this.height);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
     // Sanctum Light & Graveyard Blight Ambient Pulses
     const leftGlow = ctx.createRadialGradient(
       this.boardLeft - 45,
@@ -175,9 +207,9 @@ class RoyalBoardRenderer {
       10,
       this.boardLeft - 45,
       this.height * 0.5,
-      this.tileSize * 2.6
+      this.tileSize * 2.8
     );
-    leftGlow.addColorStop(0, `rgba(250, 204, 21, ${0.15 + Math.sin(t * 2) * 0.04})`);
+    leftGlow.addColorStop(0, `rgba(250, 204, 21, ${0.16 + Math.sin(t * 2) * 0.04})`);
     leftGlow.addColorStop(1, 'rgba(250, 204, 21, 0)');
     ctx.fillStyle = leftGlow;
     ctx.fillRect(0, 0, this.width * 0.4, this.height);
@@ -188,17 +220,35 @@ class RoyalBoardRenderer {
       10,
       this.boardLeft + this.cols * this.tileSize + 45,
       this.height * 0.5,
-      this.tileSize * 2.6
+      this.tileSize * 2.8
     );
-    rightGlow.addColorStop(0, `rgba(16, 185, 129, ${0.17 + Math.cos(t * 2.2) * 0.05})`);
+    rightGlow.addColorStop(0, `rgba(16, 185, 129, ${0.18 + Math.cos(t * 2.2) * 0.05})`);
     rightGlow.addColorStop(1, 'rgba(16, 185, 129, 0)');
     ctx.fillStyle = rightGlow;
     ctx.fillRect(this.width * 0.55, 0, this.width * 0.45, this.height);
 
     ctx.fillStyle = theme.ambientGlow || 'rgba(56, 189, 248, 0.08)';
     ctx.beginPath();
-    ctx.arc(this.width * 0.5, this.height * 0.5, this.tileSize * 3.8, 0, Math.PI * 2);
+    ctx.arc(this.width * 0.5, this.height * 0.5, this.tileSize * 4.2, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  drawAmbientEmbers(ctx, t) {
+    ctx.save();
+    for (const m of this.ambientMotes) {
+      const y = (m.yFrac * this.height - ((t * m.speedY) % this.height) + this.height) % this.height;
+      const x =
+        (m.xFrac * this.width + Math.sin(t * 0.9 + m.phase) * m.driftX + this.width) % this.width;
+      const alpha = 0.25 + 0.25 * Math.sin(t * 2.4 + m.phase);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = m.isGold ? '#fef08a' : '#38bdf8';
+      ctx.shadowColor = m.isGold ? '#facc15' : '#38bdf8';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(x, y, m.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   drawBoard(ctx, t) {
@@ -207,52 +257,75 @@ class RoyalBoardRenderer {
     const boardW = this.cols * this.tileSize;
     const boardH = this.rows * this.tileSize;
 
-    // 3D Bevelled Royal Frame
+    // 1. Deep 3D Carved Obsidian Sanctuary Plinth
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    ctx.shadowBlur = 36;
-    ctx.shadowOffsetY = 14;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 42;
+    ctx.shadowOffsetY = 16;
 
-    const framePad = 12;
-    ctx.fillStyle = 'rgba(9, 13, 24, 0.9)';
+    const outerPad = 15;
+    const plinthGrad = ctx.createLinearGradient(
+      this.boardLeft,
+      this.boardTop - outerPad,
+      this.boardLeft,
+      this.boardTop + boardH + outerPad
+    );
+    plinthGrad.addColorStop(0, 'rgba(18, 25, 44, 0.96)');
+    plinthGrad.addColorStop(0.5, 'rgba(9, 13, 24, 0.96)');
+    plinthGrad.addColorStop(1, 'rgba(4, 6, 14, 0.98)');
+    ctx.fillStyle = plinthGrad;
     this.roundRect(
       ctx,
-      this.boardLeft - framePad,
-      this.boardTop - framePad,
-      boardW + framePad * 2,
-      boardH + framePad * 2,
+      this.boardLeft - outerPad,
+      this.boardTop - outerPad,
+      boardW + outerPad * 2,
+      boardH + outerPad * 2,
       14
     );
     ctx.fill();
     ctx.restore();
 
-    // Ornate Double Gold Frame Border
+    // 2. Ornate Double Forged-Gold Frame Border
+    ctx.save();
     ctx.strokeStyle = theme.borderGold || '#d4af37';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.8;
     this.roundRect(
       ctx,
-      this.boardLeft - 9,
-      this.boardTop - 9,
-      boardW + 18,
-      boardH + 18,
-      10
+      this.boardLeft - 11,
+      this.boardTop - 11,
+      boardW + 22,
+      boardH + 22,
+      11
     );
     ctx.stroke();
 
-    // Left Back-Rank Sentinel Sanctum Pedestal Lane
+    ctx.strokeStyle = 'rgba(254, 240, 138, 0.35)';
+    ctx.lineWidth = 1.2;
+    this.roundRect(
+      ctx,
+      this.boardLeft - 5,
+      this.boardTop - 5,
+      boardW + 10,
+      boardH + 10,
+      6
+    );
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Left Back-Rank Sentinel Sanctum Pedestal Lane
     const sentinelLaneLeft = this.chariotX - this.tileSize * 0.38;
-    const sentinelLaneW = this.boardLeft - sentinelLaneLeft - 11;
-    const laneGrad = ctx.createLinearGradient(sentinelLaneLeft, 0, this.boardLeft - 11, 0);
-    laneGrad.addColorStop(0, 'rgba(250, 204, 21, 0.22)');
-    laneGrad.addColorStop(1, 'rgba(15, 23, 42, 0.82)');
+    const sentinelLaneW = this.boardLeft - sentinelLaneLeft - 13;
+    const laneGrad = ctx.createLinearGradient(sentinelLaneLeft, 0, this.boardLeft - 13, 0);
+    laneGrad.addColorStop(0, 'rgba(250, 204, 21, 0.25)');
+    laneGrad.addColorStop(1, 'rgba(15, 23, 42, 0.88)');
     ctx.fillStyle = laneGrad;
     this.roundRect(ctx, sentinelLaneLeft, this.boardTop - 6, sentinelLaneW, boardH + 12, 10);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.62)';
+    ctx.lineWidth = 1.6;
     ctx.stroke();
 
-    // Draw 8x5 Veined Marble & Obsidian Chess Squares
+    // 4. Draw 10x5 Veined Marble & Obsidian Chess Squares
     const lightTile = window.RoyalSprites && window.RoyalSprites.tileTextures.light;
     const darkTile = window.RoyalSprites && window.RoyalSprites.tileTextures.dark;
 
@@ -263,7 +336,7 @@ class RoyalBoardRenderer {
         const isLight = (r + c) % 2 === 0;
 
         ctx.save();
-        ctx.globalAlpha = 0.88;
+        ctx.globalAlpha = 0.92;
         if (isLight && lightTile) {
           ctx.drawImage(lightTile, x, y, this.tileSize, this.tileSize);
         } else if (!isLight && darkTile) {
@@ -274,50 +347,111 @@ class RoyalBoardRenderer {
         }
         ctx.restore();
 
-        // Spawn warning zone on File H (col 7)
-        if (c === 7) {
+        // Spawn warning zone on the rightmost column (col 9 / J)
+        if (c === this.cols - 1) {
           const pulse = 0.08 + 0.04 * Math.sin(t * 2.5 + r);
           ctx.fillStyle = `rgba(244, 63, 94, ${pulse})`;
           ctx.fillRect(x, y, this.tileSize, this.tileSize);
         }
 
-        // Algebraic Coordinate watermark (a1..h5)
-        const coord = this.algebraicLabel(c, r);
-        ctx.font = '700 10px "JetBrains Mono", monospace';
-        ctx.fillStyle = isLight ? 'rgba(254, 240, 138, 0.42)' : 'rgba(148, 163, 184, 0.28)';
-        ctx.textAlign = 'left';
-        ctx.fillText(coord, x + 6, y + this.tileSize - 6);
+        // Algebraic Coordinate watermark (a1..j5)
+        if (this.game.showGridOverlay !== false) {
+          const coord = this.algebraicLabel(c, r);
+          ctx.font = '700 9.5px "JetBrains Mono", monospace';
+          ctx.fillStyle = isLight ? 'rgba(254, 240, 138, 0.44)' : 'rgba(148, 163, 184, 0.30)';
+          ctx.textAlign = 'left';
+          ctx.fillText(coord, x + 5, y + this.tileSize - 5);
+        }
       }
     }
 
-    // File Headers (A - H)
-    ctx.font = '800 11px "Orbitron", sans-serif';
-    ctx.fillStyle = '#fef08a';
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 4;
-    ctx.textAlign = 'center';
-    for (let c = 0; c < this.cols; c++) {
-      const fileChar = String.fromCharCode(65 + c);
-      const cx = this.boardLeft + (c + 0.5) * this.tileSize;
-      ctx.fillText(`FILE ${fileChar}`, cx, this.boardTop - 15);
+    // 5. 4 Animated Corner Royal Flame Braziers on the Board Frame
+    const corners = [
+      [this.boardLeft - 9, this.boardTop - 9],
+      [this.boardLeft + boardW + 9, this.boardTop - 9],
+      [this.boardLeft - 9, this.boardTop + boardH + 9],
+      [this.boardLeft + boardW + 9, this.boardTop + boardH + 9]
+    ];
+    for (let i = 0; i < corners.length; i++) {
+      const [bx, by] = corners[i];
+      const flicker = 1 + Math.sin(t * 8 + i * 1.7) * 0.16;
+      ctx.save();
+      const brazierGlow = ctx.createRadialGradient(bx, by, 2, bx, by, 18 * flicker);
+      brazierGlow.addColorStop(0, '#ffffff');
+      brazierGlow.addColorStop(0.35, '#facc15');
+      brazierGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
+      brazierGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = brazierGlow;
+      ctx.beginPath();
+      ctx.arc(bx, by, 18 * flicker, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#78350f';
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(bx, by, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     }
 
-    // Rank Headers (5 - 1)
+    // 6. Clean Royal Diamond Medallion Column Headers (A - J, without the word "FILE")
+    ctx.save();
+    for (let c = 0; c < this.cols; c++) {
+      const colChar = String.fromCharCode(65 + c);
+      const cx = this.boardLeft + (c + 0.5) * this.tileSize;
+      const cy = this.boardTop - 20;
+
+      // Subtle diamond crest behind letter
+      ctx.fillStyle = 'rgba(12, 18, 34, 0.88)';
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 10);
+      ctx.lineTo(cx + 11, cy);
+      ctx.lineTo(cx, cy + 10);
+      ctx.lineTo(cx - 11, cy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '800 10.5px "Orbitron", sans-serif';
+      ctx.fillStyle = '#fef08a';
+      ctx.textAlign = 'center';
+      ctx.fillText(colChar, cx, cy + 3.8);
+    }
+
+    // 7. Rank Headers (5 - 1) on the Left Sanctum Margin
     for (let r = 0; r < this.rows; r++) {
       const rankNum = 5 - r;
-      const cy = this.boardTop + (r + 0.5) * this.tileSize + 4;
-      ctx.fillText(`R${rankNum}`, sentinelLaneLeft - 14, cy);
+      const rx = sentinelLaneLeft - 15;
+      const ry = this.boardTop + (r + 0.5) * this.tileSize;
+
+      ctx.fillStyle = 'rgba(12, 18, 34, 0.88)';
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '800 10.5px "Orbitron", sans-serif';
+      ctx.fillStyle = '#fef08a';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${rankNum}`, rx, ry + 3.8);
     }
-    ctx.shadowBlur = 0;
+    ctx.restore();
   }
 
   drawSynergyLinks(ctx, t) {
+    // 1. Royal Battery Golden Links
     if (this.game.batteryLinks && this.game.batteryLinks.length > 0) {
       ctx.save();
       for (const link of this.game.batteryLinks) {
         const p1 = this.tileCenter(link.a.col, link.a.row);
         const p2 = this.tileCenter(link.b.col, link.b.row);
-        ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
         ctx.lineWidth = 3.5;
         ctx.setLineDash([8, 6]);
         ctx.lineDashOffset = -t * 28;
@@ -329,17 +463,67 @@ class RoyalBoardRenderer {
       ctx.restore();
     }
 
+    // 2. Diagonal Pawn Chain Links
     if (this.game.pawnChainLinks && this.game.pawnChainLinks.length > 0) {
       ctx.save();
       for (const link of this.game.pawnChainLinks) {
         const p1 = this.tileCenter(link.a.col, link.a.row);
         const p2 = this.tileCenter(link.b.col, link.b.row);
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 3. Ready 5-Pawn Line Convergence Beam (سطر جنود جاهز للدمج إلى وزير!)
+    if (this.game.readyPawnLines && this.game.readyPawnLines.length > 0) {
+      ctx.save();
+      for (const line of this.game.readyPawnLines) {
+        const first = this.tileCenter(line.pawns[0].col, line.pawns[0].row);
+        const last = this.tileCenter(
+          line.pawns[line.pawns.length - 1].col,
+          line.pawns[line.pawns.length - 1].row
+        );
+
+        // Glowing golden convergence conduit connecting all 5 Pawns in the line
+        ctx.strokeStyle = `rgba(250, 204, 21, ${0.75 + Math.sin(t * 7) * 0.22})`;
+        ctx.lineWidth = 7;
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.moveTo(first.x, first.y);
+        ctx.lineTo(last.x, last.y);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(first.x, first.y);
+        ctx.lineTo(last.x, last.y);
+        ctx.stroke();
+
+        // Floating Golden Merge Banner above the center Pawn of the line
+        const midPawn = line.pawns[Math.floor(line.pawns.length / 2)];
+        const midPt = this.tileCenter(midPawn.col, midPawn.row);
+        const bobY = midPt.y - this.tileSize * 0.56 + Math.sin(t * 6) * 3.5;
+
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = 'rgba(120, 53, 15, 0.95)';
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        this.roundRect(ctx, midPt.x - 76, bobY - 13, 152, 22, 11);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.font = '800 10.5px "Cairo", "Orbitron", sans-serif';
+        ctx.fillStyle = '#fef08a';
+        ctx.textAlign = 'center';
+        ctx.fillText('👑 اضغط لدمج السطر -> وزير [M]', midPt.x, bobY + 2);
       }
       ctx.restore();
     }
@@ -572,13 +756,39 @@ class RoyalBoardRenderer {
     ctx.save();
     ctx.translate(drawX + recoil, drawY);
 
-    // 1. Synergy / King Aura Ring under base
-    if (piece.buffedByKing || piece.inBattery || piece.inPawnChain) {
+    // 1. Synergy / King Aura / Ready Pawn-Line Merge Ring under base
+    if (piece.inReadyPawnLine) {
+      ctx.save();
+      ctx.strokeStyle = '#facc15';
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.22)';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.ellipse(0, this.tileSize * 0.25, this.tileSize * 0.42, this.tileSize * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (piece.buffedByKing || piece.inBattery || piece.inPawnChain) {
       ctx.strokeStyle = piece.inBattery ? '#facc15' : piece.buffedByKing ? '#f43f5e' : '#38bdf8';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.ellipse(0, this.tileSize * 0.25, this.tileSize * 0.38, this.tileSize * 0.16, 0, 0, Math.PI * 2);
       ctx.stroke();
+    }
+
+    // Phalanx Shield-Pawn Frontal Bastion Arc (Facing Right toward Undead!)
+    if (piece.type === 'pawn') {
+      ctx.save();
+      const arcPulse = 0.55 + Math.sin(t * 4 + piece.id) * 0.18;
+      ctx.strokeStyle = piece.inReadyPawnLine
+        ? `rgba(250, 204, 21, ${arcPulse + 0.25})`
+        : `rgba(56, 189, 248, ${arcPulse})`;
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.arc(6, -2, this.tileSize * 0.36, -Math.PI * 0.36, Math.PI * 0.36);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Hex Curse Ring
@@ -592,11 +802,12 @@ class RoyalBoardRenderer {
       ctx.setLineDash([]);
     }
 
-    // Castling Shield Bubble
+    // Castling / Phalanx Aegis Shield Bubble
     if (piece.shieldHp > 0) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
-      ctx.fillStyle = 'rgba(250, 204, 21, 0.14)';
+      const isPawnShield = piece.type === 'pawn';
+      ctx.strokeStyle = isPawnShield ? 'rgba(56, 189, 248, 0.72)' : 'rgba(250, 204, 21, 0.8)';
+      ctx.fillStyle = isPawnShield ? 'rgba(56, 189, 248, 0.10)' : 'rgba(250, 204, 21, 0.14)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, -4, this.tileSize * 0.4, 0, Math.PI * 2);
@@ -612,18 +823,26 @@ class RoyalBoardRenderer {
       ctx.drawImage(sprite, -spriteSize / 2, -spriteSize / 2 + bob - 4, spriteSize, spriteSize);
     }
 
-    // 3. Pawn Promotion XP Bar & Ready-to-Crown Golden Callout
+    // 3. Pawn XP / Line-Merge Status Bar
     if (piece.type === 'pawn') {
       const xpRatio = Math.min(1, piece.xp / 100);
       const barW = this.tileSize * 0.56;
       const barY = this.tileSize * 0.34;
       ctx.fillStyle = 'rgba(9, 13, 24, 0.9)';
       ctx.fillRect(-barW / 2, barY, barW, 5);
-      ctx.fillStyle = xpRatio >= 1 ? '#facc15' : '#38bdf8';
-      ctx.fillRect(-barW / 2, barY, barW * xpRatio, 5);
+      ctx.fillStyle = piece.inReadyPawnLine || xpRatio >= 1 ? '#facc15' : '#38bdf8';
+      ctx.fillRect(-barW / 2, barY, barW * (piece.inReadyPawnLine ? 1 : xpRatio), 5);
 
-      if (xpRatio >= 1) {
-        ctx.font = '800 9.5px "Orbitron", sans-serif';
+      if (piece.inReadyPawnLine) {
+        ctx.font = '800 9px "Orbitron", sans-serif';
+        ctx.fillStyle = '#fef08a';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.95)';
+        ctx.shadowBlur = 4;
+        ctx.fillText('👑 MERGE → ♛', 0, -this.tileSize * 0.41);
+        ctx.shadowBlur = 0;
+      } else if (xpRatio >= 1) {
+        ctx.font = '800 9px "Orbitron", sans-serif';
         ctx.fillStyle = '#fef08a';
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
@@ -633,17 +852,24 @@ class RoyalBoardRenderer {
       }
     }
 
-    // 4. Health Bar
-    if (piece.hp < piece.maxHp) {
+    // 4. Health + Shield Bar
+    if (piece.hp < piece.maxHp || piece.shieldHp > 0) {
       const hpRatio = Math.max(0, piece.hp / piece.maxHp);
       const barW = this.tileSize * 0.58;
-      const barY = -this.tileSize * 0.38;
-      ctx.fillStyle = 'rgba(9, 13, 24, 0.9)';
+      const barY = -this.tileSize * 0.36;
+      ctx.fillStyle = 'rgba(9, 13, 24, 0.92)';
       this.roundRect(ctx, -barW / 2, barY, barW, 6, 3);
       ctx.fill();
       ctx.fillStyle = hpRatio > 0.5 ? '#22c55e' : hpRatio > 0.25 ? '#f59e0b' : '#ef4444';
       this.roundRect(ctx, -barW / 2, barY, barW * hpRatio, 6, 3);
       ctx.fill();
+
+      if (piece.shieldHp > 0) {
+        const shRatio = Math.min(1, piece.shieldHp / 250);
+        ctx.fillStyle = '#38bdf8';
+        this.roundRect(ctx, -barW / 2, barY - 4, barW * shRatio, 3.2, 1.5);
+        ctx.fill();
+      }
     }
 
     // 5. Tactical Chess Move Ready Emerald Pip
@@ -774,15 +1000,35 @@ class RoyalBoardRenderer {
     ctx.restore();
   }
 
+  drawShockwaves(ctx) {
+    if (!this.game.shockwaves || this.game.shockwaves.length === 0) return;
+    for (const sw of this.game.shockwaves) {
+      const prog = 1 - sw.life / sw.maxLife;
+      const r = sw.startR + (sw.endR - sw.startR) * prog;
+      const alpha = Math.max(0, sw.life / sw.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.strokeStyle = sw.color || '#facc15';
+      ctx.lineWidth = 4 * (1 - prog * 0.5);
+      ctx.shadowColor = sw.color || '#facc15';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   drawProjectilesAndBeams(ctx) {
     for (const beam of this.game.beams) {
       const alpha = Math.max(0, beam.life / beam.maxLife);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = beam.color;
-      ctx.lineWidth = beam.width || 4;
+      ctx.lineWidth = (beam.width || 4) * 1.4;
       ctx.shadowColor = beam.color;
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = 16;
+      ctx.lineCap = 'round';
 
       ctx.beginPath();
       if (beam.isLightning) {
@@ -795,11 +1041,18 @@ class RoyalBoardRenderer {
           ctx.lineTo(jx, jy);
         }
         ctx.lineTo(beam.x2, beam.y2);
+        ctx.stroke();
       } else {
         ctx.moveTo(beam.x1, beam.y1);
         ctx.lineTo(beam.x2, beam.y2);
+        ctx.stroke();
+
+        // Inner white-gold bloom core
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1.5, (beam.width || 4) * 0.42);
+        ctx.shadowBlur = 4;
+        ctx.stroke();
       }
-      ctx.stroke();
       ctx.restore();
     }
 
