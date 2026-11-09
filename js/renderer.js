@@ -286,22 +286,39 @@ class RoyalBoardRenderer {
     const boardW = this.cols * this.tileSize;
     const boardH = this.rows * this.tileSize;
 
-    // 1. Deep 3D Carved Obsidian Sanctuary Plinth
+    // 1. Deep 3D Carved Cathedral Stone Sanctuary Plinth (#242733 -> #0D111B) + 3D Stepped Front Lip
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 42;
-    ctx.shadowOffsetY = 16;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+    ctx.shadowBlur = 46;
+    ctx.shadowOffsetY = 18;
 
     const outerPad = 15;
+    // 3D Front Elevation Thickness Lip below Rank 1
+    const frontLipH = 14;
+    const lipGrad = ctx.createLinearGradient(0, this.boardTop + boardH, 0, this.boardTop + boardH + outerPad + frontLipH);
+    lipGrad.addColorStop(0, '#242733');
+    lipGrad.addColorStop(0.5, '#15131C');
+    lipGrad.addColorStop(1, '#09080D');
+    ctx.fillStyle = lipGrad;
+    this.roundRect(
+      ctx,
+      this.boardLeft - outerPad,
+      this.boardTop - outerPad + frontLipH,
+      boardW + outerPad * 2,
+      boardH + outerPad * 2,
+      14
+    );
+    ctx.fill();
+
     const plinthGrad = ctx.createLinearGradient(
       this.boardLeft,
       this.boardTop - outerPad,
       this.boardLeft,
       this.boardTop + boardH + outerPad
     );
-    plinthGrad.addColorStop(0, 'rgba(18, 25, 44, 0.96)');
-    plinthGrad.addColorStop(0.5, 'rgba(9, 13, 24, 0.96)');
-    plinthGrad.addColorStop(1, 'rgba(4, 6, 14, 0.98)');
+    plinthGrad.addColorStop(0, '#2E3242');
+    plinthGrad.addColorStop(0.5, '#242733');
+    plinthGrad.addColorStop(1, '#141722');
     ctx.fillStyle = plinthGrad;
     this.roundRect(
       ctx,
@@ -314,9 +331,9 @@ class RoyalBoardRenderer {
     ctx.fill();
     ctx.restore();
 
-    // 2. Ornate Double Forged-Gold Frame Border
+    // 2. Ornate Double Sacred-Inlay Frame Border (#B58E48 & #FFF0B2 Specular)
     ctx.save();
-    ctx.strokeStyle = theme.borderGold || '#d4af37';
+    ctx.strokeStyle = '#B58E48';
     ctx.lineWidth = 2.8;
     this.roundRect(
       ctx,
@@ -328,7 +345,7 @@ class RoyalBoardRenderer {
     );
     ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(254, 240, 138, 0.35)';
+    ctx.strokeStyle = 'rgba(255, 240, 178, 0.42)';
     ctx.lineWidth = 1.2;
     this.roundRect(
       ctx,
@@ -376,18 +393,34 @@ class RoyalBoardRenderer {
         }
         ctx.restore();
 
-        // Spawn warning zone on the rightmost column (col 9 / J)
+        // Spawn danger corner brackets (#E34B61 — ChatGPT Readability Spec) on rightmost column (col 9 / J)
         if (c === this.cols - 1) {
-          const pulse = 0.08 + 0.04 * Math.sin(t * 2.5 + r);
-          ctx.fillStyle = `rgba(244, 63, 94, ${pulse})`;
-          ctx.fillRect(x, y, this.tileSize, this.tileSize);
+          const pulse = 0.45 + 0.25 * Math.sin(t * 2.8 + r);
+          ctx.strokeStyle = `rgba(227, 75, 97, ${pulse})`;
+          ctx.lineWidth = 2;
+          const b = 6;
+          const l = 12;
+          ctx.beginPath();
+          ctx.moveTo(x + b, y + b + l);
+          ctx.lineTo(x + b, y + b);
+          ctx.lineTo(x + b + l, y + b);
+          ctx.moveTo(x + this.tileSize - b - l, y + b);
+          ctx.lineTo(x + this.tileSize - b, y + b);
+          ctx.lineTo(x + this.tileSize - b, y + b + l);
+          ctx.moveTo(x + b, y + this.tileSize - b - l);
+          ctx.lineTo(x + b, y + this.tileSize - b);
+          ctx.lineTo(x + b + l, y + this.tileSize - b);
+          ctx.moveTo(x + this.tileSize - b - l, y + this.tileSize - b);
+          ctx.lineTo(x + this.tileSize - b, y + this.tileSize - b);
+          ctx.lineTo(x + this.tileSize - b, y + this.tileSize - b - l);
+          ctx.stroke();
         }
 
         // Algebraic Coordinate watermark (a1..j5)
         if (this.game.showGridOverlay !== false) {
           const coord = this.algebraicLabel(c, r);
           ctx.font = '700 9.5px "JetBrains Mono", monospace';
-          ctx.fillStyle = isLight ? 'rgba(254, 240, 138, 0.44)' : 'rgba(148, 163, 184, 0.30)';
+          ctx.fillStyle = isLight ? 'rgba(242, 232, 206, 0.55)' : 'rgba(184, 180, 175, 0.36)';
           ctx.textAlign = 'left';
           ctx.fillText(coord, x + 5, y + this.tileSize - 5);
         }
@@ -614,18 +647,24 @@ class RoyalBoardRenderer {
       const hy = this.boardTop + hover.row * this.tileSize;
 
       if (this.game.shovelMode) {
-        ctx.fillStyle = 'rgba(244, 63, 94, 0.34)';
-        ctx.fillRect(hx, hy, this.tileSize, this.tileSize);
-        ctx.strokeStyle = '#f43f5e';
+        ctx.fillStyle = 'rgba(227, 75, 97, 0.28)';
+        ctx.fillRect(hx + 2, hy + 2, this.tileSize - 4, this.tileSize - 4);
+        ctx.strokeStyle = '#E34B61';
         ctx.lineWidth = 2.5;
-        ctx.strokeRect(hx + 2, hy + 2, this.tileSize - 4, this.tileSize - 4);
+        ctx.strokeRect(hx + 3, hy + 3, this.tileSize - 6, this.tileSize - 6);
       } else if (selectedDeckId && !selectedBoardPiece) {
+        // Restrained Gold Edge along selected lane (ChatGPT Readability Spec)
+        const laneY = this.boardTop + hover.row * this.tileSize;
+        ctx.strokeStyle = 'rgba(181, 142, 72, 0.42)';
+        ctx.lineWidth = 1.6;
+        ctx.strokeRect(this.boardLeft + 1, laneY + 1, this.cols * this.tileSize - 2, this.tileSize - 2);
+
         const occupied = this.game.getPieceAt(hover.col, hover.row);
-        ctx.fillStyle = occupied ? 'rgba(244, 63, 94, 0.24)' : 'rgba(56, 189, 248, 0.22)';
-        ctx.fillRect(hx, hy, this.tileSize, this.tileSize);
-        ctx.strokeStyle = occupied ? '#f43f5e' : '#38bdf8';
-        ctx.lineWidth = 2.5;
-        ctx.strokeRect(hx + 2, hy + 2, this.tileSize - 4, this.tileSize - 4);
+        ctx.fillStyle = occupied ? 'rgba(227, 75, 97, 0.22)' : 'rgba(205, 238, 255, 0.16)';
+        ctx.fillRect(hx + 3, hy + 3, this.tileSize - 6, this.tileSize - 6);
+        ctx.strokeStyle = occupied ? '#E34B61' : '#CDEEFF';
+        ctx.lineWidth = 2.4;
+        ctx.strokeRect(hx + 4, hy + 4, this.tileSize - 8, this.tileSize - 8);
 
         if (!occupied) {
           this.highlightAttackSquares(ctx, selectedDeckId, hover.col, hover.row, t, 0.28);
@@ -786,6 +825,12 @@ class RoyalBoardRenderer {
 
     ctx.save();
     ctx.translate(drawX + recoil + shoveLunge, drawY);
+
+    // 0. Compact Contact Shadow Anchoring Piece to Stone Tile (ChatGPT Art Director Spec)
+    ctx.fillStyle = 'rgba(13, 17, 27, 0.72)';
+    ctx.beginPath();
+    ctx.ellipse(0, this.tileSize * 0.29, this.tileSize * 0.34, this.tileSize * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // 1. Synergy / King Aura / Ready Pawn-Line Merge Ring under base
     if (piece.inReadyPawnLine) {
@@ -949,6 +994,12 @@ class RoyalBoardRenderer {
 
     ctx.save();
     ctx.translate(x, y + jumpOffsetY);
+
+    // 0. Compact Contact Shadow Anchoring Undead to Stone Tile (ChatGPT Art Director Spec)
+    ctx.fillStyle = 'rgba(9, 8, 13, 0.76)';
+    ctx.beginPath();
+    ctx.ellipse(0, this.tileSize * 0.30, this.tileSize * (enemy.isBoss ? 0.44 : 0.32), this.tileSize * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // 1. Class-Specific Dynamic Ground & Trail Auras
     if (enemy.type === 'assassin') {

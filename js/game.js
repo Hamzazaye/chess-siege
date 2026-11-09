@@ -2552,8 +2552,16 @@ class RoyalGambitGame {
 
       const capEl = document.getElementById(`cap-${pid}`);
       if (capEl) {
-        capEl.textContent = def.maxCount ? `${count}/${def.maxCount}` : '';
-        capEl.classList.toggle('cap-full', atCap);
+        if (atCap) {
+          capEl.textContent = `MAX ${count}/${def.maxCount}`;
+        } else if (cd > 0) {
+          capEl.textContent = `${cd.toFixed(1)}s`;
+        } else if (this.mana < def.cost) {
+          capEl.textContent = 'نقص ☀';
+        } else {
+          capEl.textContent = def.maxCount ? `${count}/${def.maxCount}` : '';
+        }
+        capEl.classList.toggle('cap-full', atCap || cd > 0 || this.mana < def.cost);
       }
 
       const cdEl = document.getElementById(`cd-${pid}`);

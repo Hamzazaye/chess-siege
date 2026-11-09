@@ -1,11 +1,13 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (Ultra-Visual Edition)
+ * CROWN & BLIGHT: THE ROYAL GAMBIT (AAA Art Director Edition — ChatGPT Spec)
  * High-Definition 256x256 Multi-Layered Dark-Fantasy Sprite & Texture Atlas
- * Includes:
- *  - 7 Sanctified Ivory & Gold Royal Chess Pieces
- *  - Winged Golden Rook Sentinel (The Chess Back-Rank Sweep replacement for Lawnmowers)
- *  - 7 Hyper-Detailed Corrupted Obsidian Chess Undead Monsters
- *  - Veined Marble & Obsidian Board Tile Textures
+ *
+ * Art Direction Palette (ChatGPT Principal Art Director Spec):
+ *  - Royal Defenders: Sanctified Ivory (#F2E8CE -> #8C8276), Forged Gold (#FFF0B2 -> #C79A38),
+ *    Lapis Lazuli Inlay (#234DAB), Upper-Right Starlight Rim (#CDEEFF)
+ *  - Corrupted Ebony Undead: Polished Obsidian (#15131C -> #383342),
+ *    Necrotic Emerald (#39D98A / #126348), Specialist Crimson (#A5253D), Boss Hellfire (#FF742B)
+ *  - 10x5 Cathedral Board Tiles: Light Stone (#817D79), Dark Slate (#34323C), Grout (#201F28), Sacred Inlay (#B58E48)
  */
 
 class RoyalSpriteAtlas {
@@ -49,7 +51,7 @@ class RoyalSpriteAtlas {
   generateAllSprites() {
     this.generateBoardTileTextures();
 
-    // 1. Royal Chess Pieces
+    // 1. Royal Chess Pieces (Sanctified Ivory, Forged Gold, Lapis & Starlight Rim)
     const pieceSpecs = this.getPieceSVGDefinitions();
     Object.keys(pieceSpecs).forEach(key => {
       const svgStr = pieceSpecs[key];
@@ -60,13 +62,13 @@ class RoyalSpriteAtlas {
       this.pieceSprites[key] = img;
     });
 
-    // 2. Winged Golden Rook Sentinel (Back-Rank Guardian Statue)
+    // 2. Winged Golden Rook Sentinel (Back-Rank Guardian Automaton)
     const sentinelSvg = this.getWingedRookSentinelSVG();
     this.sentinelDataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(sentinelSvg.trim());
     this.sentinelSprite = new Image();
     this.sentinelSprite.src = this.sentinelDataUrl;
 
-    // 3. Hyper-Detailed Corrupted Ebony Chess Undead Monsters
+    // 3. Corrupted Ebony Chess Undead Bestiary (Obsidian, Necrotic Emerald, Crimson & Hellfire)
     const enemySpecs = this.getEnemySVGDefinitions();
     Object.keys(enemySpecs).forEach(key => {
       const svgStr = enemySpecs[key];
@@ -81,67 +83,74 @@ class RoyalSpriteAtlas {
   }
 
   generateBoardTileTextures() {
-    const createMarbleTile = isLight => {
+    // ChatGPT Art Director Spec:
+    // Light squares #817D79, Dark squares #34323C, Grout #201F28, Sacred Inlay #B58E48
+    const createCathedralTile = isLight => {
       const c = document.createElement('canvas');
       c.width = 160;
       c.height = 160;
       const ctx = c.getContext('2d');
 
-      const grad = ctx.createRadialGradient(72, 56, 8, 80, 80, 128);
+      // 1. Continuous Grout Boundary (#201F28)
+      ctx.fillStyle = '#201F28';
+      ctx.fillRect(0, 0, 160, 160);
+
+      // 2. Broad, Subdued Stone Surface Reflection (Upper-Left Key Light)
+      const grad = ctx.createRadialGradient(52, 44, 10, 80, 80, 132);
       if (isLight) {
-        grad.addColorStop(0, '#515e86');
-        grad.addColorStop(0.5, '#35405e');
-        grad.addColorStop(1, '#21283d');
+        grad.addColorStop(0, '#96918B');
+        grad.addColorStop(0.48, '#817D79');
+        grad.addColorStop(1, '#5E5A57');
       } else {
-        grad.addColorStop(0, '#222942');
-        grad.addColorStop(0.55, '#13182a');
-        grad.addColorStop(1, '#080b14');
+        grad.addColorStop(0, '#43414E');
+        grad.addColorStop(0.52, '#34323C');
+        grad.addColorStop(1, '#23222A');
       }
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 160, 160);
+      ctx.fillRect(2, 2, 156, 156);
 
-      // Diagonal specular marble sheen
+      // 3. Soft Diagonal Cathedral Specular Wash (kept below piece highlight intensity)
       const sheen = ctx.createLinearGradient(0, 0, 160, 160);
-      sheen.addColorStop(0, isLight ? 'rgba(254, 240, 138, 0.12)' : 'rgba(56, 189, 248, 0.06)');
+      sheen.addColorStop(0, isLight ? 'rgba(242, 232, 206, 0.14)' : 'rgba(72, 83, 101, 0.14)');
       sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
-      sheen.addColorStop(1, 'rgba(0, 0, 0, 0.28)');
+      sheen.addColorStop(1, 'rgba(13, 17, 27, 0.32)');
       ctx.fillStyle = sheen;
-      ctx.fillRect(0, 0, 160, 160);
+      ctx.fillRect(2, 2, 156, 156);
 
-      // Subtle marble & gold-leaf veins
-      ctx.strokeStyle = isLight ? 'rgba(254, 240, 138, 0.085)' : 'rgba(148, 163, 184, 0.05)';
-      ctx.lineWidth = 1.3;
-      for (let i = 0; i < 6; i++) {
+      // 4. Natural Weathered Limestone / Slate Veining
+      ctx.strokeStyle = isLight ? 'rgba(242, 232, 206, 0.11)' : 'rgba(21, 19, 28, 0.35)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 5; i++) {
         ctx.beginPath();
-        ctx.moveTo((i * 37) % 160, 0);
+        ctx.moveTo((i * 41) % 156 + 2, 2);
         ctx.bezierCurveTo(
-          40 + ((i * 29) % 80),
-          50,
-          20 + ((i * 53) % 110),
-          110,
-          (i * 43 + 60) % 160,
-          160
+          36 + ((i * 29) % 84),
+          52,
+          24 + ((i * 53) % 104),
+          108,
+          (i * 47 + 50) % 156 + 2,
+          158
         );
         ctx.stroke();
       }
 
-      // Sacred Geometry Center Filigree Medallion
+      // 5. Sacred Inlay (#B58E48) Filigree & Recessed Inner Bevel
       ctx.save();
       ctx.translate(80, 80);
-      ctx.strokeStyle = isLight ? 'rgba(250, 204, 21, 0.14)' : 'rgba(56, 189, 248, 0.09)';
+      ctx.strokeStyle = isLight ? 'rgba(181, 142, 72, 0.28)' : 'rgba(181, 142, 72, 0.16)';
       ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.arc(0, 0, 38, 0, Math.PI * 2);
+      ctx.arc(0, 0, 34, 0, Math.PI * 2);
       ctx.stroke();
       ctx.rotate(Math.PI / 4);
-      ctx.strokeRect(-22, -22, 44, 44);
+      ctx.strokeRect(-19, -19, 38, 38);
       ctx.restore();
 
-      // Ornate corner gold filigree brackets
-      ctx.strokeStyle = isLight ? 'rgba(250, 204, 21, 0.34)' : 'rgba(56, 189, 248, 0.22)';
-      ctx.lineWidth = 1.6;
+      // Corner Sacred Inlay Brackets (#B58E48)
+      ctx.strokeStyle = isLight ? 'rgba(181, 142, 72, 0.45)' : 'rgba(181, 142, 72, 0.28)';
+      ctx.lineWidth = 1.5;
       const m = 7;
-      const len = 16;
+      const len = 14;
       ctx.beginPath();
       ctx.moveTo(m, m + len);
       ctx.lineTo(m, m);
@@ -157,508 +166,544 @@ class RoyalSpriteAtlas {
       ctx.lineTo(160 - m, 160 - m - len);
       ctx.stroke();
 
-      // 3D Beveled Top-Left Highlight & Bottom-Right Shadow
-      ctx.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.09)';
-      ctx.lineWidth = 2;
+      // Upper-Left Specular Bevel & Lower-Right Grout Shadow
+      ctx.strokeStyle = isLight ? 'rgba(242, 232, 206, 0.26)' : 'rgba(205, 238, 255, 0.08)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(1, 159);
-      ctx.lineTo(1, 1);
-      ctx.lineTo(159, 1);
+      ctx.moveTo(2, 158);
+      ctx.lineTo(2, 2);
+      ctx.lineTo(158, 2);
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.strokeStyle = 'rgba(13, 17, 27, 0.65)';
       ctx.beginPath();
-      ctx.moveTo(159, 1);
-      ctx.lineTo(159, 159);
-      ctx.lineTo(1, 159);
+      ctx.moveTo(158, 2);
+      ctx.lineTo(158, 158);
+      ctx.lineTo(2, 158);
       ctx.stroke();
 
       return c;
     };
 
-    this.tileTextures.light = createMarbleTile(true);
-    this.tileTextures.dark = createMarbleTile(false);
+    this.tileTextures.light = createCathedralTile(true);
+    this.tileTextures.dark = createCathedralTile(false);
   }
 
-  // ULTRA-DETAILED Imperial Golden Winged Rook Sentinel (Celestial Chess Automaton)
+  // Winged Golden Rook Sentinel (Sanctified Ivory, Forged Gold #C79A38, Lapis #234DAB & Starlight #CDEEFF)
   getWingedRookSentinelSVG() {
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260">
         <defs>
-          <linearGradient id="impGold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="18%" stop-color="#fef08a"/>
-            <stop offset="45%" stop-color="#facc15"/>
-            <stop offset="78%" stop-color="#b45309"/>
-            <stop offset="100%" stop-color="#451a03"/>
+          <linearGradient id="forgedGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFF0B2"/>
+            <stop offset="28%" stop-color="#E5C158"/>
+            <stop offset="58%" stop-color="#C79A38"/>
+            <stop offset="100%" stop-color="#6E4F12"/>
           </linearGradient>
-          <linearGradient id="impGoldDark" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#fde047"/>
-            <stop offset="50%" stop-color="#ca8a04"/>
-            <stop offset="100%" stop-color="#713f12"/>
+          <linearGradient id="sanctifiedIvory" x1="15%" y1="10%" x2="85%" y2="90%">
+            <stop offset="0%" stop-color="#FFFDF7"/>
+            <stop offset="32%" stop-color="#F2E8CE"/>
+            <stop offset="72%" stop-color="#8C8276"/>
+            <stop offset="100%" stop-color="#4A433B"/>
           </linearGradient>
-          <linearGradient id="sapphirePlate" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#38bdf8"/>
-            <stop offset="35%" stop-color="#0284c7"/>
-            <stop offset="75%" stop-color="#1e3a8a"/>
-            <stop offset="100%" stop-color="#090d16"/>
+          <linearGradient id="lapisInlay" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4B7BE5"/>
+            <stop offset="45%" stop-color="#234DAB"/>
+            <stop offset="100%" stop-color="#0F2354"/>
           </linearGradient>
-          <linearGradient id="seraphFeather" x1="0%" y1="0%" x2="100%" y2="30%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="30%" stop-color="#fef08a"/>
-            <stop offset="70%" stop-color="#f59e0b"/>
-            <stop offset="100%" stop-color="#92400e"/>
-          </linearGradient>
-          <radialGradient id="celestialCore" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="35%" stop-color="#7dd3fc"/>
-            <stop offset="70%" stop-color="#0284c7"/>
-            <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+          <radialGradient id="starlightCore" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="45%" stop-color="#CDEEFF"/>
+            <stop offset="100%" stop-color="#234DAB" stop-opacity="0"/>
           </radialGradient>
           <filter id="sentinelShadow" x="-25%" y="-25%" width="150%" height="150%">
-            <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000000" flood-opacity="0.82"/>
+            <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#0D111B" flood-opacity="0.88"/>
           </filter>
         </defs>
 
         <g filter="url(#sentinelShadow)">
-          <!-- Radiant Halo Behind the Rook Crown -->
-          <circle cx="130" cy="88" r="64" fill="url(#celestialCore)" opacity="0.55"/>
-          <circle cx="130" cy="88" r="46" fill="none" stroke="url(#impGold)" stroke-width="2.5" stroke-dasharray="6 4"/>
+          <!-- Starlight Halo Behind the Rook Crown -->
+          <circle cx="130" cy="88" r="60" fill="url(#starlightCore)" opacity="0.6"/>
+          <circle cx="130" cy="88" r="45" fill="none" stroke="url(#forgedGold)" stroke-width="2.2" stroke-dasharray="6 4"/>
 
-          <!-- TIER 1: Upper Archangel Golden Pinion Feathers (Left & Right) -->
-          <path d="M92,112 C52,82 22,52 10,18 C38,26 68,44 96,72 Z" fill="url(#seraphFeather)" stroke="#fef9c3" stroke-width="2"/>
-          <path d="M168,112 C208,82 238,52 250,18 C222,26 192,44 164,72 Z" fill="url(#seraphFeather)" stroke="#fef9c3" stroke-width="2"/>
+          <!-- Confined Valkyrie Pinion Wings (Kept disciplined around Rook silhouette) -->
+          <path d="M92,110 C56,82 28,54 16,22 C44,30 70,48 96,74 Z" fill="url(#forgedGold)" stroke="#FFF0B2" stroke-width="2"/>
+          <path d="M168,110 C204,82 232,54 244,22 C216,30 190,48 164,74 Z" fill="url(#forgedGold)" stroke="#CDEEFF" stroke-width="2.2"/>
+          <path d="M90,126 C50,108 24,88 14,60 C44,68 70,80 94,100 Z" fill="url(#sanctifiedIvory)" stroke="url(#forgedGold)" stroke-width="2"/>
+          <path d="M170,126 C210,108 236,88 246,60 C216,68 190,80 166,100 Z" fill="url(#sanctifiedIvory)" stroke="#CDEEFF" stroke-width="2"/>
 
-          <!-- TIER 2: Mid Swept Golden Bladed Feathers -->
-          <path d="M90,126 C44,108 16,86 6,56 C38,64 68,78 94,98 Z" fill="url(#impGold)" stroke="#ffffff" stroke-width="2"/>
-          <path d="M170,126 C216,108 244,86 254,56 C222,64 192,78 166,98 Z" fill="url(#impGold)" stroke="#ffffff" stroke-width="2"/>
+          <!-- Shared Stepped Forged-Gold & Lapis Pedestal Base -->
+          <ellipse cx="130" cy="216" rx="64" ry="19" fill="#171C29" stroke="url(#forgedGold)" stroke-width="3.5"/>
+          <path d="M74,208 C74,190 186,190 186,208 L174,192 C174,180 86,180 86,192 Z" fill="url(#forgedGold)" stroke="#6E4F12" stroke-width="2"/>
+          <ellipse cx="130" cy="192" rx="46" ry="12" fill="url(#lapisInlay)" stroke="#FFF0B2" stroke-width="2.5"/>
 
-          <!-- TIER 3: Lower Valkyrie Shield-Feathers -->
-          <path d="M92,142 C52,136 26,124 14,98 C44,102 70,112 94,124 Z" fill="url(#impGoldDark)" stroke="#fef08a" stroke-width="1.8"/>
-          <path d="M168,142 C208,136 234,124 246,98 C216,102 190,112 166,124 Z" fill="url(#impGoldDark)" stroke="#fef08a" stroke-width="1.8"/>
+          <!-- Sculpted Sanctified Ivory Rook Tower Body with Upper-Right Starlight Rim -->
+          <path d="M86,192 L95,90 L165,90 L174,192 Z" fill="url(#sanctifiedIvory)" stroke="url(#forgedGold)" stroke-width="3"/>
+          <line x1="164" y1="92" x2="172" y2="188" stroke="#CDEEFF" stroke-width="2.5" stroke-linecap="round"/>
 
-          <!-- Cyan Energy Feather Ribs -->
-          <path d="M84,96 L28,42 M84,114 L24,76 M176,96 L232,42 M176,114 L236,76" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Central Lapis Lazuli Focal Inlay (#234DAB) -->
+          <path d="M104,100 L156,100 L160,182 L100,182 Z" fill="url(#lapisInlay)" stroke="url(#forgedGold)" stroke-width="2.2"/>
+          <rect x="89" y="162" width="82" height="10" rx="3" fill="url(#forgedGold)"/>
+          <rect x="93" y="122" width="74" height="9" rx="3" fill="url(#forgedGold)"/>
 
-          <!-- 3D Octagonal Royal Marble & Gold Pedestal -->
-          <ellipse cx="130" cy="216" rx="64" ry="20" fill="#090d16" stroke="url(#impGold)" stroke-width="4"/>
-          <path d="M74,208 C74,190 186,190 186,208 L174,192 C174,180 86,180 86,192 Z" fill="url(#impGold)" stroke="#451a03" stroke-width="2"/>
-          <ellipse cx="130" cy="192" rx="46" ry="13" fill="url(#sapphirePlate)" stroke="url(#impGold)" stroke-width="3"/>
+          <!-- Unmistakable 5-Merlon Chess Rook Battlement Crown -->
+          <path d="M78,92 L74,50 L92,50 L94,66 L108,66 L108,46 L124,46 L124,64 L136,64 L136,46 L152,46 L152,66 L166,66 L168,50 L186,50 L182,92 Z" fill="url(#sanctifiedIvory)" stroke="url(#forgedGold)" stroke-width="3"/>
+          <path d="M152,46 L168,50 L186,50 L182,90" fill="none" stroke="#CDEEFF" stroke-width="2.2"/>
 
-          <!-- Sculpted Imperial Chess Rook Tower Body -->
-          <path d="M86,192 L96,92 L164,92 L174,192 Z" fill="url(#impGold)" stroke="#ffffff" stroke-width="3"/>
-          <!-- Inner Lapis-Sapphire Armor Core -->
-          <path d="M98,98 L162,98 L166,184 L94,184 Z" fill="url(#sapphirePlate)" stroke="url(#impGold)" stroke-width="2.5"/>
-
-          <!-- Golden Cathedral Ribs & Buttresses on the Rook Body -->
-          <rect x="88" y="162" width="84" height="12" rx="4" fill="url(#impGold)" stroke="#713f12" stroke-width="1.5"/>
-          <rect x="92" y="122" width="76" height="10" rx="4" fill="url(#impGold)" stroke="#713f12" stroke-width="1.5"/>
-
-          <!-- Grand 5-Merlon Chess Rook Battlement Crown -->
-          <path d="M78,94 L72,50 L92,50 L94,68 L108,68 L108,46 L124,46 L124,66 L136,66 L136,46 L152,46 L152,68 L166,68 L168,50 L188,50 L182,94 Z" fill="url(#impGold)" stroke="#ffffff" stroke-width="3"/>
-
-          <!-- Levitating Sovereign Crown Finial Above Rook -->
-          <polygon points="130,12 142,32 130,28 118,32" fill="#fef08a" stroke="#ca8a04" stroke-width="1.5"/>
-          <circle cx="130" cy="34" r="6" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5"/>
-
-          <!-- Blazing Orthogonal Starburst Lance Core in Chest -->
-          <polygon points="130,104 148,142 130,180 112,142" fill="url(#impGold)" stroke="#ffffff" stroke-width="2"/>
-          <polygon points="96,142 130,128 178,142 130,156" fill="url(#impGold)" stroke="#ffffff" stroke-width="2"/>
-          <circle cx="130" cy="142" r="14" fill="url(#celestialCore)"/>
-          <circle cx="130" cy="142" r="7" fill="#ffffff"/>
+          <!-- Starlight Attack Origin Core -->
+          <polygon points="130,106 146,142 130,178 114,142" fill="url(#forgedGold)" stroke="#FFF0B2" stroke-width="1.8"/>
+          <circle cx="130" cy="142" r="10" fill="#CDEEFF" stroke="#FFFFFF" stroke-width="2"/>
         </g>
       </svg>
     `;
   }
 
   getPieceSVGDefinitions() {
+    // ChatGPT Art Director Spec Gradients & Shared Stepped Gold/Lapis Pedestal
     const commonDefs = `
       <defs>
+        <!-- Sanctified Ivory (#F2E8CE -> #8C8276) with Upper-Left Key Light -->
+        <linearGradient id="ivoryCyl" x1="12%" y1="8%" x2="88%" y2="92%">
+          <stop offset="0%" stop-color="#FFFDF8"/>
+          <stop offset="26%" stop-color="#F2E8CE"/>
+          <stop offset="68%" stop-color="#8C8276"/>
+          <stop offset="100%" stop-color="#4A443C"/>
+        </linearGradient>
+
+        <!-- Forged Gold (#FFF0B2 -> #C79A38) with Sharp Specular Band -->
         <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fef08a"/>
-          <stop offset="35%" stop-color="#facc15"/>
-          <stop offset="70%" stop-color="#ca8a04"/>
-          <stop offset="100%" stop-color="#713f12"/>
+          <stop offset="0%" stop-color="#FFF0B2"/>
+          <stop offset="22%" stop-color="#E5C058"/>
+          <stop offset="48%" stop-color="#C79A38"/>
+          <stop offset="78%" stop-color="#8F681E"/>
+          <stop offset="100%" stop-color="#52390B"/>
         </linearGradient>
-        <linearGradient id="ivoryArmor" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="30%" stop-color="#e2e8f0"/>
-          <stop offset="70%" stop-color="#64748b"/>
-          <stop offset="100%" stop-color="#1e293b"/>
+
+        <!-- Lapis Lazuli Focal Inlay (#234DAB) -->
+        <linearGradient id="lapisGrad" x1="15%" y1="15%" x2="85%" y2="85%">
+          <stop offset="0%" stop-color="#5B8DEF"/>
+          <stop offset="45%" stop-color="#234DAB"/>
+          <stop offset="100%" stop-color="#0E2252"/>
         </linearGradient>
-        <linearGradient id="obsidianBase" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#0f172a"/>
-          <stop offset="50%" stop-color="#334155"/>
-          <stop offset="100%" stop-color="#090d16"/>
-        </linearGradient>
-        <radialGradient id="cyanGem" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#e0f2fe"/>
-          <stop offset="45%" stop-color="#38bdf8"/>
-          <stop offset="100%" stop-color="#0369a1"/>
+
+        <!-- Starlight Gem (#CDEEFF) -->
+        <radialGradient id="starlightGem" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="48%" stop-color="#CDEEFF"/>
+          <stop offset="100%" stop-color="#234DAB"/>
         </radialGradient>
-        <radialGradient id="violetGem" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#f3e8ff"/>
-          <stop offset="45%" stop-color="#c084fc"/>
-          <stop offset="100%" stop-color="#6b21a8"/>
-        </radialGradient>
-        <radialGradient id="rubyGem" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#ffe4e6"/>
-          <stop offset="45%" stop-color="#fb7185"/>
-          <stop offset="100%" stop-color="#9f1239"/>
-        </radialGradient>
+
         <radialGradient id="sunHalo" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fef9c3"/>
-          <stop offset="45%" stop-color="#facc15" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#FFF0B2"/>
+          <stop offset="48%" stop-color="#C79A38" stop-opacity="0.75"/>
+          <stop offset="100%" stop-color="#C79A38" stop-opacity="0"/>
         </radialGradient>
+
         <filter id="dropGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.65"/>
+          <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#0D111B" flood-opacity="0.78"/>
         </filter>
       </defs>
     `;
 
-    const pedestal = trimColor => `
-      <ellipse cx="100" cy="172" rx="58" ry="18" fill="url(#obsidianBase)" stroke="${trimColor}" stroke-width="3.5"/>
-      <path d="M52,165 C52,150 148,150 148,165 L140,152 C140,142 60,142 60,152 Z" fill="url(#goldGrad)" stroke="#713f12" stroke-width="1.5"/>
-      <ellipse cx="100" cy="152" rx="42" ry="11" fill="#1e293b" stroke="url(#goldGrad)" stroke-width="2.5"/>
+    // Shared 3-Tier Stepped Forged-Gold & Lapis Pedestal Base (ChatGPT Upgrade #1)
+    const steppedPedestal = () => `
+      <!-- Tier 1: Lower Obsidian-Enamel Plinth Ring -->
+      <ellipse cx="100" cy="175" rx="58" ry="16" fill="#171C29" stroke="url(#goldGrad)" stroke-width="3.2"/>
+      <!-- Tier 2: Stepped Forged-Gold Moulding -->
+      <path d="M50,168 C50,152 150,152 150,168 L140,154 C140,143 60,143 60,154 Z" fill="url(#goldGrad)" stroke="#52390B" stroke-width="1.6"/>
+      <!-- Upper-Left Specular Band on Gold Base -->
+      <path d="M58,162 C78,154 122,154 142,162" fill="none" stroke="#FFF0B2" stroke-width="2" stroke-linecap="round"/>
+      <!-- Tier 3: Lapis Lazuli Collar Ring (#234DAB) -->
+      <ellipse cx="100" cy="153" rx="42" ry="10.5" fill="url(#lapisGrad)" stroke="#FFF0B2" stroke-width="2.2"/>
     `;
 
     return {
+      // 1. SUN-SPIRE CHALICE: Sanctified Ivory & Forged Gold Reliquary Goblet with Lapis Collar & Starlight Sun
       chalice: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#facc15')}
-            <path d="M84,150 L90,106 L110,106 L116,150 Z" fill="url(#goldGrad)" stroke="#fef08a" stroke-width="1.5"/>
-            <path d="M54,74 C54,116 82,122 100,122 C118,122 146,116 146,74 L132,74 C128,96 112,102 100,102 C88,102 72,96 68,74 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="2"/>
-            <ellipse cx="100" cy="74" rx="46" ry="12" fill="#78350f" stroke="url(#goldGrad)" stroke-width="3.5"/>
-            <circle cx="100" cy="112" r="9" fill="url(#cyanGem)" stroke="#fef08a" stroke-width="2"/>
-            <circle cx="100" cy="52" r="34" fill="url(#sunHalo)"/>
-            <circle cx="100" cy="52" r="17" fill="#fef9c3" stroke="#f59e0b" stroke-width="3"/>
-            <path d="M100,24 L104,36 L116,36 L106,44 L110,56 L100,48 L90,56 L94,44 L84,36 L96,36 Z" fill="#facc15"/>
+            ${steppedPedestal()}
+            <!-- Sculpted Ivory & Gold Stem -->
+            <path d="M84,151 L89,104 L111,104 L116,151 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+            <!-- Lapis Lazuli Node on Stem -->
+            <ellipse cx="100" cy="126" rx="16" ry="7" fill="url(#lapisGrad)" stroke="#FFF0B2" stroke-width="1.8"/>
+            <!-- Sculpted Sanctified Ivory & Gold Reliquary Bowl -->
+            <path d="M54,74 C54,116 80,122 100,122 C120,122 146,116 146,74 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <!-- Engraved Gold Filigree Band & Upper-Right Starlight Rim -->
+            <path d="M62,92 Q100,104 138,92" fill="none" stroke="url(#goldGrad)" stroke-width="3.5"/>
+            <path d="M144,76 C142,102 128,114 112,119" fill="none" stroke="#CDEEFF" stroke-width="2.4" stroke-linecap="round"/>
+            <ellipse cx="100" cy="74" rx="46" ry="11" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <!-- Radiant Starlight-Gold Mana Sun (Attack/Mana Origin) -->
+            <circle cx="100" cy="50" r="32" fill="url(#sunHalo)"/>
+            <circle cx="100" cy="50" r="16" fill="#FFF0B2" stroke="#C79A38" stroke-width="2.8"/>
+            <polygon points="100,24 105,40 122,45 105,50 100,66 95,50 78,45 95,40" fill="#FFFFFF"/>
           </g>
         </svg>
       `,
 
+      // 2. PHALANX SHIELD-PAWN: Unmistakable Classic Pawn Sphere Finial + Sanctified Ivory Body + Forged-Gold & Lapis Push-Shield
       pawn: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#38bdf8')}
-            <!-- Phalanx Guardian Flowing Azure Cape -->
-            <path d="M52,82 L38,154 L76,148 L92,82 Z" fill="#0c4a6e" stroke="url(#goldGrad)" stroke-width="2"/>
-            <!-- Heavy Ivory & Gold Plate Cuirass -->
-            <path d="M58,152 C62,114 72,92 78,78 L112,78 C118,92 126,114 130,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <!-- Layered Gold Pauldrons -->
-            <path d="M50,90 Q95,106 136,90 L124,74 Q95,86 62,74 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.8"/>
-            <!-- Crowned Pawn Great-Helm with Glowing Visor -->
-            <circle cx="94" cy="52" r="24" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.2"/>
-            <path d="M76,50 L94,57 L112,50 L108,60 L94,65 L80,60 Z" fill="#38bdf8"/>
-            <path d="M80,32 L88,20 L94,28 L100,20 L108,32 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.2"/>
-            <circle cx="94" cy="16" r="5" fill="#38bdf8" stroke="#fef9c3" stroke-width="1.5"/>
-            <!-- Colossal Imperial Fortress Tower Shield (Held Forward Facing Right!) -->
-            <path d="M104,44 L164,34 L170,116 L136,162 L102,138 Z" fill="url(#obsidianBase)" stroke="url(#goldGrad)" stroke-width="4.5"/>
-            <path d="M112,52 L156,44 L160,112 L136,148 L110,130 Z" fill="#0c4a6e" stroke="#38bdf8" stroke-width="2"/>
-            <!-- Shield Golden Cross & Starburst Aegis Core -->
-            <line x1="136" y1="48" x2="136" y2="146" stroke="url(#goldGrad)" stroke-width="4"/>
-            <line x1="112" y1="94" x2="160" y2="90" stroke="url(#goldGrad)" stroke-width="4"/>
-            <polygon points="136,70 150,92 136,114 122,92" fill="url(#cyanGem)" stroke="#fef9c3" stroke-width="2"/>
-            <circle cx="136" cy="92" r="6" fill="#ffffff"/>
+            ${steppedPedestal()}
+            <!-- Classic Staunton-Cathedral Pawn Tapered Ivory Column -->
+            <path d="M62,152 C66,114 75,92 82,76 L112,76 C119,92 128,114 132,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3"/>
+            <!-- Forged-Gold Collar Ring -->
+            <ellipse cx="97" cy="76" rx="24" ry="7" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.8"/>
+            <!-- Unmistakable Chess Pawn Sphere Head in Sanctified Ivory -->
+            <circle cx="97" cy="50" r="23" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3"/>
+            <!-- Soft Ivory Highlight (Upper-Left) & Starlight Rim (Upper-Right) -->
+            <circle cx="89" cy="42" r="7" fill="#FFFFFF" opacity="0.65"/>
+            <path d="M104,29 A22,22 0 0,1 119,52" fill="none" stroke="#CDEEFF" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Lapis Lazuli Visor Inlay -->
+            <path d="M80,49 L97,55 L114,49 L110,57 L97,62 L84,57 Z" fill="url(#lapisGrad)" stroke="#CDEEFF" stroke-width="1.2"/>
+            <!-- Heavy Forged-Gold & Lapis Phalanx Tower Shield (Held Forward Facing Right for Shield Push!) -->
+            <path d="M106,48 L162,38 L166,116 L136,158 L104,136 Z" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="3"/>
+            <path d="M113,55 L155,47 L158,112 L136,146 L111,128 Z" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2"/>
+            <!-- Starlight Rim & Engraved Cross on Shield -->
+            <line x1="162" y1="38" x2="166" y2="116" stroke="#CDEEFF" stroke-width="3" stroke-linecap="round"/>
+            <line x1="135" y1="52" x2="135" y2="142" stroke="url(#goldGrad)" stroke-width="3.8"/>
+            <line x1="114" y1="94" x2="156" y2="90" stroke="url(#goldGrad)" stroke-width="3.8"/>
+            <polygon points="135,74 147,92 135,110 123,92" fill="url(#starlightGem)" stroke="#FFF0B2" stroke-width="1.8"/>
           </g>
         </svg>
       `,
 
+      // 3. AEGIS ROOK: Unmistakable Castle Battlement Tower in Sanctified Ivory, Lapis Focal Inlay & Forged Gold
       rook: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#fb923c')}
-            <path d="M60,152 L68,72 L132,72 L140,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.5"/>
-            <rect x="64" y="122" width="72" height="12" rx="3" fill="url(#goldGrad)"/>
-            <rect x="67" y="86" width="66" height="10" rx="3" fill="url(#goldGrad)"/>
-            <path d="M54,74 L54,42 L72,42 L72,56 L88,56 L88,42 L112,42 L112,56 L128,56 L128,42 L146,42 L146,74 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <rect x="93" y="88" width="14" height="52" rx="4" fill="#ea580c" stroke="#fed7aa" stroke-width="2"/>
-            <rect x="74" y="107" width="52" height="14" rx="4" fill="#ea580c" stroke="#fed7aa" stroke-width="2"/>
-            <circle cx="100" cy="114" r="9" fill="#fef08a"/>
+            ${steppedPedestal()}
+            <!-- Cylindrical Sanctified Ivory Castle Tower -->
+            <path d="M60,152 L68,74 L132,74 L140,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <!-- Upper-Right Starlight Rim along Tower Edge -->
+            <line x1="131" y1="76" x2="138" y2="149" stroke="#CDEEFF" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Forged-Gold Structural Bands -->
+            <rect x="63" y="126" width="74" height="10" rx="3" fill="url(#goldGrad)" stroke="#52390B" stroke-width="1.2"/>
+            <rect x="66" y="84" width="68" height="9" rx="3" fill="url(#goldGrad)" stroke="#52390B" stroke-width="1.2"/>
+            <!-- Unmistakable 4-Merlon Chess Rook Battlement Crown -->
+            <path d="M54,74 L54,40 L72,40 L72,55 L88,55 L88,40 L112,40 L112,55 L128,55 L128,40 L146,40 L146,74 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <path d="M128,40 L146,40 L146,72" fill="none" stroke="#CDEEFF" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Central Lapis Lazuli Focal Inlay + Orthogonal Starlight Cross Core -->
+            <polygon points="100,88 122,110 100,132 78,110" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2.2"/>
+            <rect x="95" y="92" width="10" height="36" rx="3" fill="#FFF0B2"/>
+            <rect x="82" y="105" width="36" height="10" rx="3" fill="#FFF0B2"/>
+            <circle cx="100" cy="110" r="6" fill="#CDEEFF"/>
           </g>
         </svg>
       `,
 
+      // 4. TEMPEST KNIGHT: Unmistakable Sculpted Horse Profile in Sanctified Ivory, Forged-Gold Mane & Lapis Barding
       knight: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#c084fc')}
-            <path d="M64,152 C62,114 68,84 58,64 C52,48 68,28 92,26 L104,14 L112,28 C132,32 152,48 156,64 L138,78 L114,72 C110,84 128,96 134,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.5"/>
-            <path d="M72,42 C56,64 60,104 68,142" fill="none" stroke="url(#goldGrad)" stroke-width="8" stroke-linecap="round"/>
-            <polygon points="112,28 148,14 126,42" fill="url(#violetGem)" stroke="#f3e8ff" stroke-width="1.5"/>
-            <circle cx="116" cy="48" r="6.5" fill="url(#violetGem)" stroke="#ffffff" stroke-width="1.5"/>
-            <path d="M104,90 L90,114 L106,114 L94,140 L120,108 L104,108 Z" fill="#c084fc" stroke="#f3e8ff" stroke-width="1.5"/>
+            ${steppedPedestal()}
+            <!-- Forged-Gold Segmented Mane Spine -->
+            <path d="M74,32 C50,56 50,104 62,148 L78,148 C70,104 70,62 88,40 Z" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2"/>
+            <!-- Classic Staunton Sculpted Warhorse Head & Arched Neck in Sanctified Ivory -->
+            <path d="M64,152 C62,112 70,84 62,62 C56,44 72,26 96,24 L108,12 L114,26 C136,32 154,48 156,64 L136,78 L112,70 C108,86 128,100 134,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <!-- Upper-Right Starlight Rim along Horse Snout & Neck -->
+            <path d="M108,12 L114,26 C136,32 154,48 156,64" fill="none" stroke="#CDEEFF" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Lapis Lazuli Royal Chamfron (Face Plate) & Chest Inlay -->
+            <polygon points="106,28 144,54 132,66 102,44" fill="url(#lapisGrad)" stroke="#FFF0B2" stroke-width="1.6"/>
+            <path d="M90,94 L118,94 L124,142 L84,142 Z" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2"/>
+            <!-- Glowing Starlight Eye & L-Jump Lightning Sigil -->
+            <circle cx="112" cy="44" r="5.5" fill="#CDEEFF" stroke="#FFFFFF" stroke-width="1.5"/>
+            <path d="M104,98 L94,118 L106,118 L98,136 L116,112 L104,112 Z" fill="#FFF0B2"/>
           </g>
         </svg>
       `,
 
+      // 5. RADIANT BISHOP: Unmistakable Cleft Mitre Slit Silhouette in Sanctified Ivory, Lapis Stole & Starlight Prisms
       bishop: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#2dd4bf')}
-            <path d="M64,152 C68,108 78,86 100,82 C122,86 132,108 136,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <path d="M70,86 C64,54 82,30 100,20 C118,30 136,54 130,86 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.5"/>
-            <circle cx="100" cy="14" r="7" fill="url(#goldGrad)"/>
-            <path d="M82,46 L118,82 M118,46 L82,82" stroke="#2dd4bf" stroke-width="6" stroke-linecap="round"/>
-            <path d="M82,46 L118,82 M118,46 L82,82" stroke="#ccfbf1" stroke-width="2" stroke-linecap="round"/>
-            <polygon points="50,64 58,50 66,64 58,78" fill="url(#cyanGem)" stroke="#fef08a" stroke-width="1.5"/>
-            <polygon points="134,64 142,50 150,64 142,78" fill="url(#goldGrad)" stroke="#fef08a" stroke-width="1.5"/>
+            ${steppedPedestal()}
+            <!-- Tapered Ivory Lower Vestment Column -->
+            <path d="M64,152 C68,108 78,88 100,84 C122,88 132,108 136,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3"/>
+            <!-- Lapis Lazuli Vertical Stole Inlay -->
+            <path d="M88,86 L112,86 L116,150 L84,150 Z" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2"/>
+            <ellipse cx="100" cy="84" rx="28" ry="7.5" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.6"/>
+            <!-- Unmistakable Chess Bishop Mitre Head with Authentic Diagonal Cleft Slit -->
+            <path d="M70,84 C64,50 80,26 100,18 C110,22 118,30 122,40 L102,56 L126,48 C132,60 132,72 130,84 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <!-- Starlight Rim & Finial Orb -->
+            <circle cx="100" cy="12" r="6.5" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.8"/>
+            <path d="M102,56 L124,42" stroke="#CDEEFF" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Engraved Diagonal X-Cross on Chest (Attack Origin) -->
+            <path d="M86,102 L114,130 M114,102 L86,130" stroke="#FFF0B2" stroke-width="4.5" stroke-linecap="round"/>
+            <circle cx="100" cy="116" r="6" fill="#CDEEFF"/>
           </g>
         </svg>
       `,
 
+      // 6. ARCANE KING: Unmistakable Towering Imperial Cross Finial, Sanctified Ivory & Lapis Sovereign Mantle
       king: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#fb7185')}
-            <path d="M58,152 L68,78 L132,78 L142,152 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3.5"/>
-            <path d="M74,80 L126,80 L130,150 L70,150 Z" fill="#881337" stroke="url(#goldGrad)" stroke-width="2"/>
-            <path d="M62,78 L56,48 L80,60 L100,44 L120,60 L144,48 L138,78 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="2"/>
-            <rect x="94" y="10" width="12" height="36" rx="3" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.5"/>
-            <rect x="80" y="20" width="40" height="12" rx="3" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="1.5"/>
-            <polygon points="100,92 114,112 100,132 86,112" fill="url(#rubyGem)" stroke="#fef08a" stroke-width="2"/>
+            ${steppedPedestal()}
+            <!-- Broad Sanctified Ivory Sovereign Column -->
+            <path d="M58,152 L68,78 L132,78 L142,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.4"/>
+            <line x1="131" y1="80" x2="140" y2="149" stroke="#CDEEFF" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Lapis Lazuli Royal Tabard Inlay -->
+            <path d="M76,80 L124,80 L128,150 L72,150 Z" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2.2"/>
+            <!-- Arched Forged-Gold Imperial Crown -->
+            <path d="M60,78 L54,48 L78,58 L100,44 L122,58 L146,48 L140,78 Z" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2.4"/>
+            <ellipse cx="100" cy="78" rx="36" ry="8" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.8"/>
+            <!-- Unmistakable Chess King Cross Finial at Apex -->
+            <rect x="94" y="8" width="12" height="36" rx="3" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2"/>
+            <rect x="80" y="18" width="40" height="12" rx="3" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2"/>
+            <circle cx="100" cy="24" r="4.5" fill="#CDEEFF"/>
+            <!-- Sovereign Starlight-Gold Command Crest on Chest -->
+            <polygon points="100,92 116,114 100,136 84,114" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2"/>
+            <circle cx="100" cy="114" r="7" fill="#CDEEFF" stroke="#FFFFFF" stroke-width="1.5"/>
           </g>
         </svg>
       `,
 
+      // 7. SOVEREIGN QUEEN: Unmistakable 7-Spire Coronet Diadem, Sanctified Ivory & Forged-Gold Starburst Core
       queen: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${commonDefs}
           <g filter="url(#dropGlow)">
-            ${pedestal('#facc15')}
-            <circle cx="100" cy="72" r="56" fill="url(#sunHalo)"/>
-            <path d="M60,152 C66,114 78,94 82,78 L118,78 C122,94 134,114 140,152 Z" fill="url(#goldGrad)" stroke="#fef9c3" stroke-width="3"/>
-            <path d="M62,78 L46,38 L76,60 L100,26 L124,60 L154,38 L138,78 Z" fill="url(#ivoryArmor)" stroke="url(#goldGrad)" stroke-width="3"/>
-            <circle cx="46" cy="34" r="6" fill="url(#cyanGem)" stroke="#fef9c3" stroke-width="2"/>
-            <circle cx="100" cy="20" r="8" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
-            <circle cx="154" cy="34" r="6" fill="url(#cyanGem)" stroke="#fef9c3" stroke-width="2"/>
-            <polygon points="100,90 105,108 123,113 105,118 100,136 95,118 77,113 95,108" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5"/>
+            ${steppedPedestal()}
+            <circle cx="100" cy="70" r="54" fill="url(#sunHalo)"/>
+            <!-- Graceful Fluted Sanctified Ivory & Gold Silhouette -->
+            <path d="M60,152 C66,114 78,94 82,76 L118,76 C122,94 134,114 140,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3.2"/>
+            <path d="M118,78 C122,96 132,116 138,149" fill="none" stroke="#CDEEFF" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Lapis Lazuli Focal Inlay Sash -->
+            <path d="M84,80 L116,80 L122,150 L78,150 Z" fill="url(#lapisGrad)" stroke="url(#goldGrad)" stroke-width="2"/>
+            <!-- Unmistakable Chess Queen Multi-Peaked Coronet Diadem -->
+            <path d="M60,76 L44,36 L70,58 L84,30 L100,54 L116,30 L130,58 L156,36 L140,76 Z" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="2.5"/>
+            <ellipse cx="100" cy="76" rx="34" ry="7.5" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.8"/>
+            <!-- Starlight Pearls on Coronet Peaks -->
+            <circle cx="44" cy="32" r="5" fill="#CDEEFF" stroke="#FFFFFF" stroke-width="1.5"/>
+            <circle cx="84" cy="26" r="5.5" fill="#FFF0B2" stroke="#FFFFFF" stroke-width="1.5"/>
+            <circle cx="100" cy="18" r="8" fill="#CDEEFF" stroke="#FFF0B2" stroke-width="2"/>
+            <circle cx="116" cy="26" r="5.5" fill="#FFF0B2" stroke="#FFFFFF" stroke-width="1.5"/>
+            <circle cx="156" cy="32" r="5" fill="#CDEEFF" stroke="#FFFFFF" stroke-width="1.5"/>
+            <!-- 8-Directional Starlight-Gold Starburst Core on Chest -->
+            <polygon points="100,90 105,108 123,113 105,118 100,136 95,118 77,113 95,108" fill="#FFF0B2" stroke="#C79A38" stroke-width="1.5"/>
+            <circle cx="100" cy="113" r="6.5" fill="#FFFFFF"/>
           </g>
         </svg>
       `
     };
   }
 
-  // ULTRA-DETAILED 256x256 Corrupted Black-Chess Undead Monsters!
+  // CORRUPTED EBONY CHESS UNDEAD (ChatGPT Spec: Obsidian #15131C, Raised Planes #383342,
+  // Baseline Emerald #39D98A/#126348, Specialist Crimson #A5253D, Elite Hellfire #FF742B)
   getEnemySVGDefinitions() {
     const defs = `
       <defs>
-        <linearGradient id="ebonyArmor" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#334155"/>
-          <stop offset="45%" stop-color="#0f172a"/>
-          <stop offset="100%" stop-color="#020617"/>
+        <!-- Polished Obsidian (#15131C) with Readable Raised Planes (#383342) -->
+        <linearGradient id="obsidianArmor" x1="10%" y1="10%" x2="90%" y2="90%">
+          <stop offset="0%" stop-color="#524B61"/>
+          <stop offset="32%" stop-color="#383342"/>
+          <stop offset="72%" stop-color="#15131C"/>
+          <stop offset="100%" stop-color="#09080D"/>
         </linearGradient>
-        <linearGradient id="necroSkull" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f8fafc"/>
-          <stop offset="45%" stop-color="#cbd5e1"/>
-          <stop offset="100%" stop-color="#475569"/>
+
+        <!-- Weathered Bone / Skull -->
+        <linearGradient id="boneSkull" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#EAE4D7"/>
+          <stop offset="55%" stop-color="#9E9689"/>
+          <stop offset="100%" stop-color="#383342"/>
         </linearGradient>
-        <linearGradient id="blightBlade" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ecfccb"/>
-          <stop offset="40%" stop-color="#84cc16"/>
-          <stop offset="100%" stop-color="#14532d"/>
+
+        <!-- Baseline Corruption: Necrotic Emerald (#39D98A -> #126348) -->
+        <linearGradient id="emeraldBlight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#B8F7D4"/>
+          <stop offset="45%" stop-color="#39D98A"/>
+          <stop offset="100%" stop-color="#126348"/>
         </linearGradient>
-        <linearGradient id="crimsonEdge" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ffe4e6"/>
-          <stop offset="45%" stop-color="#f43f5e"/>
-          <stop offset="100%" stop-color="#881337"/>
+
+        <!-- Specialist Corruption: Royal-Slayer Crimson (#A5253D) -->
+        <linearGradient id="crimsonCorruption" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFD1D9"/>
+          <stop offset="45%" stop-color="#E34B61"/>
+          <stop offset="100%" stop-color="#A5253D"/>
         </linearGradient>
-        <linearGradient id="frostSteel" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#e0f2fe"/>
-          <stop offset="50%" stop-color="#3b82f6"/>
-          <stop offset="100%" stop-color="#172554"/>
+
+        <!-- Elite Corruption: Hellfire (#FF742B) -->
+        <linearGradient id="hellfireCore" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF0B2"/>
+          <stop offset="45%" stop-color="#FF742B"/>
+          <stop offset="100%" stop-color="#8C2308"/>
         </linearGradient>
-        <radialGradient id="toxicCore" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fef08a"/>
-          <stop offset="50%" stop-color="#84cc16" stop-opacity="0.8"/>
-          <stop offset="100%" stop-color="#15803d" stop-opacity="0"/>
+
+        <radialGradient id="emeraldAura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#39D98A" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#126348" stop-opacity="0"/>
         </radialGradient>
+
         <filter id="monsterShadow" x="-25%" y="-25%" width="150%" height="150%">
-          <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.82"/>
+          <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#09080D" flood-opacity="0.88"/>
         </filter>
       </defs>
     `;
 
-    const darkPedestal = glowColor => `
-      <ellipse cx="105" cy="176" rx="54" ry="15" fill="#050811" stroke="${glowColor}" stroke-width="2.5"/>
-      <ellipse cx="105" cy="172" rx="42" ry="10" fill="url(#ebonyArmor)" stroke="#334155" stroke-width="1.5"/>
+    const corruptedPedestal = cueColor => `
+      <ellipse cx="105" cy="176" rx="54" ry="15" fill="#0D111B" stroke="${cueColor}" stroke-width="2.4"/>
+      <ellipse cx="105" cy="171" rx="42" ry="10" fill="url(#obsidianArmor)" stroke="#383342" stroke-width="1.8"/>
     `;
 
     return {
-      // 1. Shambling Pawn-Thrall: Corrupted Black-Pawn Revenant with glowing ribcage, spiked shoulder pauldrons & jagged executioner cleaver
+      // 1. SHAMBLING PAWN-THRALL (Baseline Emerald Cue #39D98A): Fractured Black-Pawn Silhouette with Glowing Ribcage Cavities
       thrall: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            ${darkPedestal('#84cc16')}
-            <!-- Necrotic Aura behind torso -->
-            <circle cx="105" cy="105" r="52" fill="url(#toxicCore)"/>
-            <!-- Tattered Dark Cloak -->
-            <path d="M68,82 L54,166 L80,156 L98,170 L124,158 L146,168 L136,82 Z" fill="#1a2e05" stroke="#4d7c0f" stroke-width="2"/>
-            <!-- Ebony Black-Pawn Armor Chest & Glowing Ribcage -->
-            <path d="M72,162 C74,118 82,92 88,78 L122,78 C128,92 136,118 138,162 Z" fill="url(#ebonyArmor)" stroke="#84cc16" stroke-width="3"/>
-            <path d="M84,98 Q105,106 126,98 M86,114 Q105,122 124,114 M88,130 Q105,138 122,130" fill="none" stroke="#bef264" stroke-width="4" stroke-linecap="round"/>
-            <!-- Spiked Black Pauldrons -->
-            <path d="M58,86 L86,74 L82,96 Z" fill="url(#ebonyArmor)" stroke="#a3e635" stroke-width="2"/>
-            <path d="M152,86 L124,74 L128,96 Z" fill="url(#ebonyArmor)" stroke="#a3e635" stroke-width="2"/>
-            <!-- Horned Skull Head + Cracked Black Pawn Finial -->
-            <circle cx="102" cy="54" r="24" fill="url(#necroSkull)" stroke="#1e293b" stroke-width="3"/>
-            <circle cx="102" cy="24" r="9" fill="url(#ebonyArmor)" stroke="#84cc16" stroke-width="2"/>
-            <!-- Menacing Glowing Blight Eyes & Jaw -->
-            <polygon points="84,48 98,52 88,58" fill="#84cc16"/>
-            <circle cx="90" cy="52" r="3.5" fill="#fef08a"/>
-            <path d="M88,68 L94,74 L100,68 L106,74 L112,68" fill="none" stroke="#1e293b" stroke-width="2.5"/>
-            <!-- Jagged Blight Executioner Cleaver (Left Hand) -->
-            <path d="M40,118 L78,94" stroke="#475569" stroke-width="7" stroke-linecap="round"/>
-            <path d="M16,52 L52,66 L46,122 L18,108 L26,88 L12,78 Z" fill="url(#blightBlade)" stroke="#ecfccb" stroke-width="2"/>
+            ${corruptedPedestal('#39D98A')}
+            <circle cx="105" cy="106" r="48" fill="url(#emeraldAura)"/>
+            <!-- Corrupted Black-Pawn Tapered Obsidian Body -->
+            <path d="M70,164 C72,118 82,92 88,76 L122,76 C128,92 138,118 140,164 Z" fill="url(#obsidianArmor)" stroke="#383342" stroke-width="3"/>
+            <!-- Hard Fragmented Obsidian Specular Highlight -->
+            <line x1="88" y1="80" x2="76" y2="156" stroke="#6E6782" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Necrotic Emerald (#39D98A) Emission Inside Cracks & Ribcage Cavities -->
+            <path d="M84,96 Q105,105 126,96 M86,114 Q105,123 124,114 M88,132 Q105,140 122,132" fill="none" stroke="#39D98A" stroke-width="4" stroke-linecap="round"/>
+            <ellipse cx="105" cy="76" rx="24" ry="7" fill="url(#obsidianArmor)" stroke="#39D98A" stroke-width="1.8"/>
+            <!-- Fractured Black-Pawn Sphere Head with Exposed Skull Jaw -->
+            <circle cx="104" cy="50" r="24" fill="url(#obsidianArmor)" stroke="#383342" stroke-width="3"/>
+            <path d="M96,26 L104,44 L116,32" fill="none" stroke="#39D98A" stroke-width="2.5"/>
+            <polygon points="86,46 100,50 90,56" fill="#39D98A"/>
+            <circle cx="92" cy="50" r="3.5" fill="#FFF0B2"/>
+            <!-- Jagged Obsidian Cleaver with Emerald Crack -->
+            <path d="M38,118 L76,94" stroke="#383342" stroke-width="6.5" stroke-linecap="round"/>
+            <path d="M16,54 L50,68 L44,122 L18,108 L26,88 L14,78 Z" fill="url(#obsidianArmor)" stroke="#39D98A" stroke-width="2.2"/>
           </g>
         </svg>
       `,
 
-      // 2. Ironclad Buckler: Armored Black-Rook Dreadnought with Runic Fortress Tower Shield & War Flail
+      // 2. IRONCLAD BUCKLER (Baseline Emerald Shield-Bearer #39D98A): Fractured Black-Rook Tower with Obsidian Slab Shield
       buckler: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            ${darkPedestal('#60a5fa')}
-            <!-- Heavy Dreadnought Plate Body -->
-            <path d="M76,164 L82,74 L146,74 L152,164 Z" fill="url(#ebonyArmor)" stroke="#60a5fa" stroke-width="3"/>
-            <!-- Rook Battlement Helmet with Glowing Blue Visor -->
-            <path d="M80,74 L80,34 L94,34 L94,44 L108,44 L108,34 L122,34 L122,44 L136,44 L136,34 L148,34 L148,74 Z" fill="url(#ebonyArmor)" stroke="#93c5fd" stroke-width="2.5"/>
-            <rect x="88" y="54" width="38" height="7" rx="3" fill="#38bdf8"/>
-            <!-- Spiked Morning-Star Flail (Right Side) -->
-            <line x1="146" y1="92" x2="174" y2="62" stroke="#94a3b8" stroke-width="5"/>
-            <circle cx="176" cy="56" r="14" fill="url(#frostSteel)" stroke="#e0f2fe" stroke-width="2"/>
-            <!-- Colossal Runic Fortress Tower Shield (Left Front) -->
-            <path d="M22,34 L82,24 L82,162 L52,178 L22,162 Z" fill="url(#ebonyArmor)" stroke="url(#frostSteel)" stroke-width="4.5"/>
-            <path d="M32,44 L72,36 L72,154 L52,166 L32,154 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
-            <!-- Glowing Rook Shield Core -->
-            <polygon points="52,66 68,98 52,130 36,98" fill="url(#frostSteel)" stroke="#ffffff" stroke-width="2"/>
-            <circle cx="52" cy="98" r="7" fill="#e0f2fe"/>
+            ${corruptedPedestal('#39D98A')}
+            <!-- Fractured Black-Rook Obsidian Body -->
+            <path d="M76,164 L82,74 L146,74 L152,164 Z" fill="url(#obsidianArmor)" stroke="#383342" stroke-width="3"/>
+            <!-- Broken Rook Battlement Crown -->
+            <path d="M78,74 L78,36 L94,36 L94,50 L108,50 L108,32 L124,38 L124,50 L136,50 L136,36 L150,36 L150,74 Z" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="2.5"/>
+            <rect x="88" y="54" width="38" height="6" rx="3" fill="#39D98A"/>
+            <!-- Heavy Obsidian Rook-Slab Shield with Necrotic Emerald Fissures (Left Front) -->
+            <path d="M22,34 L82,24 L82,162 L52,176 L22,162 Z" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="3.5"/>
+            <path d="M32,44 L72,36 L72,152 L52,164 L32,152 Z" fill="#15131C" stroke="#39D98A" stroke-width="2"/>
+            <polygon points="52,68 66,98 52,128 38,98" fill="url(#emeraldBlight)" stroke="#FFFFFF" stroke-width="1.8"/>
           </g>
         </svg>
       `,
 
-      // 3. Plaguevault Stalker: Corrupted Black-Knight Centaur/Warhorse Revenant with Twin Energy Lances
+      // 3. PLAGUEVAULT STALKER (Specialist Crimson #A5253D): Corrupted Black-Knight with Exposed Skeletal Horse Muzzle
       sprinter: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            ${darkPedestal('#c084fc')}
-            <!-- Fluttering Phantom Violet Cape -->
-            <path d="M96,64 C138,58 172,82 184,132 C156,124 134,132 118,148 Z" fill="#4c1d95" stroke="#c084fc" stroke-width="2"/>
-            <!-- Armored Black-Knight Warhorse Skull & Neck -->
-            <path d="M64,164 C62,118 72,88 62,62 C56,42 74,22 98,20 L112,8 L118,24 C138,28 152,44 148,62 L126,74 L104,68 C108,92 126,114 132,164 Z" fill="url(#ebonyArmor)" stroke="#c084fc" stroke-width="3.5"/>
-            <!-- Skeletal Jaw & Violet Flame Eye -->
-            <polygon points="78,42 96,46 84,54" fill="#e879f9"/>
-            <circle cx="86" cy="46" r="4" fill="#ffffff"/>
-            <!-- Spectral Spine Plates -->
-            <path d="M114,34 L134,26 M118,50 L140,44 M120,68 L142,64" stroke="#e879f9" stroke-width="3.5" stroke-linecap="round"/>
-            <!-- High-Voltage Vaulting Pole-Lance -->
-            <line x1="14" y1="146" x2="178" y2="22" stroke="#f0abfc" stroke-width="5.5" stroke-linecap="round"/>
-            <polygon points="10,150 32,118 46,134" fill="#c084fc" stroke="#ffffff" stroke-width="2"/>
+            ${corruptedPedestal('#A5253D')}
+            <!-- Corrupted Black-Knight Arched Horse Silhouette in Polished Obsidian -->
+            <path d="M64,164 C62,118 72,88 62,62 C56,42 74,22 98,20 L112,8 L118,24 C138,28 152,44 148,62 L126,74 L104,68 C108,92 126,114 132,164 Z" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="3.2"/>
+            <!-- Exposed Skeletal Horse Muzzle (ChatGPT Silhouette Spec) -->
+            <path d="M96,24 L62,56 L84,68 L108,46 Z" fill="url(#boneSkull)" stroke="#15131C" stroke-width="2"/>
+            <polygon points="78,42 94,46 84,54" fill="#E34B61"/>
+            <circle cx="86" cy="46" r="3.5" fill="#FFF0B2"/>
+            <!-- Crimson Corruption Fissures Along Neck & Vaulting Pole-Lance -->
+            <path d="M98,74 L92,112 L106,148" fill="none" stroke="#E34B61" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="14" y1="146" x2="178" y2="22" stroke="url(#crimsonCorruption)" stroke-width="5.5" stroke-linecap="round"/>
+            <polygon points="10,150 32,118 46,134" fill="url(#crimsonCorruption)" stroke="#FFD1D9" stroke-width="1.8"/>
           </g>
         </svg>
       `,
 
-      // 4. Shadow-Knight Assassin: Wraith Queen-Slayer with Hooded Death Mask & Twin Crimson Crescent Scythes
+      // 4. SHADOW-KNIGHT ASSASSIN (Specialist Crimson #A5253D): Fractured-Crown Wraith with Twin Crimson Scythes
       assassin: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            ${darkPedestal('#f43f5e')}
-            <!-- Swirling Shadow Smoke Tendrils -->
-            <path d="M46,158 C32,124 48,88 74,72 L126,72 C152,88 168,124 154,158 L132,144 L105,168 L78,144 Z" fill="#1f0916" stroke="#f43f5e" stroke-width="2.5"/>
-            <!-- Sleek Obsidian Assassin Cuirass -->
-            <path d="M74,154 L84,74 L126,74 L136,154 Z" fill="url(#ebonyArmor)" stroke="#fb7185" stroke-width="3"/>
-            <!-- Pointed Executioner Wraith Hood & Glowing Slit Eyes -->
-            <path d="M68,78 L105,14 L142,78 Q105,64 68,78 Z" fill="#090d16" stroke="#f43f5e" stroke-width="3"/>
-            <polygon points="84,54 100,58 88,64" fill="#f43f5e"/>
-            <polygon points="126,54 110,58 122,64" fill="#f43f5e"/>
-            <!-- Twin Crimson Queen-Slayer Crescent Scythes -->
-            <path d="M12,114 C18,64 48,44 76,58 C52,68 38,88 38,118 Z" fill="url(#crimsonEdge)" stroke="#ffe4e6" stroke-width="2"/>
-            <path d="M198,114 C192,64 162,44 134,58 C158,68 172,88 172,118 Z" fill="url(#crimsonEdge)" stroke="#ffe4e6" stroke-width="2"/>
-            <!-- Crimson Heart Sigil -->
-            <polygon points="105,90 116,108 105,126 94,108" fill="url(#crimsonEdge)" stroke="#ffffff" stroke-width="1.5"/>
+            ${corruptedPedestal('#A5253D')}
+            <!-- Obsidian Chess-Wraith Silhouette -->
+            <path d="M68,162 C70,118 80,90 84,74 L126,74 C130,90 140,118 142,162 Z" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="3"/>
+            <!-- Broken Black-Queen/Knight Pointed Crown Hood -->
+            <path d="M68,76 L82,34 L105,14 L128,34 L142,76 Q105,64 68,76 Z" fill="url(#obsidianArmor)" stroke="#E34B61" stroke-width="2.8"/>
+            <polygon points="84,52 100,56 88,62" fill="#E34B61"/>
+            <polygon points="126,52 110,56 122,62" fill="#E34B61"/>
+            <!-- Twin Crimson Queen-Slayer Crescent Scythes (#A5253D) -->
+            <path d="M14,114 C20,64 48,44 76,58 C52,68 38,88 38,118 Z" fill="url(#crimsonCorruption)" stroke="#FFD1D9" stroke-width="2"/>
+            <path d="M196,114 C190,64 162,44 134,58 C158,68 172,88 172,118 Z" fill="url(#crimsonCorruption)" stroke="#FFD1D9" stroke-width="2"/>
+            <polygon points="105,88 118,110 105,132 92,110" fill="url(#crimsonCorruption)" stroke="#FFD1D9" stroke-width="1.8"/>
           </g>
         </svg>
       `,
 
-      // 5. Necro-Bishop Acolyte: Corrupted Arch-Lich Bishop with Split Mitre Crown, Ribcage & Levitating Hex Skull Staff
+      // 5. NECRO-BISHOP ACOLYTE (Split Mitre + Emerald/Hellfire): Corrupted Black-Bishop with Split Mitre Cavity
       necro: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            ${darkPedestal('#2dd4bf')}
-            <!-- Arch-Lich vestments with gold & teal runes -->
-            <path d="M60,166 C64,114 78,86 105,78 C132,86 146,114 150,166 Z" fill="#042f2e" stroke="#2dd4bf" stroke-width="3"/>
-            <path d="M92,82 L118,82 L124,164 L86,164 Z" fill="#0f172a" stroke="#5eead4" stroke-width="2"/>
-            <!-- Corrupted Cleft Bishop Mitre Hat -->
-            <path d="M74,78 C68,44 84,22 100,12 L104,34 L112,12 C128,22 142,44 136,78 Z" fill="url(#ebonyArmor)" stroke="#2dd4bf" stroke-width="3"/>
-            <!-- Lich Skull Face -->
-            <circle cx="105" cy="64" r="18" fill="url(#necroSkull)" stroke="#115e59" stroke-width="2.5"/>
-            <circle cx="97" cy="62" r="5" fill="#2dd4bf"/>
-            <circle cx="113" cy="62" r="5" fill="#2dd4bf"/>
+            ${corruptedPedestal('#39D98A')}
+            <!-- Obsidian Bishop Column Body -->
+            <path d="M64,164 C68,112 80,86 105,78 C130,86 142,112 146,164 Z" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="3"/>
+            <path d="M92,82 L118,82 L124,162 L86,162 Z" fill="#15131C" stroke="#39D98A" stroke-width="2"/>
+            <!-- Split Black-Bishop Mitre with Glowing Emerald Cavity (ChatGPT Silhouette Spec) -->
+            <path d="M72,78 C66,44 82,20 98,10 L103,42 L112,10 C128,20 144,44 138,78 Z" fill="url(#obsidianArmor)" stroke="#39D98A" stroke-width="2.8"/>
+            <polygon points="98,12 103,44 112,12 105,30" fill="#39D98A"/>
+            <!-- Exposed Skull Visage -->
+            <circle cx="105" cy="62" r="16" fill="url(#boneSkull)" stroke="#15131C" stroke-width="2.2"/>
+            <circle cx="98" cy="60" r="4.5" fill="#39D98A"/>
+            <circle cx="112" cy="60" r="4.5" fill="#39D98A"/>
             <!-- Cursed Diagonal Hex Crozier Staff -->
-            <line x1="38" y1="168" x2="48" y2="38" stroke="#99f6e4" stroke-width="5.5" stroke-linecap="round"/>
-            <circle cx="48" cy="34" r="18" fill="rgba(45, 212, 191, 0.25)" stroke="#2dd4bf" stroke-width="2.5"/>
-            <polygon points="48,20 60,34 48,48 36,34" fill="#2dd4bf" stroke="#ffffff" stroke-width="1.5"/>
+            <line x1="38" y1="166" x2="48" y2="38" stroke="#6E6782" stroke-width="5.5" stroke-linecap="round"/>
+            <polygon points="48,18 62,34 48,50 34,34" fill="url(#emeraldBlight)" stroke="#FFFFFF" stroke-width="1.8"/>
           </g>
         </svg>
       `,
 
-      // 6. Cursed Blight-Imp: Winged Gargoyle Pawn-Fiend with Clawed Gauntlets
+      // 6. CURSED BLIGHT-IMP: Fractured Black-Pawn Gargoyle with Crimson-Hellfire Wings
       imp: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
           ${defs}
           <g filter="url(#monsterShadow)">
-            <ellipse cx="100" cy="170" rx="38" ry="11" fill="#050811" stroke="#fb7185" stroke-width="2"/>
-            <!-- Bat-like Gargoyle Wings -->
-            <path d="M78,104 L28,68 L42,118 L76,124 Z" fill="#4c0519" stroke="#fb7185" stroke-width="2"/>
-            <path d="M122,104 L172,68 L158,118 L124,124 Z" fill="#4c0519" stroke="#fb7185" stroke-width="2"/>
-            <!-- Imp Armored Body -->
-            <path d="M74,162 L82,94 L118,94 L126,162 Z" fill="#881337" stroke="#fda4af" stroke-width="2.5"/>
-            <!-- Horned Fiend Skull -->
-            <circle cx="100" cy="72" r="22" fill="url(#necroSkull)" stroke="#be123c" stroke-width="2.5"/>
-            <path d="M84,56 L62,26 L94,50 Z" fill="url(#crimsonEdge)"/>
-            <path d="M116,56 L138,26 L106,50 Z" fill="url(#crimsonEdge)"/>
-            <circle cx="90" cy="70" r="5.5" fill="#fef08a"/>
-            <circle cx="108" cy="70" r="5.5" fill="#fef08a"/>
+            ${corruptedPedestal('#FF742B')}
+            <path d="M76,102 L26,66 L40,116 L76,122 Z" fill="url(#obsidianArmor)" stroke="#E34B61" stroke-width="2"/>
+            <path d="M124,102 L174,66 L160,116 L124,122 Z" fill="url(#obsidianArmor)" stroke="#E34B61" stroke-width="2"/>
+            <path d="M72,162 C76,122 82,98 86,86 L114,86 C118,98 124,122 128,162 Z" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="2.5"/>
+            <circle cx="100" cy="64" r="21" fill="url(#obsidianArmor)" stroke="#6E6782" stroke-width="2.5"/>
+            <path d="M84,48 L64,22 L94,44 Z" fill="url(#hellfireCore)"/>
+            <path d="M116,48 L136,22 L106,44 Z" fill="url(#hellfireCore)"/>
+            <circle cx="91" cy="62" r="4.5" fill="#FFF0B2"/>
+            <circle cx="109" cy="62" r="4.5" fill="#FFF0B2"/>
           </g>
         </svg>
       `,
 
-      // 7. Fallen Rook Gargantua (BOSS): Colossal Hellfire Obsidian Rook-Titan with Molten Core & Earthshaker Monolith
+      // 7. FALLEN ROOK GARGANTUA (BOSS — Elite Hellfire Cue #FF742B): Colossal Shattered-Rook Obsidian Titan
       gargantua: `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
           ${defs}
           <g filter="url(#monsterShadow)">
-            <ellipse cx="115" cy="190" rx="74" ry="20" fill="#050811" stroke="#f97316" stroke-width="4"/>
-            <!-- Hulking Titan Obsidian Body -->
-            <path d="M52,182 L62,56 L168,56 L178,182 Z" fill="url(#ebonyArmor)" stroke="#f97316" stroke-width="4.5"/>
-            <!-- Twin Shattered Rook Citadel Shoulder Pauldrons -->
-            <path d="M32,82 L32,38 L46,38 L46,48 L60,48 L60,38 L74,38 L74,82 Z" fill="url(#ebonyArmor)" stroke="#fb923c" stroke-width="3"/>
-            <path d="M156,82 L156,38 L170,38 L170,48 L184,48 L184,38 L198,38 L198,82 Z" fill="url(#ebonyArmor)" stroke="#fb923c" stroke-width="3"/>
-            <!-- Crowned Demon-King Skull Visage -->
-            <circle cx="115" cy="48" r="28" fill="url(#necroSkull)" stroke="#ea580c" stroke-width="3.5"/>
-            <path d="M92,28 L72,4 L104,22 M138,28 L158,4 L126,22" fill="#f97316"/>
-            <circle cx="102" cy="46" r="7" fill="#facc15"/>
-            <circle cx="126" cy="46" r="7" fill="#facc15"/>
-            <!-- Blazing Hellfire Furnace Core in Chest -->
-            <polygon points="115,82 142,122 115,162 88,122" fill="#ea580c" stroke="#fef08a" stroke-width="3"/>
-            <polygon points="115,96 130,122 115,148 100,122" fill="#fef08a"/>
-            <!-- Colossal Crushing Obsidian Rook Monolith Hammer (Left Hand) -->
-            <line x1="34" y1="176" x2="34" y2="30" stroke="#78350f" stroke-width="10" stroke-linecap="round"/>
-            <rect x="6" y="16" width="54" height="76" rx="6" fill="url(#ebonyArmor)" stroke="#f97316" stroke-width="3.5"/>
-            <circle cx="33" cy="54" r="12" fill="#f97316"/>
+            <ellipse cx="115" cy="192" rx="74" ry="19" fill="#0D111B" stroke="#FF742B" stroke-width="3.8"/>
+            <!-- Colossal Shattered Obsidian Rook-Tower Body -->
+            <path d="M52,184 L62,56 L168,56 L178,184 Z" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="4"/>
+            <line x1="64" y1="60" x2="56" y2="180" stroke="#6E6782" stroke-width="3" stroke-linecap="round"/>
+            <!-- Fractured Rook Battlement Shoulders (ChatGPT Silhouette Spec) -->
+            <path d="M32,82 L32,38 L46,38 L46,50 L60,50 L60,38 L74,38 L74,82 Z" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="2.8"/>
+            <path d="M156,82 L156,38 L170,38 L170,50 L184,50 L184,38 L198,38 L198,82 Z" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="2.8"/>
+            <!-- Crowned Skull Visage with Hellfire Horns -->
+            <circle cx="115" cy="48" r="27" fill="url(#boneSkull)" stroke="#15131C" stroke-width="3"/>
+            <path d="M92,28 L70,4 L104,22 M138,28 L160,4 L126,22" fill="url(#hellfireCore)"/>
+            <circle cx="103" cy="46" r="6.5" fill="#FF742B"/>
+            <circle cx="127" cy="46" r="6.5" fill="#FF742B"/>
+            <!-- Hellfire (#FF742B) Emission Inside Cracked Obsidian Chest Cavity -->
+            <polygon points="115,80 144,122 115,164 86,122" fill="url(#hellfireCore)" stroke="#FFF0B2" stroke-width="2.5"/>
+            <polygon points="115,96 130,122 115,148 100,122" fill="#FFF0B2"/>
+            <!-- Crushing Obsidian Rook-Monolith Hammer -->
+            <line x1="34" y1="178" x2="34" y2="28" stroke="#383342" stroke-width="9" stroke-linecap="round"/>
+            <rect x="6" y="16" width="54" height="74" rx="5" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="3.2"/>
+            <polygon points="33,34 45,53 33,72 21,53" fill="url(#hellfireCore)"/>
           </g>
         </svg>
       `
