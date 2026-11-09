@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CROWN &amp; BLIGHT: The Royal Gambit | الشطرنج الملكي ضد جيش الظلام</title>
+  <meta name="description" content="Command Royal Chess Pieces with authentic Chess Attack Geometry, Tactical Board Repositioning, Pawn Promotion, Royal Batteries, and Castling against the Corrupted Ebony Undead Horde." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Cinzel:wght@700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Orbitron:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="royal-shell">
+    <!-- ================= FULL-BLEED 60FPS BATTLEFIELD CANVAS ================= -->
+    <main class="battle-stage">
+      <canvas id="battleCanvas" aria-label="8 by 5 Tactical Chessboard Siege Battlefield"></canvas>
+    </main>
+
+    <!-- ================= FLOATING TOP ROYAL COMMAND PODS ================= -->
+    <header class="floating-top-hud">
+      <!-- POD 1 (LEFT): Sovereign Crest & Treasury Medallion -->
+      <div class="hud-wing left-treasury-wing">
+        <div class="royal-emblem" aria-hidden="true">
+          <img src="assets/royal-crest.png" alt="" class="royal-crest-img" onerror="this.style.display='none'" />
+        </div>
+
+        <div class="mana-medallion" id="manaPodBox" title="Sovereign Crown Mana — طاقة التاج الملكي">
+          <div class="mana-sun-orb" aria-hidden="true">☀</div>
+          <div class="mana-readout">
+            <span class="pod-label">طاقة التاج • MANA</span>
+            <strong class="pod-value" id="manaCounterVal">150</strong>
+          </div>
+        </div>
+
+        <div class="title-and-sentinels">
+          <span class="act-badge" id="actTitleBadge">ACT I: The Courtyard Breach</span>
+          <span class="sentinel-chip" id="sentinelCountBadge" title="Imperial Winged Golden Rook Sentinels guarding the 5 Ranks">
+            🪽 5/5 القلاع المجنحة
+          </span>
+        </div>
+      </div>
+
+      <!-- POD 2 (CENTER): Grandmaster Astrolabe & Wave Siege Chronometer -->
+      <div class="hud-center-astrolabe">
+        <div class="astrolabe-main-row">
+          <div class="wave-pod">
+            <div class="wave-pod-top">
+              <span id="waveCounterText">WAVE 1 / 6</span>
+              <div class="wave-enemy-icons" id="waveEnemyIcons" title="وحوش الموجة الحالية • Wave Undead"></div>
+            </div>
+            <div class="wave-track">
+              <div class="wave-fill" id="waveProgressBar"></div>
+            </div>
+          </div>
+
+          <button type="button" class="early-wave-btn" id="callWaveBtn" title="استدعِ الموجة التالية مبكراً واحصل على +15 طاقة إضافية!">
+            <span>⚔ الموجة التالية</span>
+            <small>+15☀ مكافأة</small>
+          </button>
+
+          <div class="elo-score-cluster">
+            <div class="mini-stat-box">
+              <span class="pod-label">النقاط • SCORE</span>
+              <strong class="pod-value" id="scoreCounterVal">0</strong>
+            </div>
+            <div class="mini-stat-box">
+              <span class="pod-label">تصنيف • ELO</span>
+              <strong class="pod-value" id="eloCounterVal">1500</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Tactical Status & Synergy Ribbon right beneath the Center Astrolabe -->
+        <div class="stage-top-ribbon">
+          <div class="tactical-status-pill mode-deploy" id="tacticalStatusPill">
+            ⚔ اختر مربعاً لوضع الجندي — أو انقر على أي قطعة في الملعب لتحريكها بحركة الشطرنج!
+          </div>
+          <div class="active-synergies-row" id="activeSynergiesRow"></div>
+        </div>
+      </div>
+
+      <!-- POD 3 (RIGHT): War-Council Controls -->
+      <div class="hud-wing right-council-wing">
+        <button type="button" class="hud-btn gold-outline" id="openActsBtn" title="خريطة المراحل والطور اللانهائي">
+          🗺 المراحل
+        </button>
+        <button type="button" class="hud-btn gold-outline" id="openCodexBtn" title="دليل حركات الشطرنج والوحوش">
+          📖 الدليل
+        </button>
+        <button type="button" class="hud-btn active" id="autoManaBtn" title="تفعيل/إيقاف الجمع التلقائي للطاقة">
+          ☀ تلقائي: ON
+        </button>
+        <button type="button" class="hud-btn" id="speedBtn" title="تغيير سرعة المعركة (1x / 1.5x / 2x)">
+          ⏩ 1x
+        </button>
+        <button type="button" class="hud-btn" id="audioMuteBtn" aria-pressed="true" title="كتم/تشغيل الموسيقى والمؤثرات">
+          🔊
+        </button>
+        <button type="button" class="hud-btn" id="pauseBtn" title="إيقاف مؤقت [P]">
+          ⏸
+        </button>
+        <button type="button" class="hud-btn" id="restartBtn" title="إعادة المرحلة الحالية">
+          ↻
+        </button>
+      </div>
+    </header>
+
+    <!-- Dramatic Wave / Act Announcement Banner -->
+    <div class="wave-announcement hidden" id="waveAnnouncement" role="status" aria-live="polite">
+      <h2 id="waveBannerTitle">ACT I: THE COURTYARD BREACH</h2>
+      <p id="waveBannerSub">Sunlit Ivory &amp; Obsidian Bastion</p>
+    </div>
+
+    <!-- ================= FLOATING BOTTOM GRANDMASTER RELIQUARY DOCK ================= -->
+    <footer class="floating-bottom-altar">
+      <div class="reliquary-dock-inner">
+        <!-- SECTION A: 7 Gothic-Arched Royal Chess Relic Cards -->
+        <div class="chess-deck-bar" id="chessDeckBar" role="toolbar" aria-label="Royal Chess Piece Deployment Deck">
+          <!-- Populated dynamically from CHESS_DATA.PIECES -->
+        </div>
+
+        <!-- SECTION B: Live 5x5 Chess Attack Matrix & Unit Inspector -->
+        <div class="tactical-inspector" id="tacticalInspectorCard">
+          <!-- Mini 5x5 Chess Attack Geometry Matrix -->
+          <div class="mini-matrix-wrap" title="مصفوفة هجوم وحركة القطعة في الشطرنج • Authentic Chess Attack Matrix">
+            <div class="mini-matrix-grid" id="miniMatrixGrid"></div>
+            <span class="mini-matrix-caption">هندسة الحركة</span>
+          </div>
+
+          <img src="" alt="" class="inspector-portrait" id="inspectorPortrait" />
+
+          <div class="inspector-meta">
+            <div class="inspector-title-row">
+              <strong id="inspectorName">جندي الطليعة • Vanguard Pawn</strong>
+              <span class="inspector-stat-chip" id="inspectorStats">HP 480 • DMG 28/58</span>
+            </div>
+            <p class="inspector-rule" id="inspectorRule">
+              يطلق للأمام ويضرب قطرياً بضرر مضاعف! عند 100 XP يمكنك ترقيته إلى وزير أو فارس.
+            </p>
+          </div>
+
+          <div class="inspector-quick-actions" id="inspectorQuickActions"></div>
+        </div>
+
+        <!-- SECTION C: Royal Decree Orbs (Sacrifice & Checkmate Overload) -->
+        <div class="dock-specials">
+          <button type="button" class="sacrifice-btn" id="shovelBtn" title="تضحية بقطعة لاسترجاع 60% من طاقتها وتفجير الأعداء حولها [مفتاح S]">
+            <span class="sac-icon">🔥</span>
+            <span class="sac-title">تضحية</span>
+            <small>[S] +60%☀</small>
+          </button>
+
+          <button type="button" class="ultimate-btn" id="ultimateBtn" disabled title="الضربة القاضية: رماح السماء الذهبية تطهر جميع الصفوف وتجدد حركات قطعك [مفتاح المسافة Space]">
+            <div class="ultimate-fill" id="ultimateFillBar"></div>
+            <div class="ultimate-content">
+              <span class="ult-crown">⚡ كش مات الشاملة</span>
+              <span class="ultimate-label" id="ultimateText">شحن 25% [SPACE]</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ================= ROYAL CODEX MODAL (CHESS GEOMETRY & BESTIARY) ================= -->
+  <div class="modal-backdrop hidden" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="codexModalTitle">📖 الدليل الملكي • Royal Grandmaster Codex</h3>
+        <button type="button" class="hud-btn" id="closeCodexBtn">✕ إغلاق [Esc]</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <h4 class="codex-section-title">قواعد الدمج بين الشطرنج والدفاع الاستراتيجي • Tactical Fusion Rules</h4>
+          <p class="codex-desc">
+            كل قطعة شطرنج تهاجم وفق <strong>هندسة حركتها الحقيقية في الشطرنج</strong>، ويمكنك <strong>النقر على أي قطعة موضوعة في الملعب لتحريكها لمربع جديد</strong> أثناء المعركة! كما يحرس الصف الأول على اليسار <strong>5 تماثيل للقلعة المجنحة الذهبية (Imperial Winged Rook Sentinels)</strong> التي تنطلق لتطهير الصف بالكامل بحركة رخ قاضية إذا اخترق العدو دفاعك.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="codex-section-title">قطع الشطرنج الملكية (7 وحدات) • Royal Chess Defenders</h4>
+          <div class="codex-grid" id="codexPiecesGrid"></div>
+        </div>
+
+        <div>
+          <h4 class="codex-section-title">جيش الشطرنج الأسود الملعون • Corrupted Ebony Undead</h4>
+          <div class="codex-grid" id="codexEnemiesGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CAMPAIGN ACTS MODAL ================= -->
+  <div class="modal-backdrop hidden" id="actsModal" role="dialog" aria-modal="true" aria-labelledby="actsModalTitle">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="actsModalTitle">🗺 خريطة العمليات • Campaign Operations</h3>
+        <button type="button" class="hud-btn" id="closeActsBtn">✕ إغلاق [Esc]</button>
+      </div>
+      <div class="modal-body">
+        <div class="acts-grid" id="actsListContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VICTORY / DEFEAT RESULT MODAL ================= -->
+  <div class="modal-backdrop hidden" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+    <div class="modal-window result-window">
+      <h3 id="resultModalTitle" style="font-family: var(--font-display); font-size: 26px; color: #fef08a;">👑 كش مات — انتصار ساحق!</h3>
+      <p id="resultModalSubtitle" style="color: #cbd5e1; margin-top: 8px; font-size: 14px;"></p>
+      <div class="result-stats-row" id="resultModalStats"></div>
+      <div class="result-actions">
+        <button type="button" class="hud-btn" id="modalRetryBtn">↻ إعادة المرحلة</button>
+        <button type="button" class="launch-act-btn" id="modalNextActBtn">المرحلة التالية ←</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
