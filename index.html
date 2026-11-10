@@ -72,42 +72,47 @@
         </div>
 
         <!-- Floating Tactical Status & Synergy Ribbon right beneath the Center Astrolabe -->
-        <div class="stage-top-ribbon">
-          <div class="tactical-status-pill mode-deploy" id="tacticalStatusPill">
-            ⚔ اختر مربعاً لوضع الجندي — أو انقر على أي قطعة في الملعب لتحريكها بحركة الشطرنج!
+        <div class="stage-top-ribbon" dir="rtl" lang="ar">
+          <div class="tactical-status-pill mode-deploy" id="tacticalStatusPill" dir="rtl">
+            اختر مربعاً لنشر الجندي المدرع — أو انقر على أي قطعة في الرقعة لتحريكها بحركة الشطرنج!
           </div>
-          <div class="active-synergies-row" id="activeSynergiesRow"></div>
+          <div class="active-synergies-row" id="activeSynergiesRow" dir="rtl"></div>
         </div>
       </div>
 
-      <!-- POD 3 (RIGHT): War-Council Controls -->
+      <!-- POD 3 (RIGHT): War-Council Controls (Monochrome Forged-Gold Vector Icons) -->
       <div class="hud-wing right-council-wing">
         <button type="button" class="hud-btn gold-outline" id="openMenuBtn" title="القائمة الملكية والإعدادات [Esc]">
-          ☰ القائمة
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <span>القائمة</span>
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openActsBtn" title="خريطة المراحل والطور اللانهائي">
-          🗺 المراحل
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6zM9 3v15M15 6v15"/></svg>
+          <span>المراحل</span>
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openCodexBtn" title="دليل حركات الشطرنج والوحوش">
-          📖 الدليل
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2V4zm20 0h-7a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h8V4z"/></svg>
+          <span>الدليل</span>
         </button>
         <button type="button" class="hud-btn active hide-on-tablet" id="autoManaBtn" title="تفعيل/إيقاف الجمع التلقائي للطاقة">
-          ☀ تلقائي: ON
+          <span class="ui-glyph-sun">☀</span>
+          <span id="autoManaText">تلقائي: ON</span>
         </button>
         <button type="button" class="hud-btn" id="speedBtn" title="تغيير سرعة المعركة (1x / 1.5x / 2x)">
-          ⏩ 1x
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+          <bdi dir="ltr" id="speedBtnText">1x</bdi>
         </button>
-        <button type="button" class="hud-btn hide-on-mobile" id="fullscreenBtn" title="ملء الشاشة الكاملة [F]">
-          ⛶
+        <button type="button" class="hud-btn icon-only-btn hide-on-mobile" id="fullscreenBtn" aria-label="ملء الشاشة" title="ملء الشاشة الكاملة [F]">
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
         </button>
-        <button type="button" class="hud-btn" id="audioMuteBtn" aria-pressed="true" title="كتم/تشغيل الموسيقى والمؤثرات">
-          🔊
+        <button type="button" class="hud-btn icon-only-btn" id="audioMuteBtn" aria-label="كتم أو تشغيل الصوت" aria-pressed="true" title="كتم/تشغيل الموسيقى والمؤثرات">
+          <svg class="ui-svg-icon" id="audioMuteSvg" viewBox="0 0 24 24" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         </button>
-        <button type="button" class="hud-btn hide-on-mobile" id="pauseBtn" title="إيقاف مؤقت [P]">
-          ⏸
+        <button type="button" class="hud-btn icon-only-btn hide-on-mobile" id="pauseBtn" aria-label="إيقاف مؤقت" title="إيقاف مؤقت [P]">
+          <svg class="ui-svg-icon" id="pauseBtnSvg" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         </button>
-        <button type="button" class="hud-btn hide-on-tablet" id="restartBtn" title="إعادة المرحلة الحالية">
-          ↻
+        <button type="button" class="hud-btn icon-only-btn hide-on-tablet" id="restartBtn" aria-label="إعادة المرحلة" title="إعادة المرحلة الحالية">
+          <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
       </div>
     </header>
@@ -136,7 +141,7 @@
         </div>
 
         <!-- SECTION B: Live 5x5 Chess Attack Matrix & Unit Inspector -->
-        <div class="tactical-inspector" id="tacticalInspectorCard">
+        <div class="tactical-inspector" id="tacticalInspectorCard" dir="rtl" lang="ar">
           <!-- Mini 5x5 Chess Attack Geometry Matrix -->
           <div class="mini-matrix-wrap" title="مصفوفة هجوم وحركة القطعة في الشطرنج • Authentic Chess Attack Matrix">
             <div class="mini-matrix-grid" id="miniMatrixGrid"></div>
@@ -148,7 +153,7 @@
           <div class="inspector-meta">
             <div class="inspector-title-row">
               <strong id="inspectorName">الجندي المدرع • Phalanx Shield-Pawn</strong>
-              <span class="inspector-stat-chip" id="inspectorStats">HP 640 (+65🛡) • 60☀</span>
+              <bdi dir="ltr" class="inspector-stat-chip" id="inspectorStats">HP 640 (+65🛡) • 60☀</bdi>
             </div>
             <p class="inspector-rule" id="inspectorRule">
               مدافع أمامي يدفع الوحوش بالدرع للخلف (بدون أي ليزر) — كوّن سطراً من 5 جنود لدمجهم سينمائياً إلى وزير ملكي [M]!
@@ -161,16 +166,16 @@
         <!-- SECTION C: Royal Decree Orbs (Sacrifice & Checkmate Overload) -->
         <div class="dock-specials">
           <button type="button" class="sacrifice-btn" id="shovelBtn" title="تضحية بقطعة لاسترجاع 60% من طاقتها وتفجير الأعداء حولها [مفتاح S]">
-            <span class="sac-icon">🔥</span>
+            <span class="sac-icon">⚔</span>
             <span class="sac-title">تضحية</span>
-            <small>[S] +60%☀</small>
+            <small dir="ltr">[S] +60%☀</small>
           </button>
 
           <button type="button" class="ultimate-btn" id="ultimateBtn" disabled title="الضربة القاضية: رماح السماء الذهبية تطهر جميع الصفوف وتجدد حركات قطعك [مفتاح المسافة Space]">
             <div class="ultimate-fill" id="ultimateFillBar"></div>
             <div class="ultimate-content">
-              <span class="ult-crown">⚡ كش مات الشاملة</span>
-              <span class="ultimate-label" id="ultimateText">شحن 25% [SPACE]</span>
+              <span class="ult-crown">♛ كش مات الشاملة</span>
+              <span class="ultimate-label" id="ultimateText" dir="ltr">25% [SPACE]</span>
             </div>
           </button>
         </div>
@@ -179,35 +184,35 @@
   </div>
 
   <!-- ================= ROYAL COMMAND MENU MODAL (UNIFIED PAUSE, SETTINGS & QUICK HUB) ================= -->
-  <div class="modal-backdrop hidden" id="commandMenuModal" role="dialog" aria-modal="true" aria-labelledby="commandMenuTitle">
+  <div class="modal-backdrop hidden" id="commandMenuModal" role="dialog" aria-modal="true" aria-labelledby="commandMenuTitle" dir="rtl" lang="ar">
     <div class="modal-window command-menu-window">
       <div class="modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="commandMenuTitle">👑 مركز القيادة الملكي • Royal Sanctum Hub</h3>
+          <h3 id="commandMenuTitle">♚ مركز القيادة الملكي • Royal Sanctum Hub</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab active" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">🗺 خريطة الحملة (4)</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">📖 الموسوعة الملكية (14)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeMenuBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeMenuBtn">✕ العودة للمعركة <bdi dir="ltr">[Esc]</bdi></button>
       </div>
       <div class="modal-body">
         <!-- Live Grandmaster Battle Telemetry Banner -->
         <div class="menu-telemetry-banner">
           <div class="telemetry-card highlight-gold">
             <span class="telemetry-label">التصنيف الملكي • GRANDMASTER ELO</span>
-            <strong class="telemetry-val" id="menuEloVal">1500</strong>
+            <strong class="telemetry-val" id="menuEloVal" dir="ltr">1500</strong>
             <small class="telemetry-sub" id="menuRankTitle">قائد التاج الملكي • Royal Commander</small>
           </div>
           <div class="telemetry-card">
             <span class="telemetry-label">المرحلة والموجة • CAMPAIGN WAVE</span>
-            <strong class="telemetry-val" id="menuActWaveVal">ACT I • 1/6</strong>
+            <strong class="telemetry-val" id="menuActWaveVal" dir="ltr">ACT I • 1/6</strong>
             <small class="telemetry-sub" id="menuActNameSub">The Courtyard Breach</small>
           </div>
           <div class="telemetry-card">
             <span class="telemetry-label">القلاع المجنحة • SENTINELS</span>
-            <strong class="telemetry-val" id="menuSentinelsVal">🪽 5 / 5</strong>
+            <strong class="telemetry-val" id="menuSentinelsVal" dir="ltr">♜ 5 / 5</strong>
             <small class="telemetry-sub">خط الدفاع الأخير للصفوف</small>
           </div>
           <div class="telemetry-card">
@@ -226,10 +231,10 @@
             ↻ إعادة المرحلة الحالية
           </button>
           <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenActsBtn">
-            🗺 خريطة المراحل الكاملة
+            ❖ خريطة المراحل الكاملة
           </button>
           <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenCodexBtn">
-            📖 موسوعة الشطرنج والوحوش
+            ◈ موسوعة الشطرنج والوحوش
           </button>
         </div>
 
@@ -239,13 +244,13 @@
           <div class="menu-settings-grid">
             <button type="button" class="menu-setting-card is-on" id="menuSpeedBtn">
               <div class="setting-card-meta">
-                <span class="setting-icon">⏩</span>
+                <span class="setting-icon">»</span>
                 <div class="setting-text">
                   <strong>سرعة المعركة</strong>
                   <small>التحكم في وتيرة الوقت</small>
                 </div>
               </div>
-              <span class="setting-pill" id="menuSpeedPill">1x</span>
+              <bdi dir="ltr" class="setting-pill" id="menuSpeedPill">1x</bdi>
             </button>
 
             <button type="button" class="menu-setting-card is-on" id="menuAutoManaBtn">
@@ -256,7 +261,7 @@
                   <small>التقاط بلورات النور آلياً</small>
                 </div>
               </div>
-              <span class="setting-pill" id="menuAutoManaPill">تلقائي ON</span>
+              <bdi dir="ltr" class="setting-pill" id="menuAutoManaPill">تلقائي ON</bdi>
             </button>
 
             <button type="button" class="menu-setting-card is-on" id="menuGridCoordsBtn">
@@ -267,18 +272,18 @@
                   <small>إظهار ترقيم المربعات A1–J5</small>
                 </div>
               </div>
-              <span class="setting-pill" id="menuGridCoordsPill">مفعلة ON</span>
+              <bdi dir="ltr" class="setting-pill" id="menuGridCoordsPill">مفعلة ON</bdi>
             </button>
 
             <button type="button" class="menu-setting-card is-on" id="menuAudioBtn">
               <div class="setting-card-meta">
-                <span class="setting-icon" id="menuAudioIcon">🔊</span>
+                <span class="setting-icon" id="menuAudioIcon">♫</span>
                 <div class="setting-text">
                   <strong>الموسيقى والمؤثرات</strong>
                   <small>الأوركسترا الملكية وأصوات القتال</small>
                 </div>
               </div>
-              <span class="setting-pill" id="menuAudioPill">مفعل ON</span>
+              <bdi dir="ltr" class="setting-pill" id="menuAudioPill">مفعل ON</bdi>
             </button>
 
             <button type="button" class="menu-setting-card" id="menuFullscreenBtn">
@@ -289,7 +294,7 @@
                   <small>تجربة سينمائية بدون حواف</small>
                 </div>
               </div>
-              <span class="setting-pill" id="menuFullscreenPill">تبديل [F]</span>
+              <bdi dir="ltr" class="setting-pill" id="menuFullscreenPill">تبديل [F]</bdi>
             </button>
           </div>
         </div>
@@ -302,12 +307,12 @@
 
         <!-- Controls & Synergies Cheat-Sheet -->
         <div class="menu-shortcuts-box">
-          <h4 class="codex-section-title">🎮 اختصارات التحكم والدمج التكتيكي • Tactical Controls &amp; Combos</h4>
+          <h4 class="codex-section-title">♚ اختصارات التحكم والدمج التكتيكي • Tactical Controls &amp; Combos</h4>
           <div class="shortcuts-chips">
             <span><kbd>1</kbd>–<kbd>7</kbd> اختيار قطعة</span>
             <span><kbd>M</kbd> دمج سطر 5 جنود لوزير متوّج ♛</span>
             <span><kbd>S</kbd> تضحية بقطعة (+60%☀ وتفجير)</span>
-            <span><kbd>Space</kbd> كش مات الشاملة ⚡</span>
+            <span><kbd>Space</kbd> كش مات الشاملة ♛</span>
             <span><kbd>F</kbd> ملء الشاشة</span>
             <span><kbd>P</kbd> إيقاف مؤقت</span>
             <span><kbd>Esc</kbd> إغلاق النوافذ</span>
@@ -318,35 +323,35 @@
   </div>
 
   <!-- ================= ROYAL CODEX MODAL (CHESS GEOMETRY & BESTIARY) ================= -->
-  <div class="modal-backdrop hidden" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
+  <div class="modal-backdrop hidden" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle" dir="rtl" lang="ar">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="codexModalTitle">📖 الموسوعة الملكية • Royal Grandmaster Codex</h3>
+          <h3 id="codexModalTitle">◈ الموسوعة الملكية • Royal Grandmaster Codex</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">🗺 خريطة الحملة (4)</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">📖 الموسوعة الملكية (14)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
           <div class="codex-tabs" role="tablist">
             <button type="button" class="codex-tab-btn active" data-codex-tab="all">الكل (14)</button>
             <button type="button" class="codex-tab-btn" data-codex-tab="pieces">♟ قطع الشطرنج (7)</button>
-            <button type="button" class="codex-tab-btn" data-codex-tab="enemies">💀 جيش الظلام (7)</button>
+            <button type="button" class="codex-tab-btn" data-codex-tab="enemies">☠ جيش الظلام (7)</button>
           </div>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeCodexBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeCodexBtn">✕ العودة للمعركة <bdi dir="ltr">[Esc]</bdi></button>
       </div>
       <div class="modal-body">
         <div id="codexRulesSection" class="codex-rules-banner">
           <div class="codex-rules-main">
-            <h4 class="codex-section-title">👑 قواعد الدمج بين الشطرنج والدفاع الاستراتيجي • Tactical Chess Fusion</h4>
+            <h4 class="codex-section-title">♛ قواعد الدمج بين الشطرنج والدفاع الاستراتيجي • Tactical Chess Fusion</h4>
             <p class="codex-desc">
               ساحة المعركة عبارة عن رقعة شطرنج كاتدرائية بحجم <strong>10×5 (من A إلى J)</strong>. كل قطعة تهاجم وتتحرك وفق <strong>هندسة حركتها الحقيقية في الشطرنج</strong>. <strong>الجندي المدرع (Phalanx Pawn)</strong> مدافع صلب يدفع الأعداء للخلف بدرعه ولا يطلق الليزر أبداً، وعند <strong>صفّ 5 جنود في نفس السطر (عمودياً أو أفقياً)</strong> يمكنك تفعيل <strong>الدمج السينمائي [M]</strong> لدمجهم إلى <strong>وزير ملكي متوّج (Ascended Sovereign Queen)</strong>!
             </p>
           </div>
           <div class="codex-synergy-cards">
             <div class="codex-syn-pill">
-              <strong>👑 دمج 5 جنود ← وزير</strong>
+              <strong>♛ دمج 5 جنود ← وزير</strong>
               <span>5 جنود في صف أو عمود يندمجون سينمائياً إلى وزير خارق (780 HP + 300🛡)</span>
             </div>
             <div class="codex-syn-pill">
@@ -354,7 +359,7 @@
               <span>اصطفاف القلعة أو الفيل أو الوزير على نفس الخط يضاعف قوة الهجوم</span>
             </div>
             <div class="codex-syn-pill">
-              <strong>🏰 التبييت الملكي (Castling)</strong>
+              <strong>♜ التبييت الملكي (Castling)</strong>
               <span>تبادل موقع الملك والقلعة في نفس الصف يمنح درعاً ذهبياً للصف بالكامل</span>
             </div>
           </div>
@@ -366,7 +371,7 @@
         </div>
 
         <div id="codexEnemiesSection">
-          <h4 class="codex-section-title">💀 جيش الشطرنج الأسود الملعون (7 وحوش) • Corrupted Ebony Undead</h4>
+          <h4 class="codex-section-title">☠ جيش الشطرنج الأسود الملعون (7 وحوش) • Corrupted Ebony Undead</h4>
           <div class="codex-grid" id="codexEnemiesGrid"></div>
         </div>
       </div>
@@ -374,18 +379,18 @@
   </div>
 
   <!-- ================= CAMPAIGN ACTS MODAL ================= -->
-  <div class="modal-backdrop hidden" id="actsModal" role="dialog" aria-modal="true" aria-labelledby="actsModalTitle">
+  <div class="modal-backdrop hidden" id="actsModal" role="dialog" aria-modal="true" aria-labelledby="actsModalTitle" dir="rtl" lang="ar">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="actsModalTitle">🗺 خريطة الحملة الملكية • Campaign Operations</h3>
+          <h3 id="actsModalTitle">❖ خريطة الحملة الملكية • Campaign Operations</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">🗺 خريطة الحملة (4)</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">📖 الموسوعة الملكية (14)</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeActsBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeActsBtn">✕ العودة للمعركة <bdi dir="ltr">[Esc]</bdi></button>
       </div>
       <div class="modal-body">
         <div class="acts-grid" id="actsListContainer"></div>
@@ -394,15 +399,15 @@
   </div>
 
   <!-- ================= VICTORY / DEFEAT RESULT MODAL ================= -->
-  <div class="modal-backdrop hidden" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+  <div class="modal-backdrop hidden" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle" dir="rtl" lang="ar">
     <div class="modal-window result-window">
       <div class="result-stars-banner" id="resultStarsRow">★★★</div>
-      <h3 id="resultModalTitle" class="result-modal-heading">👑 كش مات — انتصار ساحق!</h3>
+      <h3 id="resultModalTitle" class="result-modal-heading">♛ كش مات — انتصار ساحق!</h3>
       <p id="resultModalSubtitle" class="result-modal-sub"></p>
       <div class="result-stats-row" id="resultModalStats"></div>
       <div class="result-actions">
         <button type="button" class="hud-btn gold-outline" id="modalRetryBtn">↻ إعادة المرحلة</button>
-        <button type="button" class="hud-btn gold-outline" id="modalActsBtn">🗺 خريطة المراحل</button>
+        <button type="button" class="hud-btn gold-outline" id="modalActsBtn">❖ خريطة المراحل</button>
         <button type="button" class="launch-act-btn" id="modalNextActBtn">⚔ المرحلة التالية ←</button>
       </div>
     </div>

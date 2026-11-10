@@ -2200,16 +2200,16 @@ class RoyalGambitGame {
       btn.innerHTML = `
         <div class="deck-card-cooldown" id="cd-${def.id}"></div>
         <div class="deck-card-top">
-          <span class="deck-hotkey">[${def.hotkey}]</span>
-          <span class="deck-cap-badge" id="cap-${def.id}"></span>
-          <span class="deck-cost"><span class="mana-gem">☀</span>${def.cost}</span>
+          <bdi dir="ltr" class="deck-hotkey">[${def.hotkey}]</bdi>
+          <bdi dir="ltr" class="deck-cost"><span class="mana-gem">☀</span>${def.cost}</bdi>
         </div>
         <div class="deck-piece-portrait">
           <img src="${spriteUrl}" alt="${def.name}" class="deck-sprite-img" />
+          <bdi dir="ltr" class="deck-cap-badge" id="cap-${def.id}"></bdi>
         </div>
-        <div class="deck-card-info">
-          <strong class="deck-piece-name">${def.arabicTitle || def.name}</strong>
-          <span class="deck-piece-role">${def.name}</span>
+        <div class="deck-card-info" dir="rtl">
+          <strong class="deck-piece-name" lang="ar">${def.arabicTitle || def.name}</strong>
+          <span class="deck-piece-role" lang="en" dir="ltr">${def.name}</span>
         </div>
       `;
       btn.addEventListener('click', () => {
@@ -2684,7 +2684,7 @@ class RoyalGambitGame {
       ultBtn.classList.toggle('ready', ultPct >= 100);
       ultBtn.disabled = ultPct < 100;
     }
-    setTxt('ultimateText', ultPct >= 100 ? '⚡ الضربة القاضية جاهزة [SPACE]' : `⚡ الضربة القاضية ${ultPct}%`);
+    setTxt('ultimateText', ultPct >= 100 ? 'جاهزة [SPACE]' : `${ultPct}% [SPACE]`);
 
     // Deck Cards
     document.querySelectorAll('.deck-card').forEach(card => {
@@ -2703,15 +2703,18 @@ class RoyalGambitGame {
 
       const capEl = document.getElementById(`cap-${pid}`);
       if (capEl) {
+        let badgeTxt = '';
         if (atCap) {
-          capEl.textContent = `MAX ${count}/${def.maxCount}`;
+          badgeTxt = `MAX ${count}/${def.maxCount}`;
         } else if (cd > 0) {
-          capEl.textContent = `${cd.toFixed(1)}s`;
+          badgeTxt = `${cd.toFixed(1)}s`;
         } else if (this.mana < def.cost) {
-          capEl.textContent = 'نقص ☀';
-        } else {
-          capEl.textContent = def.maxCount ? `${count}/${def.maxCount}` : '';
+          badgeTxt = 'نقص ☀';
+        } else if (def.maxCount) {
+          badgeTxt = `${count}/${def.maxCount}`;
         }
+        capEl.textContent = badgeTxt;
+        capEl.classList.toggle('has-badge', Boolean(badgeTxt));
         capEl.classList.toggle('cap-full', atCap || cd > 0 || this.mana < def.cost);
       }
 
@@ -2722,23 +2725,24 @@ class RoyalGambitGame {
       }
     });
 
-    // Tactical Status Pill
+    // Tactical Status Pill (RTL-safe with <bdi dir="ltr"> for numbers/costs)
     const statusPill = document.getElementById('tacticalStatusPill');
     if (statusPill) {
       if (this.shovelMode) {
-        statusPill.textContent = '🔥 وضع التضحية: انقر على أي قطعة لاسترجاع 60% من الطاقة وتفجير الأعداء حولها!';
+        statusPill.innerHTML =
+          '⚔ <strong>وضع التضحية:</strong> انقر على أي قطعة لاسترجاع <bdi dir="ltr">60%☀</bdi> وتفجير الأعداء حولها!';
         statusPill.className = 'tactical-status-pill mode-shovel';
       } else if (this.selectedBoardPiece) {
         const pDef = window.CHESS_DATA.PIECES[this.selectedBoardPiece.type];
         const cd = this.selectedBoardPiece.moveCd;
-        statusPill.textContent =
+        statusPill.innerHTML =
           cd > 0
-            ? `⏳ حركة ${pDef.arabicTitle || pDef.name} قيد الشحن (${cd.toFixed(1)}ث)`
-            : `♟ حركة شطرنج جاهزة: انقر على أي مربع أخضر لتحريك ${pDef.arabicTitle || pDef.name}!`;
+            ? `⏳ حركة <strong>${pDef.arabicTitle || pDef.name}</strong> قيد الشحن (<bdi dir="ltr">${cd.toFixed(1)}s</bdi>)`
+            : `♟ <strong>حركة شطرنج جاهزة:</strong> انقر على أي مربع متوهج لتحريك <strong>${pDef.arabicTitle || pDef.name}</strong>!`;
         statusPill.className = 'tactical-status-pill mode-move';
       } else if (this.selectedDeckPieceId) {
         const dDef = window.CHESS_DATA.PIECES[this.selectedDeckPieceId];
-        statusPill.textContent = `⚔ نشر: ${dDef.arabicTitle || dDef.name} (${dDef.cost}☀) — انقر على مربع فارغ للوضع، أو على قطعة موضوعة لتحريكها!`;
+        statusPill.innerHTML = `⚔ <strong>نشر ${dDef.arabicTitle || dDef.name} (<bdi dir="ltr">${dDef.cost}☀</bdi>):</strong> انقر على مربع فارغ للوضع، أو على قطعة موضوعة لتحريكها!`;
         statusPill.className = 'tactical-status-pill mode-deploy';
       }
     }
@@ -2748,16 +2752,20 @@ class RoyalGambitGame {
     const shovelBtn = document.getElementById('shovelBtn');
     if (shovelBtn) shovelBtn.classList.toggle('active', this.shovelMode);
 
-    setTxt('speedBtn', `⏩ ${this.gameSpeed}x`);
+    setTxt('speedBtnText', `${this.gameSpeed}x`);
 
     const autoBtn = document.getElementById('autoManaBtn');
     if (autoBtn) {
       autoBtn.classList.toggle('active', this.autoCollectMana);
-      autoBtn.textContent = this.autoCollectMana ? '☀ تلقائي: ON' : '☀ تلقائي: OFF';
     }
+    setTxt('autoManaText', this.autoCollectMana ? 'تلقائي: ON' : 'تلقائي: OFF');
 
-    const pauseBtn = document.getElementById('pauseBtn');
-    if (pauseBtn) pauseBtn.textContent = this.paused ? '▶' : '⏸';
+    const pauseSvg = document.getElementById('pauseBtnSvg');
+    if (pauseSvg) {
+      pauseSvg.innerHTML = this.paused
+        ? '<polygon points="6 4 20 12 6 20 6 4"/>'
+        : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    }
 
     // Synchronize Royal Command Menu Telemetry & Settings Cards
     setTxt('menuEloVal', this.eloRating);
@@ -2770,14 +2778,14 @@ class RoyalGambitGame {
     setTxt('menuRankTitle', rankTitle);
     setTxt('menuActWaveVal', `${this.currentAct.code} • ${Math.max(1, this.waveIndex)}/${totalW}`);
     setTxt('menuActNameSub', this.currentAct.name);
-    setTxt('menuSentinelsVal', `🪽 ${remainingSentinels} / 5`);
+    setTxt('menuSentinelsVal', `♜ ${remainingSentinels} / 5`);
     setTxt('menuForcesVal', `${this.pieces.length} قطع • ${Math.floor(this.mana)}☀`);
 
     const readyLines = this.readyPawnLines ? this.readyPawnLines.length : 0;
     setTxt(
       'menuSynergySub',
       readyLines > 0
-        ? `👑 سطر جنود جاهز للدمج (${readyLines})!`
+        ? `♛ سطر جنود جاهز للدمج (${readyLines})!`
         : this.batteryLinks.length > 0
           ? `⚡ بطارية ملكية نشطة (${this.batteryLinks.length})`
           : 'الدمج التكتيكي جاهز'
@@ -2789,8 +2797,13 @@ class RoyalGambitGame {
 
     const isMuted = Boolean(window.RoyalAudio && window.RoyalAudio.muted);
     setTxt('menuAudioPill', isMuted ? 'مكتوم OFF' : 'مفعل ON');
-    setTxt('menuAudioIcon', isMuted ? '🔇' : '🔊');
-    setTxt('audioMuteBtn', isMuted ? '🔇' : '🔊');
+    setTxt('menuAudioIcon', isMuted ? '✕' : '♫');
+    const audioSvg = document.getElementById('audioMuteSvg');
+    if (audioSvg) {
+      audioSvg.innerHTML = isMuted
+        ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
+        : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>';
+    }
 
     const isFs = Boolean(document.fullscreenElement);
     setTxt('menuFullscreenPill', isFs ? 'نشط ON' : 'تبديل [F]');
