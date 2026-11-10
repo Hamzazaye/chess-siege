@@ -73,16 +73,16 @@ body {
   cursor: pointer;
 }
 
-/* ================= FLOATING TOP ROYAL COMMAND PODS ================= */
+/* ================= FLOATING TOP ROYAL COMMAND PODS (UNIFIED SLEEK BAR) ================= */
 .floating-top-hud {
   position: fixed;
-  top: 10px;
+  top: 8px;
   left: 14px;
   right: 14px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   pointer-events: none;
   z-index: 20;
 }
@@ -92,29 +92,39 @@ body {
   pointer-events: auto;
 }
 
-/* POD 1: Left Sovereign Crest & Treasury Wing */
+/* POD 1: Sleek Single-Surface Sovereign Crest & Mana Treasury Bar (No Nested Ovals!) */
 .left-treasury-wing {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 14px 7px 9px;
-  background: linear-gradient(145deg, rgba(14, 20, 38, 0.94) 0%, rgba(7, 11, 22, 0.96) 100%);
-  border: 1.5px solid var(--gold-border);
-  border-radius: 16px 24px 24px 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+  min-height: 46px;
+  padding: 5px 14px 5px 7px;
+  background: linear-gradient(180deg, #171c29 0%, #0d111b 100%);
+  border: 1.5px solid #b89148;
+  border-radius: 14px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.78),
+    inset 0 1.5px 0 rgba(255, 240, 178, 0.38);
   backdrop-filter: blur(10px);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.left-treasury-wing.mana-flash {
+  transform: scale(1.04);
+  border-color: #e34b61;
+  box-shadow: 0 0 22px rgba(227, 75, 97, 0.65);
 }
 
 .royal-emblem {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: linear-gradient(135deg, #fde047 0%, #b45309 100%);
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 2px solid #fef08a;
-  box-shadow: 0 0 18px rgba(250, 204, 21, 0.45);
+  border: 1.5px solid #fff0b2;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.35);
   flex-shrink: 0;
 }
 
@@ -125,82 +135,89 @@ body {
   display: block;
 }
 
-/* Sculpted Sun-Chalice Mana Medallion */
+/* Flat Integrated Mana Readout (No Clunky Circle/Egg Inside Box!) */
 .mana-medallion {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px 4px 6px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 20% 50%, rgba(250, 204, 21, 0.26), rgba(15, 23, 42, 0.95));
-  border: 1.5px solid rgba(250, 204, 21, 0.65);
-  box-shadow: 0 0 18px rgba(250, 204, 21, 0.22);
-  transition: transform 0.16s ease, border-color 0.16s ease;
-}
-
-.mana-medallion.mana-flash {
-  transform: scale(1.08);
-  border-color: #f43f5e;
-  box-shadow: 0 0 22px rgba(244, 63, 94, 0.65);
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  flex-shrink: 0;
 }
 
 .mana-sun-orb {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fef08a 45%, #d97706 100%);
-  color: #78350f;
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  font-weight: 900;
-  box-shadow: 0 0 14px rgba(250, 204, 21, 0.75);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.65));
+}
+
+.mana-gem-svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.mana-readout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.05;
+  white-space: nowrap;
 }
 
 .mana-readout .pod-label {
   display: block;
   font-size: 9.5px;
   font-weight: 800;
-  color: #fde047;
-  letter-spacing: 0.03em;
+  color: #f2c66d;
+  white-space: nowrap;
 }
 
 .mana-readout .pod-value {
   font-family: var(--font-mono);
   font-size: 18px;
-  font-weight: 800;
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+  font-weight: 900;
+  color: #fff3d1;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.45);
+  white-space: nowrap;
+}
+
+.hud-v-divider {
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(180deg, transparent, rgba(184, 145, 72, 0.55), transparent);
+  flex-shrink: 0;
 }
 
 .title-and-sentinels {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
 }
 
 .act-badge {
   font-family: var(--font-hud);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  color: var(--cyan-tactical);
-  background: rgba(56, 189, 248, 0.14);
-  border: 1px solid rgba(56, 189, 248, 0.38);
-  padding: 2px 9px;
-  border-radius: 999px;
+  color: #8ddfff;
   white-space: nowrap;
+  line-height: 1.1;
 }
 
 .sentinel-chip {
   font-family: var(--font-body);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 800;
-  color: #fef08a;
-  background: rgba(250, 204, 21, 0.15);
-  border: 1px solid rgba(250, 204, 21, 0.42);
-  padding: 1px 9px;
-  border-radius: 999px;
+  color: #fde68a;
   white-space: nowrap;
+  line-height: 1.1;
 }
 
 /* POD 2: Center Grandmaster Astrolabe & Wave Siege Chronometer */
@@ -208,18 +225,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .astrolabe-main-row {
   display: flex;
   align-items: center;
+  min-height: 46px;
   gap: 10px;
-  padding: 7px 16px;
-  background: linear-gradient(180deg, rgba(14, 20, 38, 0.95) 0%, rgba(7, 10, 20, 0.96) 100%);
-  border: 1.5px solid var(--gold-border);
-  border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+  padding: 5px 14px;
+  background: linear-gradient(180deg, #171c29 0%, #0d111b 100%);
+  border: 1.5px solid #b89148;
+  border-radius: 14px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.78),
+    inset 0 1.5px 0 rgba(255, 240, 178, 0.38);
   backdrop-filter: blur(10px);
 }
 
@@ -391,12 +411,15 @@ body {
 .right-council-wing {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: linear-gradient(145deg, rgba(16, 22, 36, 0.95) 0%, rgba(9, 13, 22, 0.97) 100%);
-  border: 1.5px solid var(--gold-border);
-  border-radius: 24px 16px 16px 24px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+  min-height: 46px;
+  gap: 5px;
+  padding: 5px 8px;
+  background: linear-gradient(180deg, #171c29 0%, #0d111b 100%);
+  border: 1.5px solid #b89148;
+  border-radius: 14px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.78),
+    inset 0 1.5px 0 rgba(255, 240, 178, 0.38);
   backdrop-filter: blur(10px);
 }
 
@@ -2021,7 +2044,8 @@ body {
     display: none !important;
   }
 
-  .title-and-sentinels {
+  .title-and-sentinels,
+  .hud-v-divider {
     display: none;
   }
 

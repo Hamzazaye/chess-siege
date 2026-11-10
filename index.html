@@ -19,24 +19,38 @@
 
     <!-- ================= FLOATING TOP ROYAL COMMAND PODS ================= -->
     <header class="floating-top-hud">
-      <!-- POD 1 (LEFT): Sovereign Crest & Treasury Medallion -->
-      <div class="hud-wing left-treasury-wing">
+      <!-- POD 1 (LEFT): Sleek Unified Sovereign Crest & Mana Treasury Bar -->
+      <div class="hud-wing left-treasury-wing" id="manaPodBox" title="Sovereign Crown Mana — طاقة التاج الملكي">
         <div class="royal-emblem" aria-hidden="true">
           <img src="assets/royal-crest.png" alt="" class="royal-crest-img" onerror="this.style.display='none'" />
         </div>
 
-        <div class="mana-medallion" id="manaPodBox" title="Sovereign Crown Mana — طاقة التاج الملكي">
-          <div class="mana-sun-orb" aria-hidden="true">☀</div>
+        <div class="mana-medallion">
+          <div class="mana-sun-orb" aria-hidden="true">
+            <svg viewBox="0 0 32 32" class="mana-gem-svg">
+              <defs>
+                <radialGradient id="sunGemGrad" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="45%" stop-color="#fef08a" />
+                  <stop offset="100%" stop-color="#d97706" />
+                </radialGradient>
+              </defs>
+              <polygon points="16,2 19.5,10.5 28.5,8.5 23,16 28.5,23.5 19.5,21.5 16,30 12.5,21.5 3.5,23.5 9,16 3.5,8.5 12.5,10.5" fill="url(#sunGemGrad)" stroke="#fff3d1" stroke-width="1.2" />
+              <circle cx="16" cy="16" r="5.5" fill="#fffbeb" />
+            </svg>
+          </div>
           <div class="mana-readout">
-            <span class="pod-label">طاقة التاج • MANA</span>
-            <strong class="pod-value" id="manaCounterVal">150</strong>
+            <span class="pod-label">طاقة التاج</span>
+            <strong class="pod-value" id="manaCounterVal" dir="ltr">150</strong>
           </div>
         </div>
+
+        <div class="hud-v-divider" aria-hidden="true"></div>
 
         <div class="title-and-sentinels">
           <span class="act-badge" id="actTitleBadge">ACT I: The Courtyard Breach</span>
           <span class="sentinel-chip" id="sentinelCountBadge" title="Imperial Winged Golden Rook Sentinels guarding the 5 Ranks">
-            🪽 5/5 القلاع المجنحة
+            ♜ 5/5 القلاع المجنحة
           </span>
         </div>
       </div>

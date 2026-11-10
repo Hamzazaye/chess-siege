@@ -2624,7 +2624,7 @@ class RoyalGambitGame {
 
     // Remaining Winged Golden Rook Sentinels
     const remainingSentinels = this.chariots.filter(c => !c.used || c.active).length;
-    setTxt('sentinelCountBadge', `🪽 ${remainingSentinels}/5 القلاع المجنحة`);
+    setTxt('sentinelCountBadge', `♜ ${remainingSentinels}/5 القلاع المجنحة`);
 
     const totalW = this.currentAct.isEndless ? '∞' : this.currentAct.totalWaves;
     setTxt('waveCounterText', `WAVE ${Math.max(1, this.waveIndex)} / ${totalW}`);
