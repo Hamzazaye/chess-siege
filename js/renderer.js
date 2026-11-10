@@ -745,7 +745,53 @@ class RoyalBoardRenderer {
       }
       ctx.restore();
 
-      if (sentinel.used && !sentinel.active) continue;
+      if (sentinel.used && !sentinel.active) {
+        // ChatGPT Visual Audit #5: Broken-Shield Marker & Localized Crimson Lane Wash on Threatened Ranks
+        const laneThreatened = this.game.enemies.some(
+          e => Math.round(e.row) === sentinel.row && e.colPos <= 3.5
+        );
+        const pulse = laneThreatened ? 0.55 + Math.sin(t * 7.5) * 0.35 : 0.32;
+
+        if (laneThreatened) {
+          ctx.save();
+          const dangerGrad = ctx.createLinearGradient(
+            this.boardLeft,
+            cy,
+            this.boardLeft + this.tileSize * 3.8,
+            cy
+          );
+          dangerGrad.addColorStop(0, `rgba(225, 29, 72, ${0.28 * pulse})`);
+          dangerGrad.addColorStop(0.6, `rgba(225, 29, 72, ${0.12 * pulse})`);
+          dangerGrad.addColorStop(1, 'rgba(225, 29, 72, 0)');
+          ctx.fillStyle = dangerGrad;
+          ctx.fillRect(
+            this.boardLeft,
+            this.boardTop + sentinel.row * this.tileSize + 2,
+            this.tileSize * 3.8,
+            this.tileSize - 4
+          );
+          ctx.restore();
+        }
+
+        // Broken Sentinel Shield Emblem at the Left Balcony
+        ctx.save();
+        ctx.translate(this.chariotX, cy);
+        ctx.fillStyle = laneThreatened ? `rgba(225, 29, 72, ${0.32 + pulse * 0.25})` : 'rgba(30, 41, 59, 0.65)';
+        ctx.strokeStyle = laneThreatened ? '#fb7185' : 'rgba(244, 63, 94, 0.45)';
+        ctx.lineWidth = laneThreatened ? 2.0 : 1.4;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.tileSize * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = laneThreatened ? '#ffe4e6' : '#fda4af';
+        ctx.font = `900 ${Math.round(this.tileSize * 0.22)}px "Cinzel", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('!', 0, 1);
+        ctx.restore();
+        continue;
+      }
 
       const cx = sentinel.active ? sentinel.x : this.chariotX;
       const hoverBob = sentinel.active ? 0 : Math.sin(t * 3.4 + sentinel.row * 1.1) * 4;

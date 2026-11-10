@@ -68,9 +68,9 @@
             </div>
           </div>
 
-          <button type="button" class="early-wave-btn" id="callWaveBtn" title="استدعِ الموجة التالية مبكراً واحصل على +15 طاقة إضافية!">
+          <button type="button" class="early-wave-btn" id="callWaveBtn" title="استدعِ الموجة التالية مبكراً واحصل على +25 طاقة إضافية!">
             <span>⚔ الموجة التالية</span>
-            <small>+15☀ مكافأة</small>
+            <small dir="ltr">+25☀ مكافأة</small>
           </button>
 
           <div class="elo-score-cluster">
@@ -197,21 +197,53 @@
     </footer>
   </div>
 
-  <!-- ================= ROYAL COMMAND MENU MODAL (UNIFIED PAUSE, SETTINGS & QUICK HUB) ================= -->
+  <!-- ================= ROYAL COMMAND MENU MODAL (MAIN SANCTUM, ECONOMY & SETTINGS HUB) ================= -->
   <div class="modal-backdrop hidden" id="commandMenuModal" role="dialog" aria-modal="true" aria-labelledby="commandMenuTitle" dir="rtl" lang="ar">
     <div class="modal-window command-menu-window">
       <div class="modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="commandMenuTitle">♚ مركز القيادة الملكي • Royal Sanctum Hub</h3>
+          <h3 id="commandMenuTitle">♚ القائمة الملكية الرئيسية • Royal Sanctum Hub</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab active" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
             <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
         </div>
         <button type="button" class="hud-btn modal-close-pill" id="closeMenuBtn">✕ العودة للمعركة <bdi dir="ltr">[Esc]</bdi></button>
       </div>
       <div class="modal-body">
+        <!-- Royal Sanctum Hero Banner (Main Menu Centerpiece) -->
+        <div class="menu-hero-crest-banner">
+          <div class="hero-crest-medallion">
+            <img src="assets/crest.jpg" alt="Crown & Blight Crest" />
+            <span class="hero-crest-crown">♛</span>
+          </div>
+          <div class="hero-crest-copy">
+            <div class="hero-crest-badges">
+              <span class="hero-edition-pill">AAA TACTICAL CHESS DEFENSE</span>
+              <span class="hero-campaign-pill" id="menuHeroProgressPill">الفصل 1 من 5 • حملة التاج</span>
+            </div>
+            <h2 class="hero-game-title">حرب التاج والظلام <span dir="ltr">• CROWN &amp; BLIGHT</span></h2>
+            <p class="hero-game-subtitle">
+              هندسة الشطرنج الحقيقية على رقعة <strong>10×5</strong> في مواجهة جحافل الظلام — ابنِ اقتصاد كؤوس النور، شكّل جدار الجنود المدرعين، وادمج 5 جنود في سطر لترقيتهم سينمائياً إلى وزير متوّج!
+            </p>
+          </div>
+          <div class="hero-economy-pulse">
+            <div class="econ-pulse-item">
+              <span>معدل إنتاج الطاقة</span>
+              <strong id="menuIncomeRateVal" dir="ltr">+53☀ / 10s</strong>
+            </div>
+            <div class="econ-pulse-item">
+              <span>قيمة الجيش بالميدان</span>
+              <strong id="menuArmyValueVal" dir="ltr">100☀</strong>
+            </div>
+            <div class="econ-pulse-item">
+              <span>الوحوش المدمّرة</span>
+              <strong id="menuKillsVal" dir="ltr">0 ☠</strong>
+            </div>
+          </div>
+        </div>
+
         <!-- Live Grandmaster Battle Telemetry Banner -->
         <div class="menu-telemetry-banner">
           <div class="telemetry-card highlight-gold">
@@ -231,7 +263,7 @@
           </div>
           <div class="telemetry-card">
             <span class="telemetry-label">قوات الميدان والطاقة • FIELD STATUS</span>
-            <strong class="telemetry-val" id="menuForcesVal">0 قطع • 150☀</strong>
+            <strong class="telemetry-val" id="menuForcesVal">2 قطع • 150☀</strong>
             <small class="telemetry-sub" id="menuSynergySub">الدمج التكتيكي جاهز</small>
           </div>
         </div>
@@ -245,7 +277,7 @@
             ↻ إعادة المرحلة الحالية
           </button>
           <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenActsBtn">
-            ❖ خريطة المراحل الكاملة
+            ❖ خريطة الحملة (5 فصول)
           </button>
           <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenCodexBtn">
             ◈ موسوعة الشطرنج والوحوش
@@ -315,21 +347,22 @@
 
         <!-- Quick Campaign Act Switcher -->
         <div>
-          <h4 class="codex-section-title">⚔ انتقال سريع بين فصول الحملة • Quick Campaign Select</h4>
+          <h4 class="codex-section-title">⚔ انتقال سريع بين فصول الحملة (5 فصول) • Quick Campaign Select</h4>
           <div class="menu-quick-acts" id="menuQuickActsGrid"></div>
         </div>
 
         <!-- Controls & Synergies Cheat-Sheet -->
         <div class="menu-shortcuts-box">
-          <h4 class="codex-section-title">♚ اختصارات التحكم والدمج التكتيكي • Tactical Controls &amp; Combos</h4>
+          <h4 class="codex-section-title">♚ اختصارات التحكم والتوازن الاقتصادي • Tactical Controls &amp; Economy</h4>
           <div class="shortcuts-chips">
             <span><kbd>1</kbd>–<kbd>7</kbd> اختيار قطعة</span>
             <span><kbd>M</kbd> دمج سطر 5 جنود لوزير متوّج ♛</span>
             <span><kbd>S</kbd> تضحية بقطعة (+60%☀ وتفجير)</span>
             <span><kbd>Space</kbd> كش مات الشاملة ♛</span>
+            <span><kbd>+25☀</kbd> مكافأة استدعاء الموجة مبكراً</span>
             <span><kbd>F</kbd> ملء الشاشة</span>
             <span><kbd>P</kbd> إيقاف مؤقت</span>
-            <span><kbd>Esc</kbd> إغلاق النوافذ</span>
+            <span><kbd>Esc</kbd> القائمة / إغلاق</span>
           </div>
         </div>
       </div>
@@ -344,7 +377,7 @@
           <h3 id="codexModalTitle">◈ الموسوعة الملكية • Royal Grandmaster Codex</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
             <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
           <div class="codex-tabs" role="tablist">
@@ -358,7 +391,7 @@
       <div class="modal-body">
         <div id="codexRulesSection" class="codex-rules-banner">
           <div class="codex-rules-main">
-            <h4 class="codex-section-title">♛ قواعد الدمج بين الشطرنج والدفاع الاستراتيجي • Tactical Chess Fusion</h4>
+            <h4 class="codex-section-title">♛ قواعد الدمج والاقتصاد المتوازن • Tactical Chess &amp; Economy</h4>
             <p class="codex-desc">
               ساحة المعركة عبارة عن رقعة شطرنج كاتدرائية بحجم <strong>10×5 (من A إلى J)</strong>. كل قطعة تهاجم وتتحرك وفق <strong>هندسة حركتها الحقيقية في الشطرنج</strong>. <strong>الجندي المدرع (Phalanx Pawn)</strong> مدافع صلب يدفع الأعداء للخلف بدرعه ولا يطلق الليزر أبداً، وعند <strong>صفّ 5 جنود في نفس السطر (عمودياً أو أفقياً)</strong> يمكنك تفعيل <strong>الدمج السينمائي [M]</strong> لدمجهم إلى <strong>وزير ملكي متوّج (Ascended Sovereign Queen)</strong>!
             </p>
@@ -366,7 +399,7 @@
           <div class="codex-synergy-cards">
             <div class="codex-syn-pill">
               <strong>♛ دمج 5 جنود ← وزير</strong>
-              <span>5 جنود في صف أو عمود يندمجون سينمائياً إلى وزير خارق (780 HP + 300🛡)</span>
+              <span>5 جنود في صف أو عمود يندمجون سينمائياً إلى وزير خارق (820 HP + 300🛡 + 20% ضرر)</span>
             </div>
             <div class="codex-syn-pill">
               <strong>⚡ بطارية ملكية (+30%)</strong>
@@ -400,7 +433,7 @@
           <h3 id="actsModalTitle">❖ خريطة الحملة الملكية • Campaign Operations</h3>
           <nav class="sanctum-modal-nav" aria-label="تنقل القوائم الملكية">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ خريطة الحملة (4)</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
             <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (14)</button>
           </nav>
         </div>
@@ -412,17 +445,45 @@
     </div>
   </div>
 
-  <!-- ================= VICTORY / DEFEAT RESULT MODAL ================= -->
-  <div class="modal-backdrop hidden" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle" dir="rtl" lang="ar">
+  <!-- ================= BESPOKE VICTORY (WIN) & DEFEAT (LOST) ROYAL DECREE MODAL ================= -->
+  <div class="modal-backdrop hidden is-victory" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle" dir="rtl" lang="ar">
     <div class="modal-window result-window">
-      <div class="result-stars-banner" id="resultStarsRow">★★★</div>
-      <h3 id="resultModalTitle" class="result-modal-heading">♛ كش مات — انتصار ساحق!</h3>
-      <p id="resultModalSubtitle" class="result-modal-sub"></p>
-      <div class="result-stats-row" id="resultModalStats"></div>
+      <!-- Top Ornamental Crest & Ribbon -->
+      <div class="result-hero-header">
+        <div class="result-crest-medallion" id="resultCrestBox">
+          <span class="result-crest-glyph" id="resultCrestGlyph">♛</span>
+        </div>
+        <span class="result-ribbon-tag" id="resultRibbonTag">مرسوم النصر الملكي • SOVEREIGN VICTORY DECREE</span>
+        <div class="result-stars-banner victory-stars" id="resultStarsRow" aria-label="تقييم القلاع المجنحة">
+          <span class="result-star earned">★</span>
+          <span class="result-star earned">★</span>
+          <span class="result-star earned">★</span>
+        </div>
+        <h3 id="resultModalTitle" class="result-modal-heading">♛ كش مات — انتصار ملكي ساحق!</h3>
+        <p id="resultModalSubtitle" class="result-modal-sub"></p>
+        <div class="result-breach-strip hidden" id="resultBreachStrip"></div>
+      </div>
+
+      <!-- 6-Card Battle Telemetry Breakdown -->
+      <div class="result-stats-grid" id="resultModalStats"></div>
+
+      <!-- Post-Battle Tactical Advisor / Breach Diagnostics Box -->
+      <div class="result-advisor-box" id="resultAdvisorBox">
+        <div class="advisor-header">
+          <span class="advisor-badge" id="resultAdvisorBadge">♚ تحليل القائد الأعلى • Grandmaster Analysis</span>
+        </div>
+        <p class="advisor-text" id="resultAdvisorText">
+          تشكيلة دفاعية متقنة! حافظت على توازن مثالي بين اقتصاد كؤوس النور وخطوط النار المتقاطعة.
+        </p>
+      </div>
+
+      <!-- Action Footer -->
       <div class="result-actions">
-        <button type="button" class="hud-btn gold-outline" id="modalRetryBtn">↻ إعادة المرحلة</button>
-        <button type="button" class="hud-btn gold-outline" id="modalActsBtn">❖ خريطة المراحل</button>
-        <button type="button" class="launch-act-btn" id="modalNextActBtn">⚔ المرحلة التالية ←</button>
+        <button type="button" class="launch-act-btn result-primary-cta" id="modalNextActBtn">⚔ المرحلة التالية ←</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalRetryBtn">↻ إعادة المرحلة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalActsBtn">❖ خريطة الحملة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalCodexBtn">◈ الموسوعة المضادة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalMainMenuBtn">♚ مركز القيادة</button>
       </div>
     </div>
   </div>

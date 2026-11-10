@@ -1210,11 +1210,11 @@ body {
 }
 
 .telemetry-label {
-  font-family: var(--font-hud);
-  font-size: 9.5px;
+  font-family: var(--font-body);
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
+  letter-spacing: 0;
+  color: #cbd5e1;
 }
 
 .telemetry-val {
@@ -1599,81 +1599,468 @@ body {
   filter: brightness(1.08);
 }
 
-/* Victory / Defeat Result Window */
+/* ================= BESPOKE VICTORY (WIN) & DEFEAT (LOST) ROYAL DECREE MODAL ================= */
+#resultModal.is-victory {
+  background: radial-gradient(circle at 50% 35%, rgba(250, 204, 21, 0.22), rgba(4, 7, 14, 0.88) 70%);
+}
+
+#resultModal.is-defeat {
+  background: radial-gradient(circle at 50% 35%, rgba(225, 29, 72, 0.25), rgba(4, 6, 12, 0.90) 70%);
+}
+
 .result-window {
-  width: min(560px, 94vw);
+  width: min(680px, 95vw);
   text-align: center;
-  padding: 30px 28px;
+  padding: 28px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+#resultModal.is-victory .result-window {
+  border: 2px solid rgba(250, 204, 21, 0.72);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.18), transparent 62%),
+    linear-gradient(180deg, rgba(24, 32, 52, 0.98) 0%, rgba(9, 13, 23, 0.99) 100%);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.88),
+    0 0 42px rgba(250, 204, 21, 0.28),
+    inset 0 1px 0 rgba(255, 248, 214, 0.35);
+}
+
+#resultModal.is-defeat .result-window {
+  border: 2px solid rgba(244, 63, 94, 0.68);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(225, 29, 72, 0.20), transparent 62%),
+    linear-gradient(180deg, rgba(34, 16, 26, 0.98) 0%, rgba(10, 8, 16, 0.99) 100%);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.92),
+    0 0 42px rgba(225, 29, 72, 0.28),
+    inset 0 1px 0 rgba(253, 164, 175, 0.25);
+}
+
+.result-hero-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.result-crest-medallion {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+#resultModal.is-victory .result-crest-medallion {
+  background: radial-gradient(circle at 35% 30%, #fffbeb 0%, #facc15 45%, #b45309 100%);
+  border: 2px solid #fef08a;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+  animation: crestCoronationGlow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#resultModal.is-defeat .result-crest-medallion {
+  background: radial-gradient(circle at 35% 30%, #fecdd3 0%, #e11d48 48%, #4c0519 100%);
+  border: 2px solid #fda4af;
+  border-radius: 14px;
+  clip-path: polygon(50% 0%, 90% 14%, 100% 52%, 84% 90%, 54% 100%, 44% 82%, 18% 94%, 0% 54%, 12% 14%);
+  box-shadow: 0 0 28px rgba(225, 29, 72, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.35);
+  animation: crestFractureSettle 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes crestCoronationGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes crestFractureSettle {
+  0% {
+    opacity: 0;
+    transform: scale(1.12) rotate(-6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.result-crest-glyph {
+  font-size: 34px;
+  line-height: 1;
+  color: #090d16;
+  filter: drop-shadow(0 2px 3px rgba(255, 255, 255, 0.35));
+}
+
+.result-ribbon-tag {
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  padding: 4px 14px;
+  border-radius: 999px;
+}
+
+#resultModal.is-victory .result-ribbon-tag {
+  background: rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250, 204, 21, 0.48);
+  color: #fef08a;
+}
+
+#resultModal.is-defeat .result-ribbon-tag {
+  background: rgba(244, 63, 94, 0.18);
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  color: #fda4af;
 }
 
 .result-stars-banner {
-  font-size: 38px;
-  letter-spacing: 8px;
-  margin-bottom: 6px;
-  text-shadow: 0 0 24px rgba(250, 204, 21, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 34px;
+  line-height: 1.1;
+  margin: 2px 0;
 }
 
-.result-stars-banner.victory-stars {
+.result-star {
+  display: inline-block;
+  animation: starCoronation 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--star-delay, 0ms);
+}
+
+.result-star.earned {
   color: #facc15;
+  text-shadow: 0 0 22px rgba(250, 204, 21, 0.8);
 }
 
-.result-stars-banner.defeat-stars {
-  color: #64748b;
+.result-star.unearned {
+  color: rgba(148, 163, 184, 0.42);
   text-shadow: none;
+}
+
+#resultModal.is-defeat .result-star.unearned {
+  color: rgba(244, 63, 94, 0.55);
+  text-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+}
+
+@keyframes starCoronation {
+  0% {
+    opacity: 0;
+    transform: scale(0.75) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .result-modal-heading {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 25px;
+  font-weight: 900;
   color: #fff3d1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
+}
+
+#resultModal.is-defeat .result-modal-heading {
+  color: #ffe4e6;
 }
 
 .result-modal-sub {
   color: #cbd5e1;
-  margin-top: 8px;
-  font-size: 14px;
+  font-size: 13.5px;
+  max-width: 540px;
+  line-height: 1.6;
 }
 
-.result-stats-row {
-  display: flex;
-  justify-content: center;
+.result-breach-strip {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(225, 29, 72, 0.24);
+  border: 1px solid rgba(251, 113, 133, 0.65);
+  color: #ffe4e6;
+  font-size: 12.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 18px rgba(225, 29, 72, 0.3);
+}
+
+.result-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 20px 0;
-  flex-wrap: wrap;
+  order: 2;
+}
+
+#resultModal.is-defeat .result-stats-grid {
+  order: 3;
 }
 
 .stat-pill {
-  padding: 10px 15px;
+  padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(23, 30, 46, 0.88);
-  border: 1px solid rgba(242, 198, 109, 0.35);
-  min-width: 112px;
+  background: rgba(15, 22, 36, 0.88);
+  border: 1px solid rgba(242, 198, 109, 0.32);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.stat-pill.highlight-sentinel {
+  border-color: rgba(250, 204, 21, 0.72);
+  background: linear-gradient(180deg, rgba(55, 43, 18, 0.72), rgba(15, 22, 36, 0.94));
+}
+
+#resultModal.is-defeat .stat-pill {
+  background: rgba(24, 14, 24, 0.88);
+  border-color: rgba(244, 63, 94, 0.32);
 }
 
 .stat-pill span {
   display: block;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #cbd5e1;
 }
 
 .stat-pill strong {
   font-family: var(--font-mono);
-  font-size: 16.5px;
+  font-size: 15.5px;
+  font-weight: 900;
   color: #fff3d1;
+}
+
+.result-advisor-box {
+  text-align: right;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(12, 19, 33, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-right: 4px solid #38bdf8;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  order: 3;
+}
+
+#resultModal.is-defeat .result-advisor-box {
+  order: 2;
+}
+
+#resultModal.is-victory .result-advisor-box {
+  border-color: rgba(250, 204, 21, 0.38);
+  border-right-color: #facc15;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.88), rgba(250, 204, 21, 0.10));
+}
+
+#resultModal.is-defeat .result-advisor-box {
+  border-color: rgba(244, 63, 94, 0.55);
+  border-right-color: #f43f5e;
+  background: linear-gradient(90deg, rgba(28, 12, 22, 0.94), rgba(244, 63, 94, 0.18));
+}
+
+.advisor-badge {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fef08a;
+}
+
+#resultModal.is-defeat .advisor-badge {
+  color: #fecdd3;
+}
+
+.advisor-text {
+  font-size: 13px;
+  color: #fff3d1;
+  line-height: 1.6;
 }
 
 .result-actions {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  order: 4;
+}
+
+#resultModal.is-defeat #modalRetryBtn {
+  background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+  border-color: #fecdd3;
+  color: #fff1f2;
+  font-weight: 900;
+  padding: 10px 22px;
+  font-size: 13.5px;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+}
+
+.result-primary-cta {
+  padding: 10px 20px;
+  font-size: 13.5px;
+}
+
+.result-secondary-cta {
+  padding: 9px 14px;
+  font-size: 12.5px;
+}
+
+/* ================= ROYAL COMMAND MENU & MAIN SANCTUM HERO BANNER ================= */
+.command-menu-window {
+  width: min(980px, 95vw);
+  max-height: 90dvh;
+}
+
+.menu-hero-crest-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(250, 204, 21, 0.18), transparent 55%),
+    linear-gradient(135deg, rgba(28, 39, 64, 0.95) 0%, rgba(11, 16, 28, 0.98) 100%);
+  border: 1.5px solid rgba(242, 198, 109, 0.48);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 244, 206, 0.22);
+}
+
+.hero-crest-medallion {
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  border: 2px solid #f2c66d;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 22px rgba(242, 198, 109, 0.35);
+  flex-shrink: 0;
+}
+
+.hero-crest-medallion img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-crest-crown {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #facc15;
+  color: #090d16;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.hero-crest-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.hero-crest-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-/* ================= ROYAL COMMAND MENU & INTERACTIVE SETTINGS ================= */
-.command-menu-window {
-  width: min(960px, 95vw);
-  max-height: 89dvh;
+.hero-edition-pill {
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  color: #fef08a;
+}
+
+.hero-campaign-pill {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #bae6fd;
+}
+
+.hero-game-title {
+  font-size: 19px;
+  font-weight: 900;
+  color: #fff3d1;
+  line-height: 1.2;
+}
+
+.hero-game-title span {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: #facc15;
+  font-weight: 700;
+}
+
+.hero-game-subtitle {
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.hero-economy-pulse {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 14px;
+  border-right: 1px solid rgba(242, 198, 109, 0.25);
+  min-width: 148px;
+}
+
+.econ-pulse-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: rgba(9, 14, 25, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.econ-pulse-item span {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.econ-pulse-item strong {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fef08a;
 }
 
 .menu-hero-actions {
@@ -1726,6 +2113,18 @@ body {
   transform: translateY(-2px);
   border-color: #f2c66d;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.menu-setting-card:active {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
+
+.menu-setting-card:focus-visible,
+.menu-act-pill:focus-visible,
+.sanctum-nav-tab:focus-visible {
+  outline: 2px solid #fff3d1;
+  outline-offset: 2px;
 }
 
 .setting-card-meta {
@@ -1827,11 +2226,24 @@ body {
   color: #fff3d1;
 }
 
-.menu-act-pill.active,
 .menu-act-pill:hover {
-  border-color: #f2c66d;
-  background: linear-gradient(135deg, rgba(242, 198, 109, 0.2), rgba(14, 20, 33, 0.96));
-  box-shadow: 0 0 16px rgba(242, 198, 109, 0.24);
+  transform: translateY(-2px);
+  border-color: rgba(242, 198, 109, 0.65);
+  background: rgba(22, 31, 50, 0.92);
+}
+
+.menu-act-pill.active {
+  border-color: #facc15;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.24), rgba(14, 20, 33, 0.98));
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.28), inset 0 1px 0 rgba(255, 248, 214, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-crest-medallion,
+  .result-star,
+  .modal-window {
+    animation: none !important;
+  }
 }
 
 .menu-shortcuts-box {
@@ -2204,6 +2616,31 @@ body {
   .modal-body {
     padding: 14px;
     gap: 14px;
+  }
+
+  .menu-hero-crest-banner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .hero-crest-badges {
+    justify-content: center;
+  }
+
+  .hero-economy-pulse {
+    width: 100%;
+    padding-right: 0;
+    border-right: none;
+    border-top: 1px solid rgba(242, 198, 109, 0.25);
+    padding-top: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .result-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
