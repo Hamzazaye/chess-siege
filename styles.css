@@ -1649,30 +1649,52 @@ body {
 }
 
 .result-crest-medallion {
-  width: 68px;
-  height: 68px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   position: relative;
+  overflow: visible;
+}
+
+.result-crest-medallion::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 #resultModal.is-victory .result-crest-medallion {
-  background: radial-gradient(circle at 35% 30%, #fffbeb 0%, #facc15 45%, #b45309 100%);
+  background: radial-gradient(circle at 35% 28%, #2e2412 0%, #171209 62%, #090d16 100%);
   border: 2px solid #fef08a;
-  box-shadow: 0 0 28px rgba(250, 204, 21, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 0 32px rgba(250, 204, 21, 0.55),
+    0 8px 20px rgba(0, 0, 0, 0.75),
+    inset 0 2px 8px rgba(254, 240, 138, 0.35);
   animation: crestCoronationGlow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+#resultModal.is-victory .result-crest-medallion::after {
+  border: 1px solid rgba(250, 204, 21, 0.48);
+}
+
 #resultModal.is-defeat .result-crest-medallion {
-  background: radial-gradient(circle at 35% 30%, #fecdd3 0%, #e11d48 48%, #4c0519 100%);
-  border: 2px solid #fda4af;
-  border-radius: 14px;
-  clip-path: polygon(50% 0%, 90% 14%, 100% 52%, 84% 90%, 54% 100%, 44% 82%, 18% 94%, 0% 54%, 12% 14%);
-  box-shadow: 0 0 28px rgba(225, 29, 72, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.35);
+  background: radial-gradient(circle at 35% 28%, #3b0a18 0%, #1b060d 64%, #09080d 100%);
+  border: 2px solid #fb7185;
+  border-radius: 50%;
+  box-shadow:
+    0 0 32px rgba(225, 29, 72, 0.6),
+    0 8px 20px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(251, 113, 133, 0.32);
   animation: crestFractureSettle 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#resultModal.is-defeat .result-crest-medallion::after {
+  border: 1px solid rgba(251, 113, 133, 0.45);
 }
 
 @keyframes crestCoronationGlow {
@@ -1698,10 +1720,23 @@ body {
 }
 
 .result-crest-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
   font-size: 34px;
   line-height: 1;
-  color: #090d16;
-  filter: drop-shadow(0 2px 3px rgba(255, 255, 255, 0.35));
+  color: #fef08a;
+  z-index: 1;
+}
+
+.result-crest-glyph svg {
+  width: 56px;
+  height: 56px;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.85));
 }
 
 .result-ribbon-tag {
@@ -1788,7 +1823,7 @@ body {
 
 .result-breach-strip {
   margin-top: 4px;
-  padding: 6px 14px;
+  padding: 5px 14px 5px 10px;
   border-radius: 999px;
   background: rgba(225, 29, 72, 0.24);
   border: 1px solid rgba(251, 113, 133, 0.65);
@@ -1799,6 +1834,16 @@ body {
   align-items: center;
   gap: 8px;
   box-shadow: 0 0 18px rgba(225, 29, 72, 0.3);
+}
+
+.breach-enemy-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(9, 8, 13, 0.85);
+  border: 1px solid rgba(251, 113, 133, 0.7);
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .result-stats-grid {

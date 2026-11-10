@@ -743,7 +743,7 @@ class RoyalGambitGame {
       this.screenShake = 0.32;
       const newCenter = this.renderer.tileCenter(piece.col, piece.row);
       this.spawnShockwave(newCenter.x, newCenter.y, 14, 150, '#facc15');
-      this.addFloatingText('🏰 تبييت ملكي! +درع ذهبي!', newCenter.x, newCenter.y - 18, '#facc15', true);
+      this.addFloatingText('♜ تبييت ملكي! +درع ذهبي!', newCenter.x, newCenter.y - 18, '#facc15', true);
       this.spawnParticles(newCenter.x, newCenter.y, '#facc15', 24);
       this.recalculateSynergies();
       return;
@@ -816,7 +816,7 @@ class RoyalGambitGame {
         ((ally.type === 'bishop' || ally.type === 'queen') && sameDiag)
       ) {
         const c = this.renderer.tileCenter(ally.col, ally.row);
-        this.addFloatingText('💥 DISCOVERED ATTACK! (1.6x)', c.x, c.y - 22, '#facc15', true);
+        this.addFloatingText('⚔ DISCOVERED ATTACK! (1.6x)', c.x, c.y - 22, '#facc15', true);
         this.performPieceAttack(ally, 1.6);
         break;
       }
@@ -935,7 +935,7 @@ class RoyalGambitGame {
       this.score += 300;
 
       this.addFloatingText(
-        '👑 ارتقاء ملكي -> الوزير المتوّج!',
+        '♛ ارتقاء ملكي ← الوزير المتوّج!',
         mc.targetX,
         mc.targetY - 30,
         '#fef08a',
@@ -989,7 +989,7 @@ class RoyalGambitGame {
     this.spawnParticles(center.x, center.y, '#facc15', 28);
     this.addFloatingText(
       targetType === 'queen'
-        ? '👑 تمت الترقية إلى الوزير الملكي!'
+        ? '♛ تمت الترقية إلى الوزير الملكي!'
         : '⚡ تمت الترقية إلى فارس العاصفة! (الحد 2 وزير)',
       center.x,
       center.y - 24,
@@ -1343,7 +1343,7 @@ class RoyalGambitGame {
     if (waveDef.isFlag) {
       window.RoyalAudio.playWaveHorn();
       window.RoyalAudio.setIntenseMode(true);
-      this.announceBanner(`🚩 ${waveDef.label}`, `Wave ${this.waveIndex} — A Massive Horde Approaches!`);
+      this.announceBanner(`⚔ ${waveDef.label}`, `Wave ${this.waveIndex} — A Massive Horde Approaches!`);
     } else {
       window.RoyalAudio.setIntenseMode(false);
     }
@@ -1515,7 +1515,7 @@ class RoyalGambitGame {
           target.slowTimer = Math.max(target.slowTimer, 0.70);
         }
 
-        this.addFloatingText('🛡 دفع!', center.x + 18, center.y - 18, '#7dd3fc', false);
+        this.addFloatingText('❖ دفع بالدرع!', center.x + 18, center.y - 18, '#7dd3fc', false);
         piece.xp = Math.min(100, piece.xp + 15);
         window.RoyalAudio.playAttack('pawn');
         return true;
@@ -1686,7 +1686,7 @@ class RoyalGambitGame {
             if (ally.hexTimer > 0) {
               ally.hexTimer = 0;
               const ac = this.renderer.tileCenter(ally.col, ally.row);
-              this.addFloatingText('✨ HEX CLEANSED!', ac.x, ac.y - 16, '#2dd4bf', false);
+              this.addFloatingText('❖ HEX CLEANSED!', ac.x, ac.y - 16, '#2dd4bf', false);
             }
           }
         }
@@ -1834,7 +1834,7 @@ class RoyalGambitGame {
           const ex = this.renderer.boardLeft + e.colPos * this.renderer.tileSize;
           const ey = this.renderer.boardTop + (e.row + 0.5) * this.renderer.tileSize;
           this.addFloatingText(
-            e.type === 'assassin' ? '🗡 SHADOW L-AMBUSH!' : 'KNIGHT-VAULT!',
+            e.type === 'assassin' ? '⚔ SHADOW L-AMBUSH!' : 'KNIGHT-VAULT!',
             ex,
             ey - 22,
             e.type === 'assassin' ? '#f43f5e' : '#c084fc',
@@ -1869,7 +1869,7 @@ class RoyalGambitGame {
             });
             targetPiece.hexTimer = 4.0;
             this.damagePiece(targetPiece, 32);
-            this.addFloatingText('☠ HEXED (-40% SPD)', tc.x, tc.y - 18, '#2dd4bf', false);
+            this.addFloatingText('❖ HEXED (-40% SPD)', tc.x, tc.y - 18, '#2dd4bf', false);
           }
         }
       }
@@ -1920,7 +1920,7 @@ class RoyalGambitGame {
           window.RoyalAudio.playChariotCharge();
           this.screenShake = 0.38;
           this.addFloatingText(
-            '🪽 القلعة المجنحة: تطهير الصف! • WINGED ROOK SWEEP!',
+            '♜ القلعة المجنحة: تطهير الصف! • WINGED ROOK SWEEP!',
             this.renderer.boardLeft + 210,
             this.renderer.boardTop + (sentinel.row + 0.5) * this.renderer.tileSize,
             '#fef08a',
@@ -2203,6 +2203,81 @@ class RoyalGambitGame {
     this.updateHUD();
   }
 
+  getResultCrestSVG(isVictory) {
+    if (isVictory) {
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" aria-hidden="true">
+          <defs>
+            <linearGradient id="vicGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FFF7CC"/>
+              <stop offset="45%" stop-color="#FACC15"/>
+              <stop offset="100%" stop-color="#B45309"/>
+            </linearGradient>
+            <linearGradient id="vicLapis" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#1E3A8A"/>
+            </linearGradient>
+          </defs>
+          <!-- Crossed Golden Sovereign Scepters / Blades -->
+          <line x1="14" y1="64" x2="66" y2="16" stroke="url(#vicGold)" stroke-width="3.2" stroke-linecap="round"/>
+          <line x1="66" y1="64" x2="14" y2="16" stroke="url(#vicGold)" stroke-width="3.2" stroke-linecap="round"/>
+          <!-- Heraldic Lapis & Gold Shield Backing -->
+          <path d="M22,22 L58,22 L58,46 C58,58 40,68 40,68 C40,68 22,58 22,46 Z" fill="url(#vicLapis)" stroke="url(#vicGold)" stroke-width="2.6"/>
+          <!-- 5-Spire Imperial Sovereign Crown -->
+          <path d="M16,46 L12,24 L26,34 L40,16 L54,34 L68,24 L64,46 Z" fill="url(#vicGold)" stroke="#FFFBEB" stroke-width="2"/>
+          <rect x="18" y="45" width="44" height="7" rx="3" fill="url(#vicGold)" stroke="#FFFBEB" stroke-width="1.6"/>
+          <!-- Crown Starlight Jewels -->
+          <circle cx="12" cy="22" r="3" fill="#E0F2FE"/>
+          <circle cx="40" cy="13" r="4" fill="#FFFBEB"/>
+          <circle cx="68" cy="22" r="3" fill="#E0F2FE"/>
+          <polygon points="40,32 45,39 40,46 35,39" fill="#E0F2FE"/>
+        </svg>
+      `;
+    }
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="defBone" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F5F0E6"/>
+            <stop offset="52%" stop-color="#B8B0A4"/>
+            <stop offset="100%" stop-color="#4A4356"/>
+          </linearGradient>
+          <linearGradient id="defObsidian" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#524B61"/>
+            <stop offset="55%" stop-color="#231F2E"/>
+            <stop offset="100%" stop-color="#09080D"/>
+          </linearGradient>
+          <linearGradient id="defCrimson" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFE4E6"/>
+            <stop offset="45%" stop-color="#FB7185"/>
+            <stop offset="100%" stop-color="#9F1239"/>
+          </linearGradient>
+        </defs>
+        <!-- Crossed Crimson-Edged Executioner Blades Behind Skull -->
+        <line x1="12" y1="66" x2="68" y2="14" stroke="url(#defCrimson)" stroke-width="3.4" stroke-linecap="round"/>
+        <line x1="68" y1="66" x2="12" y2="14" stroke="url(#defCrimson)" stroke-width="3.4" stroke-linecap="round"/>
+        <!-- Dark-Fantasy Obsidian & Bone Heraldic Shield -->
+        <path d="M20,22 L60,22 L60,46 C60,60 40,70 40,70 C40,70 20,60 20,46 Z" fill="url(#defObsidian)" stroke="#FB7185" stroke-width="2.2"/>
+        <!-- Fractured Fallen Sovereign Crown -->
+        <path d="M20,32 L16,16 L29,25 L38,12 L43,24 L51,14 L64,17 L60,32 Z" fill="url(#defCrimson)" stroke="#FFE4E6" stroke-width="1.6"/>
+        <!-- Sculpted Gothic War-Skull (Cranium, Cheekbones & Armored Jaw) -->
+        <path d="M24,38 C24,26 56,26 56,38 C56,44 53,48 50,51 L49,60 L31,60 L30,51 C27,48 24,44 24,38 Z" fill="url(#defBone)" stroke="#15131C" stroke-width="2.2"/>
+        <!-- Glowing Crimson Eye Sockets -->
+        <polygon points="29,39 37,41 35,47 28,45" fill="#9F1239" stroke="#FF3B5C" stroke-width="1.2"/>
+        <polygon points="51,39 43,41 45,47 52,45" fill="#9F1239" stroke="#FF3B5C" stroke-width="1.2"/>
+        <circle cx="33" cy="43" r="2" fill="#FFE4E6"/>
+        <circle cx="47" cy="43" r="2" fill="#FFE4E6"/>
+        <!-- Nasal Cavity & Carved Jaw Grill -->
+        <polygon points="40,45 37,51 43,51" fill="#15131C"/>
+        <line x1="35" y1="54" x2="35" y2="59" stroke="#15131C" stroke-width="2" stroke-linecap="round"/>
+        <line x1="40" y1="54" x2="40" y2="59" stroke="#15131C" stroke-width="2" stroke-linecap="round"/>
+        <line x1="45" y1="54" x2="45" y2="59" stroke="#15131C" stroke-width="2" stroke-linecap="round"/>
+        <!-- Forehead Battle Fracture -->
+        <path d="M40,28 L37,35 L41,38" fill="none" stroke="#E11D48" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
   handleActVictory() {
     this.victory = true;
     this.gameOver = true;
@@ -2231,7 +2306,7 @@ class RoyalGambitGame {
       modal.classList.add('is-victory');
       modal.classList.remove('is-defeat');
     }
-    if (glyphEl) glyphEl.textContent = '♛';
+    if (glyphEl) glyphEl.innerHTML = this.getResultCrestSVG(true);
     if (ribbonEl) ribbonEl.textContent = 'مرسوم النصر الملكي • SOVEREIGN VICTORY DECREE';
     if (starsEl) {
       starsEl.className = 'result-stars-banner victory-stars';
@@ -2242,9 +2317,9 @@ class RoyalGambitGame {
         })
         .join('');
     }
-    if (title) title.textContent = '👑 كش مات — انتصار ملكي ساحق!';
+    if (title) title.textContent = '♛ كش مات — انتصار ملكي ساحق!';
     if (sub) {
-      sub.textContent = `تم تأمين ${this.currentAct.code} (${this.currentAct.name}) بنجاح وسحق جحافل الظلام!`;
+      sub.innerHTML = `تم تأمين <bdi dir="ltr">${this.currentAct.code} (${this.currentAct.name})</bdi> بنجاح وسحق جحافل الظلام!`;
     }
     if (breachStrip) {
       breachStrip.classList.add('hidden');
@@ -2255,24 +2330,24 @@ class RoyalGambitGame {
         <div class="stat-pill highlight-sentinel"><span>القلاع الصامدة • Sentinels</span><strong dir="ltr">♜ ${remainingSentinels} / 5</strong></div>
         <div class="stat-pill"><span>التصنيف • ELO</span><strong dir="ltr">${this.eloRating} (+45)</strong></div>
         <div class="stat-pill"><span>النقاط • Score</span><strong dir="ltr">${this.score.toLocaleString()}</strong></div>
-        <div class="stat-pill"><span>الوحوش المدمّرة • Slain</span><strong dir="ltr">☠ ${this.enemiesKilled || 0}</strong></div>
+        <div class="stat-pill"><span>الوحوش المدمّرة • Slain</span><strong dir="ltr">⚔ ${this.enemiesKilled || 0}</strong></div>
         <div class="stat-pill"><span>إجمالي الطاقة • Mana</span><strong dir="ltr">☀ ${Math.floor(this.totalManaEarned || this.mana)}</strong></div>
-        <div class="stat-pill"><span>الجيش الصامد • Army</span><strong dir="ltr">♟ ${this.pieces.length} قطع</strong></div>
+        <div class="stat-pill"><span>الجيش الصامد • Army</span><strong>♟ <bdi dir="ltr">${this.pieces.length}</bdi> قطع</strong></div>
       `;
     }
     if (advBadge) {
-      advBadge.textContent =
+      advBadge.innerHTML =
         remainingSentinels === 5
-          ? '♚ وسام الأستاذ الدولي الكبير • Flawless Defense (3/3 ★)'
-          : '♚ تقرير القيادة الملكية • Tactical Commendation';
+          ? '♛ وسام الأستاذ الدولي الكبير • <bdi dir="ltr">Flawless Defense (3/3 ★)</bdi>'
+          : '♚ تقرير القيادة الملكية • <bdi dir="ltr">Tactical Commendation</bdi>';
     }
     if (advText) {
       const queensCount = this.countPiecesOfType('queen');
       const chalicesCount = this.countPiecesOfType('chalice');
-      advText.textContent =
+      advText.innerHTML =
         remainingSentinels === 5
-          ? `أداء أسطوري! لم تخسر أي قلعة مجنحة (5/5)، وأدرت اقتصاد المعركة بكفاءة عالية (${chalicesCount} كؤوس نور و${queensCount} وزير في الميدان). انتقل للفصل التالي لتحدٍ أعمق!`
-          : `انتصار تكتيكي ثمين! حافظت على ${remainingSentinels} من أصل 5 قلاع مجنحة. للحصول على العلامة الكاملة (★★★)، عزّز الخطوط الأمامية بسلسلة جنود مدرعين أو استخدم التبييت الملكي مع القلعة!`;
+          ? `أداء أسطوري! لم تخسر أي قلعة مجنحة <bdi dir="ltr">(5/5)</bdi>، وأدرت اقتصاد المعركة بكفاءة عالية (${chalicesCount} كؤوس نور و${queensCount} وزير في الميدان). انتقل للفصل التالي لتحدٍ أعمق!`
+          : `انتصار تكتيكي ثمين! حافظت على <bdi dir="ltr">${remainingSentinels}</bdi> من أصل <bdi dir="ltr">5</bdi> قلاع مجنحة. للحصول على العلامة الكاملة <bdi dir="ltr">(★★★)</bdi>، عزّز الخطوط الأمامية بسلسلة جنود مدرعين أو استخدم التبييت الملكي مع القلعة!`;
     }
     if (nextBtn) nextBtn.style.display = '';
     if (retryBtn) retryBtn.textContent = '↻ إعادة المرحلة';
@@ -2299,32 +2374,47 @@ class RoyalGambitGame {
     const nextBtn = document.getElementById('modalNextActBtn');
     const retryBtn = document.getElementById('modalRetryBtn');
 
-    const breachCounterTips = {
-      thrall:
-        'اخترق بيدق الظلام دفاعك! ضع جندياً مدرعاً (Phalanx Pawn - 60☀) في الصفوف الأمامية ليدفعه بالدرع للخلف ويمنعه من التقدم.',
-      buckler:
-        'اخترق حامل الدرع الحديدي الصف! درعه الأمامي يقاوم الدفع العادي — استخدم فيل الأشعة (Bishop) أو فارس العاصفة (Knight) لتجاوز 50% من درعه!',
-      sprinter:
-        'اخترق المتسلل الوثّاب دفاعك بقفزة الحصان! ضع جندياً أمامياً لاستنزاف قفزته الأولى، ثم ضع قلعة حصار (Aegis Rook) خلفه لسحقه.',
-      assassin:
-        'الفارس الشبح القاتل اغتال دفاعاتك! يقفز بحرف L فوق القطع العادية لكنه يتوقف تماماً أمام قلعة الحصار (Aegis Rook). احمِ الوزير بقلعة أو ملك!',
-      necro:
-        'كاهن الفيل الملعون أبطأ قطعك بلعناته! ضع فيل الأشعة المقدسة (Radiant Bishop) على قطره لتطهير اللعنات فوراً وعلاج قطعك.',
-      imp:
-        'تسلل عفريت الوباء السريع إلى الخلفية! هالة الملك القائد (Arcane King) أو أشعة القلعة المتقاطعة تمحو الأسراب السريعة بثوانٍ.',
-      gargantua:
-        'عملاق القلعة المحطمة حطّم الصف! لمواجهته: ادمج 5 جنود لوزير متوّج [M]، أو شكّل بطارية ملكية (+30% ضرر)، وأطلق كش مات الشاملة [Space]!'
+    const enemyArabicNames = {
+      thrall: 'بيدق الظلام الزاحف',
+      buckler: 'حامل الدرع الحديدي',
+      sprinter: 'المتسلل الوثّاب',
+      assassin: 'الفارس الشبح القاتل',
+      necro: 'كاهن الفيل الملعون',
+      imp: 'عفريت الوباء السريع',
+      gargantua: 'عملاق القلعة المحطمة'
     };
 
-    const bInfo = this.breachInfo || { enemyType: 'thrall', enemyName: 'Undead Vanguard', row: 2 };
+    const breachCounterTips = {
+      thrall:
+        'اخترق بيدق الظلام دفاعك! ضع جندياً مدرعاً <bdi dir="ltr">(Phalanx Pawn • 60☀)</bdi> في الصفوف الأمامية ليدفعه بالدرع للخلف ويمنعه من التقدم.',
+      buckler:
+        'اخترق حامل الدرع الحديدي المسار! درعه الأمامي يقاوم الدفع العادي — استخدم فيل الأشعة <bdi dir="ltr">(Bishop)</bdi> أو فارس العاصفة <bdi dir="ltr">(Knight)</bdi> لتجاوز <bdi dir="ltr">50%</bdi> من درعه!',
+      sprinter:
+        'اخترق المتسلل الوثّاب دفاعك بقفزة الحصان! ضع جندياً أمامياً لاستنزاف قفزته الأولى، ثم ضع قلعة حصار <bdi dir="ltr">(Aegis Rook)</bdi> خلفه لسحقه.',
+      assassin:
+        'الفارس الشبح القاتل اغتال دفاعاتك! يقفز بحرف <bdi dir="ltr">L</bdi> فوق القطع العادية لكنه يتوقف تماماً أمام قلعة الحصار <bdi dir="ltr">(Aegis Rook)</bdi>. احمِ الوزير بقلعة أو ملك!',
+      necro:
+        'كاهن الفيل الملعون أبطأ قطعك بلعناته! ضع فيل الأشعة المقدسة <bdi dir="ltr">(Radiant Bishop)</bdi> على قطره لتطهير اللعنات فوراً وعلاج قطعك.',
+      imp:
+        'تسلل عفريت الوباء السريع إلى الخلفية! هالة الملك القائد <bdi dir="ltr">(Arcane King)</bdi> أو أشعة القلعة المتقاطعة تمحو الأسراب السريعة بثوانٍ.',
+      gargantua:
+        'عملاق القلعة المحطمة حطّم المسار! لمواجهته: ادمج <bdi dir="ltr">5</bdi> جنود لوزير متوّج <bdi dir="ltr">[M]</bdi>، أو شكّل بطارية ملكية <bdi dir="ltr">(+30% DMG)</bdi>، وأطلق كش مات الشاملة <bdi dir="ltr">[Space]</bdi>!'
+    };
+
+    const bInfo = this.breachInfo || { enemyType: 'thrall', enemyName: 'Shambling Pawn-Thrall', row: 2 };
     const rankNum = 5 - bInfo.row;
     const totalW = this.currentAct.isEndless ? '∞' : this.currentAct.totalWaves;
+    const arEnemyName = enemyArabicNames[bInfo.enemyType] || bInfo.enemyName;
+    const enemySpriteUrl =
+      window.RoyalSprites && window.RoyalSprites.enemyDataUrls[bInfo.enemyType]
+        ? window.RoyalSprites.enemyDataUrls[bInfo.enemyType]
+        : '';
 
     if (modal) {
       modal.classList.remove('is-victory');
       modal.classList.add('is-defeat');
     }
-    if (glyphEl) glyphEl.textContent = '💀';
+    if (glyphEl) glyphEl.innerHTML = this.getResultCrestSVG(false);
     if (ribbonEl) ribbonEl.textContent = 'تقرير سقوط الدفاعات • CITADEL BREACH REPORT';
     if (starsEl) {
       starsEl.className = 'result-stars-banner defeat-stars';
@@ -2332,32 +2422,35 @@ class RoyalGambitGame {
         .map(i => `<span class="result-star unearned" style="--star-delay: ${i * 80}ms">☆</span>`)
         .join('');
     }
-    if (title) title.textContent = '💀 سقطت القلعة الملكية — كش ملك!';
+    if (title) title.textContent = '♚ سقطت القلعة الملكية — كش ملك!';
     if (sub) {
       sub.textContent = 'اخترق جيش الظلام خط الدفاع الأخير بعد استنفاد القلعة المجنحة في المسار المخترق!';
     }
     const breachStrip = document.getElementById('resultBreachStrip');
     if (breachStrip) {
       breachStrip.classList.remove('hidden');
-      breachStrip.innerHTML = `⚠️ سبب الاختراق: <strong>${bInfo.enemyName}</strong> في الصف رقم <bdi dir="ltr">Rank ${rankNum}</bdi>`;
+      const iconHtml = enemySpriteUrl
+        ? `<img src="${enemySpriteUrl}" alt="" class="breach-enemy-icon" />`
+        : '<span>⚔</span>';
+      breachStrip.innerHTML = `${iconHtml}<span>سبب الاختراق: <strong>${arEnemyName}</strong> <bdi dir="ltr">(${bInfo.enemyName})</bdi> في المسار <bdi dir="ltr">Rank ${rankNum}</bdi></span>`;
     }
     if (stats) {
       stats.innerHTML = `
         <div class="stat-pill"><span>الموجة • Wave</span><strong dir="ltr">${Math.max(1, this.waveIndex)} / ${totalW}</strong></div>
         <div class="stat-pill"><span>مسار الاختراق • Breach</span><strong dir="ltr">Rank ${rankNum}</strong></div>
-        <div class="stat-pill"><span>الوحوش المدمّرة • Slain</span><strong dir="ltr">☠ ${this.enemiesKilled || 0}</strong></div>
+        <div class="stat-pill"><span>الوحوش المدمّرة • Slain</span><strong dir="ltr">⚔ ${this.enemiesKilled || 0}</strong></div>
         <div class="stat-pill"><span>إجمالي الطاقة • Mana</span><strong dir="ltr">☀ ${Math.floor(this.totalManaEarned || this.mana)}</strong></div>
         <div class="stat-pill"><span>النقاط • Score</span><strong dir="ltr">${this.score.toLocaleString()}</strong></div>
         <div class="stat-pill"><span>التصنيف • ELO</span><strong dir="ltr">${this.eloRating} (-15)</strong></div>
       `;
     }
     if (advBadge) {
-      advBadge.textContent = `🛡 التشخيص التكتيكي المضاد (اختراق الصف ${rankNum}) • Counter-Strategy`;
+      advBadge.innerHTML = `❖ التشخيص التكتيكي المضاد (المسار <bdi dir="ltr">Rank ${rankNum}</bdi>) • <bdi dir="ltr">Counter-Strategy</bdi>`;
     }
     if (advText) {
-      advText.textContent =
+      advText.innerHTML =
         breachCounterTips[bInfo.enemyType] ||
-        'احرص على بناء 3 إلى 4 كؤوس نور ملكية مبكراً لتمويل خط دفاع متوازن من الجنود المدرعين والقلاع.';
+        'احرص على بناء <bdi dir="ltr">3</bdi> إلى <bdi dir="ltr">4</bdi> كؤوس نور ملكية مبكراً لتمويل خط دفاع متوازن من الجنود المدرعين والقلاع.';
     }
     if (nextBtn) nextBtn.style.display = 'none';
     if (retryBtn) retryBtn.textContent = '⚔ الثأر وإعادة المرحلة فوراً!';
@@ -2469,45 +2562,52 @@ class RoyalGambitGame {
     const enemyArabicMeta = {
       thrall: {
         arName: 'بيدق الظلام الزاحف',
-        tier: '💀 جندي أساسي',
+        tier: '♟ جندي أساسي',
         tierClass: 'tier-emerald',
-        counter: '💡 المضاد: الجندي المدرع (Phalanx Pawn) يدفعه للخلف بسهولة ويمنعه من التقدم.'
+        counter:
+          '❖ <strong>المضاد:</strong> الجندي المدرع <bdi dir="ltr">(Phalanx Pawn)</bdi> يدفعه للخلف بسهولة ويمنعه من التقدم.'
       },
       buckler: {
         arName: 'حامل الدرع الحديدي',
-        tier: '🛡 مدرع ثقيل',
+        tier: '♜ مدرع ثقيل',
         tierClass: 'tier-emerald',
-        counter: '💡 المضاد: فيل الأشعة (Bishop) أو فارس العاصفة (Knight) لتجاوز 50% من درعه الأمامي!'
+        counter:
+          '❖ <strong>المضاد:</strong> فيل الأشعة <bdi dir="ltr">(Bishop)</bdi> أو فارس العاصفة <bdi dir="ltr">(Knight)</bdi> لتجاوز <bdi dir="ltr">50%</bdi> من درعه الأمامي!'
       },
       sprinter: {
         arName: 'المتسلل الوثّاب',
-        tier: '⚡ نخبة سريعة',
+        tier: '♞ نخبة سريعة',
         tierClass: 'tier-crimson',
-        counter: '💡 المضاد: ضع جندياً في الأمام ليمتص قفزته الأولى، ثم اسحقه بالقلعة أو الفارس.'
+        counter:
+          '❖ <strong>المضاد:</strong> ضع جندياً في الأمام ليمتص قفزته الأولى، ثم اسحقه بقلعة الحصار <bdi dir="ltr">(Aegis Rook)</bdi>.'
       },
       assassin: {
         arName: 'الفارس الشبح القاتل',
-        tier: '🩸 صائد الوزير',
+        tier: '⚔ صائد الوزير',
         tierClass: 'tier-crimson',
-        counter: '💡 المضاد: احمِ الوزير بملك أو جندي قريب؛ الفارس الشبح يقفز بحرف L لاغتيال الخلفية!'
+        counter:
+          '❖ <strong>المضاد:</strong> احمِ الوزير بقلعة أو ملك؛ الفارس الشبح يقفز بحرف <bdi dir="ltr">L</bdi> لكنه يتوقف أمام القلعة!'
       },
       necro: {
         arName: 'كاهن الفيل الملعون',
-        tier: '🔮 ساحر ظلام',
+        tier: '♝ ساحر ظلام',
         tierClass: 'tier-crimson',
-        counter: '💡 المضاد: فيل الأشعة المقدسة (Radiant Bishop) يطهّر لعناته ويعيد سرعة الهجوم فوراً.'
+        counter:
+          '❖ <strong>المضاد:</strong> فيل الأشعة المقدسة <bdi dir="ltr">(Radiant Bishop)</bdi> يطهّر لعناته ويعيد سرعة الهجوم فوراً.'
       },
       imp: {
         arName: 'عفريت الوباء السريع',
-        tier: '🔥 سرب خاطف',
+        tier: '⚡ سرب خاطف',
         tierClass: 'tier-emerald',
-        counter: '💡 المضاد: هالة الملك (Arcane King) أو أشعة القلعة المتقاطعة تمحو الأسراب بثوانٍ.'
+        counter:
+          '❖ <strong>المضاد:</strong> هالة الملك <bdi dir="ltr">(Arcane King)</bdi> أو أشعة القلعة المتقاطعة تمحو الأسراب بثوانٍ.'
       },
       gargantua: {
         arName: 'عملاق القلعة المحطمة',
-        tier: '👑 زعيم الحصار',
+        tier: '♚ زعيم الحصار',
         tierClass: 'tier-boss',
-        counter: '💡 المضاد: ادمج 5 جنود لوزير متوّج [M] أو أطلق كش مات الشاملة [Space] مع بطارية ملكية!'
+        counter:
+          '❖ <strong>المضاد:</strong> ادمج <bdi dir="ltr">5</bdi> جنود لوزير متوّج <bdi dir="ltr">[M]</bdi> أو أطلق كش مات الشاملة <bdi dir="ltr">[Space]</bdi> مع بطارية ملكية!'
       }
     };
 
@@ -2516,8 +2616,9 @@ class RoyalGambitGame {
         .map(p => {
           const url = window.RoyalSprites ? window.RoyalSprites.pieceDataUrls[p.id] : '';
           const matrixHtml = this.buildMiniMatrixCellsHTML(p.id);
-          const powerVal = p.damage > 0 ? `${p.damage} ضرر` : `+${p.manaYield}☀ طاقة`;
-          const hpVal = p.startingShield ? `${p.maxHp} (+${p.startingShield}🛡)` : `${p.maxHp}`;
+          const powerVal =
+            p.damage > 0 ? `<bdi dir="ltr">${p.damage}</bdi> ضرر` : `<bdi dir="ltr">+${p.manaYield}☀</bdi> طاقة`;
+          const hpVal = p.startingShield ? `${p.maxHp} (+${p.startingShield}❖)` : `${p.maxHp}`;
           return `
         <article class="codex-card" style="--accent: ${p.accentColor}">
           <div class="codex-card-head">
@@ -2525,22 +2626,22 @@ class RoyalGambitGame {
             <div class="codex-head-text">
               <div class="codex-title-line">
                 <h4>${p.arabicTitle ? `${p.arabicTitle}` : p.name}</h4>
-                <span class="codex-hotkey-pill">[${p.hotkey}]</span>
+                <span class="codex-hotkey-pill" dir="ltr">[${p.hotkey}]</span>
               </div>
-              <span class="codex-sub-en">${p.name} • ${p.roleBadge}</span>
+              <span class="codex-sub-en" dir="ltr">${p.name} • ${p.roleBadge}</span>
             </div>
             <div class="codex-mini-matrix" title="هندسة الهجوم 5×5">
               <div class="mini-matrix-grid">${matrixHtml}</div>
             </div>
           </div>
           <div class="codex-stats-strip">
-            <span class="codex-stat-chip">☀ التكلفة: <strong>${p.cost}</strong></span>
-            <span class="codex-stat-chip">❤️ الصحة: <strong>${hpVal}</strong></span>
+            <span class="codex-stat-chip">☀ التكلفة: <strong dir="ltr">${p.cost}</strong></span>
+            <span class="codex-stat-chip">❖ الصحة: <strong dir="ltr">${hpVal}</strong></span>
             <span class="codex-stat-chip">⚔ القدرة: <strong>${powerVal}</strong></span>
-            <span class="codex-stat-chip">⏱ الشحن: <strong>${p.cooldown}ث</strong></span>
+            <span class="codex-stat-chip">◈ الشحن: <strong dir="ltr">${p.cooldown}s</strong></span>
           </div>
-          <p class="codex-rule">♟ <strong>هندسة الشطرنج:</strong> ${p.chessRule}</p>
-          <p class="codex-desc">${p.description}</p>
+          <p class="codex-rule" dir="ltr">♟ <strong>Chess Geometry:</strong> ${p.chessRule}</p>
+          <p class="codex-desc" dir="ltr">${p.description}</p>
         </article>
       `;
         })
@@ -2552,9 +2653,9 @@ class RoyalGambitGame {
           const url = window.RoyalSprites ? window.RoyalSprites.enemyDataUrls[e.id] : '';
           const meta = enemyArabicMeta[e.id] || {
             arName: e.name,
-            tier: '💀 جيش الظلام',
+            tier: '⚔ جيش الظلام',
             tierClass: 'tier-emerald',
-            counter: '💡 المضاد: استخدم التشكيلات المتقاطعة لصد تقدمه.'
+            counter: '❖ <strong>المضاد:</strong> استخدم التشكيلات المتقاطعة لصد تقدمه.'
           };
           return `
         <article class="codex-card enemy-card" style="--accent: ${e.color}">
@@ -2565,16 +2666,16 @@ class RoyalGambitGame {
                 <h4>${meta.arName}</h4>
                 <span class="codex-tier-pill ${meta.tierClass}">${meta.tier}</span>
               </div>
-              <span class="codex-sub-en">${e.name} • ${e.title}</span>
+              <span class="codex-sub-en" dir="ltr">${e.name} • ${e.title}</span>
             </div>
           </div>
           <div class="codex-stats-strip">
-            <span class="codex-stat-chip">❤️ الصحة: <strong>${e.maxHp}</strong></span>
-            <span class="codex-stat-chip">🛡 الدرع: <strong>${e.shieldHp || 0}</strong></span>
-            <span class="codex-stat-chip">⚡ السرعة: <strong>${e.speed}</strong></span>
-            <span class="codex-stat-chip">☠ الضرر/ث: <strong>${e.dps}</strong></span>
+            <span class="codex-stat-chip">❖ الصحة: <strong dir="ltr">${e.maxHp}</strong></span>
+            <span class="codex-stat-chip">◈ الدرع: <strong dir="ltr">${e.shieldHp || 0}</strong></span>
+            <span class="codex-stat-chip">⚡ السرعة: <strong dir="ltr">${e.speed}</strong></span>
+            <span class="codex-stat-chip">⚔ الضرر/ث: <strong dir="ltr">${e.dps}</strong></span>
           </div>
-          <p class="codex-desc">${e.description}</p>
+          <p class="codex-desc" dir="ltr">${e.description}</p>
           <div class="codex-counter-tip">${meta.counter}</div>
         </article>
       `;
@@ -2622,25 +2723,25 @@ class RoyalGambitGame {
         return `
       <div class="act-card ${isCurrent ? 'active-act' : ''}" data-act-idx="${idx}">
         <div class="act-card-header">
-          <span class="act-code">${act.code} ${isCurrent ? '• قيد اللعب حالياً' : ''}</span>
-          <span class="act-diff">${actStars[idx] || '★★★'} • ${act.difficulty}</span>
+          <span class="act-code"><bdi dir="ltr">${act.code}</bdi> ${isCurrent ? '• قيد اللعب حالياً' : ''}</span>
+          <span class="act-diff" dir="ltr">${actStars[idx] || '★★★'} • ${act.difficulty}</span>
         </div>
         <div>
           <h4>${actArabicNames[idx] || act.name}</h4>
-          <span class="act-sub-en">${act.name} — ${act.subtitle || ''}</span>
+          <span class="act-sub-en" dir="ltr">${act.name} — ${act.subtitle || ''}</span>
         </div>
-        <p>${act.description}</p>
+        <p dir="ltr">${act.description}</p>
         <div class="act-enemy-roster">
-          <span class="roster-label">💀 وحوش الفصل:</span>
+          <span class="roster-label">⚔ وحوش الفصل:</span>
           <div class="roster-icons-row">${rosterIconsHtml}</div>
         </div>
         <div class="act-meta-pills">
           <span class="act-meta-pill">⚔ ${wavesTxt}</span>
-          <span class="act-meta-pill">☀ ${act.startingMana || 150} طاقة ابتدائية</span>
-          <span class="act-meta-pill">🏆 +45 ELO</span>
+          <span class="act-meta-pill">☀ <bdi dir="ltr">${act.startingMana || 150}</bdi> طاقة ابتدائية</span>
+          <span class="act-meta-pill" dir="ltr">♛ +45 ELO</span>
         </div>
         <button type="button" class="launch-act-btn" data-launch-idx="${idx}">
-          ${isCurrent ? '↻ إعادة تشغيل هذا الفصل' : `⚔ قيادة المعركة في ${act.code} ←`}
+          ${isCurrent ? '↻ إعادة تشغيل هذا الفصل' : `⚔ قيادة المعركة في <bdi dir="ltr">${act.code}</bdi> ←`}
         </button>
       </div>
     `;
@@ -2663,7 +2764,7 @@ class RoyalGambitGame {
         return `
           <button type="button" class="menu-act-pill ${isCurrent ? 'active' : ''}" data-menu-act-idx="${idx}" aria-current="${isCurrent ? 'true' : 'false'}">
             <div class="menu-act-pill-top">
-              <strong>${isCurrent ? `♛ ${act.code} (الحالي)` : act.code}</strong>
+              <strong>${isCurrent ? `♛ <bdi dir="ltr">${act.code}</bdi> (الحالي)` : `<bdi dir="ltr">${act.code}</bdi>`}</strong>
               <small>${wavesTxt}</small>
             </div>
             <span>${actArabicNames[idx] || act.name}</span>
@@ -2735,16 +2836,16 @@ class RoyalGambitGame {
 
     if (boardPiece) {
       const coord = this.renderer.algebraicLabel(boardPiece.col, boardPiece.row);
-      nameEl.textContent = `${def.arabicTitle || def.name} [${coord.toUpperCase()}]`;
+      nameEl.innerHTML = `${def.arabicTitle || def.name} <bdi dir="ltr">[${coord.toUpperCase()}]</bdi>`;
 
       let extraInfo = '';
       if (boardPiece.type === 'pawn') {
         const colPawns = this.pieces.filter(p => p.type === 'pawn' && p.col === boardPiece.col).length;
         const rowPawns = this.pieces.filter(p => p.type === 'pawn' && p.row === boardPiece.row).length;
         const bestLine = Math.max(colPawns, rowPawns);
-        extraInfo = ` • سطر ${bestLine}/5 • XP ${Math.floor(boardPiece.xp)}%`;
+        extraInfo = ` • LINE ${bestLine}/5 • XP ${Math.floor(boardPiece.xp)}%`;
       }
-      const shieldTxt = boardPiece.shieldHp > 0 ? ` (+${Math.ceil(boardPiece.shieldHp)}🛡)` : '';
+      const shieldTxt = boardPiece.shieldHp > 0 ? ` (+${Math.ceil(boardPiece.shieldHp)}❖)` : '';
       statsEl.textContent = `HP ${Math.ceil(boardPiece.hp)}/${boardPiece.maxHp}${shieldTxt}${extraInfo}`;
       ruleEl.textContent = def.chessRule;
 
@@ -2759,7 +2860,7 @@ class RoyalGambitGame {
           const mergeBtn = document.createElement('button');
           mergeBtn.type = 'button';
           mergeBtn.className = 'quick-action-btn';
-          mergeBtn.textContent = '👑 دمج سطر الجنود -> وزير [M]';
+          mergeBtn.innerHTML = '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
           mergeBtn.addEventListener('click', () => this.tryMergePawnLine(boardPiece));
           actionsEl.appendChild(mergeBtn);
         }
@@ -2771,8 +2872,10 @@ class RoyalGambitGame {
           crownBtn.className = 'quick-action-btn';
           const canCrown = boardPiece.xp >= 100 && this.mana >= 125;
           crownBtn.disabled = !canCrown;
-          crownBtn.textContent =
-            boardPiece.xp >= 100 ? '👑 ترقية (125☀)' : `👑 XP ${Math.floor(boardPiece.xp)}/100`;
+          crownBtn.innerHTML =
+            boardPiece.xp >= 100
+              ? '♛ ترقية <bdi dir="ltr">(125☀)</bdi>'
+              : `♛ <bdi dir="ltr">XP ${Math.floor(boardPiece.xp)}/100</bdi>`;
           crownBtn.addEventListener('click', () => this.tryPromotePawn(boardPiece));
           actionsEl.appendChild(crownBtn);
         }
@@ -2785,7 +2888,7 @@ class RoyalGambitGame {
             const cBtn = document.createElement('button');
             cBtn.type = 'button';
             cBtn.className = 'quick-action-btn';
-            cBtn.textContent = '🏰 تبييت • Castle!';
+            cBtn.innerHTML = '♜ تبييت • <bdi dir="ltr">Castle!</bdi>';
             cBtn.addEventListener('click', () => {
               this.executeChessMove(boardPiece, castleMove);
               this.selectedBoardPiece = null;
@@ -2796,8 +2899,8 @@ class RoyalGambitGame {
         }
       }
     } else {
-      nameEl.textContent = `${def.arabicTitle || ''} • ${def.name}`;
-      const shieldInfo = def.startingShield ? ` (+${def.startingShield}🛡)` : '';
+      nameEl.innerHTML = `${def.arabicTitle || ''} • <bdi dir="ltr">${def.name}</bdi>`;
+      const shieldInfo = def.startingShield ? ` (+${def.startingShield}❖)` : '';
       statsEl.textContent = `HP ${def.maxHp}${shieldInfo} • ${def.cost}☀`;
       ruleEl.textContent = def.chessRule;
       const deckKey = `deck-${typeId}-${readyLinesCount}`;
@@ -2808,7 +2911,7 @@ class RoyalGambitGame {
           const mergeBtn = document.createElement('button');
           mergeBtn.type = 'button';
           mergeBtn.className = 'quick-action-btn';
-          mergeBtn.textContent = '👑 دمج سطر الجنود -> وزير [M]';
+          mergeBtn.innerHTML = '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
           mergeBtn.addEventListener('click', () => this.tryMergePawnLine(null));
           actionsEl.appendChild(mergeBtn);
         }
@@ -2865,17 +2968,21 @@ class RoyalGambitGame {
       const pills = [];
       if (this.readyPawnLines && this.readyPawnLines.length > 0) {
         pills.push(
-          `<span class="synergy-pill">👑 سطر جنود مكتمل (${this.readyPawnLines.length}) — اضغط [M] للدمج إلى وزير!</span>`
+          `<span class="synergy-pill">♛ سطر جنود مكتمل <bdi dir="ltr">(${this.readyPawnLines.length})</bdi> — اضغط <bdi dir="ltr">[M]</bdi> للدمج إلى وزير!</span>`
         );
       }
       if (this.batteryLinks.length > 0) {
-        pills.push(`<span class="synergy-pill">⚡ بطارية ملكية (${this.batteryLinks.length}) +30%</span>`);
+        pills.push(
+          `<span class="synergy-pill">⚡ بطارية ملكية <bdi dir="ltr">(${this.batteryLinks.length}) +30%</bdi></span>`
+        );
       }
       if (this.pawnChainLinks.length > 0) {
-        pills.push(`<span class="synergy-pill">🛡 سلسلة جنود (${this.pawnChainLinks.length})</span>`);
+        pills.push(
+          `<span class="synergy-pill">❖ سلسلة جنود <bdi dir="ltr">(${this.pawnChainLinks.length})</bdi></span>`
+        );
       }
       if (this.pieces.some(p => p.type === 'king')) {
-        pills.push(`<span class="synergy-pill">👑 هالة الملك +30%</span>`);
+        pills.push(`<span class="synergy-pill">♚ هالة الملك <bdi dir="ltr">+30%</bdi></span>`);
       }
       synRow.innerHTML = pills.join('');
     }
@@ -2889,7 +2996,7 @@ class RoyalGambitGame {
       ultBtn.classList.toggle('ready', ultPct >= 100);
       ultBtn.disabled = ultPct < 100;
     }
-    setTxt('ultimateText', ultPct >= 100 ? 'جاهزة [SPACE]' : `${ultPct}% [SPACE]`);
+    setTxt('ultimateText', ultPct >= 100 ? 'READY [SPACE]' : `${ultPct}% [SPACE]`);
 
     // Deck Cards
     document.querySelectorAll('.deck-card').forEach(card => {
@@ -2942,12 +3049,12 @@ class RoyalGambitGame {
         const cd = this.selectedBoardPiece.moveCd;
         statusPill.innerHTML =
           cd > 0
-            ? `⏳ حركة <strong>${pDef.arabicTitle || pDef.name}</strong> قيد الشحن (<bdi dir="ltr">${cd.toFixed(1)}s</bdi>)`
+            ? `◈ حركة <strong>${pDef.arabicTitle || pDef.name}</strong> قيد الشحن <bdi dir="ltr">(${cd.toFixed(1)}s)</bdi>`
             : `♟ <strong>حركة شطرنج جاهزة:</strong> انقر على أي مربع متوهج لتحريك <strong>${pDef.arabicTitle || pDef.name}</strong>!`;
         statusPill.className = 'tactical-status-pill mode-move';
       } else if (this.selectedDeckPieceId) {
         const dDef = window.CHESS_DATA.PIECES[this.selectedDeckPieceId];
-        statusPill.innerHTML = `⚔ <strong>نشر ${dDef.arabicTitle || dDef.name} (<bdi dir="ltr">${dDef.cost}☀</bdi>):</strong> انقر على مربع فارغ للوضع، أو على قطعة موضوعة لتحريكها!`;
+        statusPill.innerHTML = `⚔ <strong>نشر ${dDef.arabicTitle || dDef.name} <bdi dir="ltr">(${dDef.cost}☀)</bdi>:</strong> انقر على مربع فارغ للوضع، أو على قطعة موضوعة لتحريكها!`;
         statusPill.className = 'tactical-status-pill mode-deploy';
       }
     }
@@ -2963,7 +3070,12 @@ class RoyalGambitGame {
     if (autoBtn) {
       autoBtn.classList.toggle('active', this.autoCollectMana);
     }
-    setTxt('autoManaText', this.autoCollectMana ? 'تلقائي: ON' : 'تلقائي: OFF');
+    const autoTxtEl = document.getElementById('autoManaText');
+    if (autoTxtEl) {
+      autoTxtEl.innerHTML = this.autoCollectMana
+        ? 'تلقائي: <bdi dir="ltr">ON</bdi>'
+        : 'تلقائي: <bdi dir="ltr">OFF</bdi>';
+    }
 
     const pauseSvg = document.getElementById('pauseBtnSvg');
     if (pauseSvg) {
@@ -2973,7 +3085,10 @@ class RoyalGambitGame {
     }
 
     // Synchronize Royal Command Menu Telemetry, Hero Economy Pulse & Settings Cards
-    setTxt('menuHeroProgressPill', `الفصل ${this.actIndex + 1} من ${window.CHESS_DATA.ACTS.length} • ${this.currentAct.code}`);
+    setTxt(
+      'menuHeroProgressPill',
+      `الفصل ${this.actIndex + 1} من ${window.CHESS_DATA.ACTS.length} • ${this.currentAct.code}`
+    );
     const chalicesCount = this.countPiecesOfType('chalice');
     const skyRatePer10s = Math.round((25 / (this.currentAct.skyDropInterval || 8.0)) * 10);
     const chaliceRatePer10s = Math.round(chalicesCount * (25 / 8.0) * 10);
@@ -2983,7 +3098,7 @@ class RoyalGambitGame {
       return sum + (pDef ? pDef.cost : 0);
     }, 0);
     setTxt('menuArmyValueVal', `${armyVal}☀`);
-    setTxt('menuKillsVal', `${this.enemiesKilled || 0} ☠`);
+    setTxt('menuKillsVal', `⚔ ${this.enemiesKilled || 0}`);
 
     setTxt('menuEloVal', this.eloRating);
     const rankTitle =
@@ -2996,7 +3111,10 @@ class RoyalGambitGame {
     setTxt('menuActWaveVal', `${this.currentAct.code} • ${Math.max(1, this.waveIndex)}/${totalW}`);
     setTxt('menuActNameSub', this.currentAct.name);
     setTxt('menuSentinelsVal', `♜ ${remainingSentinels} / 5`);
-    setTxt('menuForcesVal', `${this.pieces.length} قطع • ${Math.floor(this.mana)}☀`);
+    const forcesEl = document.getElementById('menuForcesVal');
+    if (forcesEl) {
+      forcesEl.innerHTML = `<bdi dir="ltr">${this.pieces.length}</bdi> قطع • <bdi dir="ltr">${Math.floor(this.mana)}☀</bdi>`;
+    }
 
     const readyLines = this.readyPawnLines ? this.readyPawnLines.length : 0;
     setTxt(
@@ -3009,11 +3127,11 @@ class RoyalGambitGame {
     );
 
     setTxt('menuSpeedPill', `${this.gameSpeed}x`);
-    setTxt('menuAutoManaPill', this.autoCollectMana ? 'تلقائي ON' : 'يدوي OFF');
-    setTxt('menuGridCoordsPill', this.showGridOverlay ? 'مفعلة ON' : 'مخفية OFF');
+    setTxt('menuAutoManaPill', this.autoCollectMana ? 'AUTO: ON' : 'AUTO: OFF');
+    setTxt('menuGridCoordsPill', this.showGridOverlay ? 'GRID: ON' : 'GRID: OFF');
 
     const isMuted = Boolean(window.RoyalAudio && window.RoyalAudio.muted);
-    setTxt('menuAudioPill', isMuted ? 'مكتوم OFF' : 'مفعل ON');
+    setTxt('menuAudioPill', isMuted ? 'AUDIO: OFF' : 'AUDIO: ON');
     setTxt('menuAudioIcon', isMuted ? '✕' : '♫');
     const audioSvg = document.getElementById('audioMuteSvg');
     if (audioSvg) {
@@ -3023,7 +3141,7 @@ class RoyalGambitGame {
     }
 
     const isFs = Boolean(document.fullscreenElement);
-    setTxt('menuFullscreenPill', isFs ? 'نشط ON' : 'تبديل [F]');
+    setTxt('menuFullscreenPill', isFs ? 'FULL: ON' : '[F] FULL');
 
     const toggleCardState = (id, active) => {
       const el = document.getElementById(id);

@@ -585,7 +585,7 @@ class RoyalBoardRenderer {
         ctx.font = '800 10.5px "Cairo", "Orbitron", sans-serif';
         ctx.fillStyle = '#fef08a';
         ctx.textAlign = 'center';
-        ctx.fillText('👑 اضغط لدمج السطر -> وزير [M]', midPt.x, bobY + 2);
+        ctx.fillText('♛ اضغط لدمج السطر ← وزير [M]', midPt.x, bobY + 2);
       }
       ctx.restore();
     }
@@ -972,7 +972,7 @@ class RoyalBoardRenderer {
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
         ctx.shadowBlur = 4;
-        ctx.fillText('👑 MERGE → ♛', 0, -this.tileSize * 0.41);
+        ctx.fillText('♛ MERGE [M]', 0, -this.tileSize * 0.41);
         ctx.shadowBlur = 0;
       } else if (xpRatio >= 1) {
         ctx.font = '800 9px "Orbitron", sans-serif';
@@ -980,7 +980,7 @@ class RoyalBoardRenderer {
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
         ctx.shadowBlur = 4;
-        ctx.fillText('👑 CROWN (125☀)', 0, -this.tileSize * 0.41);
+        ctx.fillText('♛ CROWN (125☀)', 0, -this.tileSize * 0.41);
         ctx.shadowBlur = 0;
       }
     }
@@ -1429,7 +1429,7 @@ class RoyalBoardRenderer {
     const bannerY = Math.max(82, this.boardTop * 0.72);
     ctx.font = '900 22px "Cairo", "Cinzel", serif';
     ctx.fillStyle = '#fef08a';
-    ctx.fillText('👑 اندماج ملكي سينمائي • تحوّل الفيلق إلى الوزير المتوّج! 👑', this.width * 0.5, bannerY);
+    ctx.fillText('♛ اندماج ملكي سينمائي • تحوّل الفيلق إلى الوزير المتوّج! ♛', this.width * 0.5, bannerY);
 
     ctx.font = '700 13px "Orbitron", sans-serif';
     ctx.fillStyle = '#38bdf8';
