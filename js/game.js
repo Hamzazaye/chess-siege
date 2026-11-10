@@ -295,9 +295,28 @@ class RoyalGambitGame {
     bindBtn('openActsBtn', () => this.openModal('actsModal'));
     bindBtn('closeActsBtn', () => this.hideModals());
     bindBtn('modalRetryBtn', () => this.startAct(this.actIndex));
+    bindBtn('modalActsBtn', () => {
+      this.hideModals();
+      this.openModal('actsModal');
+    });
     bindBtn('modalNextActBtn', () => {
       const next = (this.actIndex + 1) % window.CHESS_DATA.ACTS.length;
       this.startAct(next);
+    });
+
+    // Unified Sanctum Top Navigation Tabs inside Modals
+    document.querySelectorAll('[data-switch-modal]').forEach(navBtn => {
+      navBtn.addEventListener('click', () => {
+        const targetModalId = navBtn.getAttribute('data-switch-modal');
+        if (!targetModalId) return;
+        ['commandMenuModal', 'codexModal', 'actsModal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.toggle('hidden', id !== targetModalId);
+        });
+        this.paused = true;
+        this.populateActsDrawer();
+        this.updateHUD();
+      });
     });
 
     // Close modals when clicking the dark backdrop outside the modal window
@@ -2096,17 +2115,26 @@ class RoyalGambitGame {
     window.RoyalAudio.playVictory();
     window.RoyalAudio.setIntenseMode(false);
 
+    const remainingSentinels = this.chariots.filter(c => !c.used || c.active).length;
+    const stars = remainingSentinels === 5 ? '★★★' : remainingSentinels >= 3 ? '★★☆' : '★☆☆';
+
     const modal = document.getElementById('resultModal');
+    const starsEl = document.getElementById('resultStarsRow');
     const title = document.getElementById('resultModalTitle');
     const sub = document.getElementById('resultModalSubtitle');
     const stats = document.getElementById('resultModalStats');
-    if (title) title.textContent = '👑 CHECKMATE VICTORY!';
-    if (sub) sub.textContent = `${this.currentAct.code}: ${this.currentAct.name} Secured!`;
+    if (starsEl) {
+      starsEl.textContent = stars;
+      starsEl.className = 'result-stars-banner victory-stars';
+    }
+    if (title) title.textContent = '👑 كش مات — انتصار ملكي ساحق!';
+    if (sub) sub.textContent = `تم تأمين ${this.currentAct.code}: ${this.currentAct.name} بنجاح!`;
     if (stats) {
       stats.innerHTML = `
-        <div class="stat-pill"><span>Score</span><strong>${this.score.toLocaleString()}</strong></div>
-        <div class="stat-pill"><span>Grandmaster ELO</span><strong>${this.eloRating} (+45)</strong></div>
-        <div class="stat-pill"><span>Surviving Pieces</span><strong>${this.pieces.length}</strong></div>
+        <div class="stat-pill"><span>النقاط • Score</span><strong>${this.score.toLocaleString()}</strong></div>
+        <div class="stat-pill"><span>التصنيف • ELO</span><strong>${this.eloRating} (+45)</strong></div>
+        <div class="stat-pill"><span>القلاع المجنحة • Sentinels</span><strong>🪽 ${remainingSentinels}/5</strong></div>
+        <div class="stat-pill"><span>القطع الصامدة • Pieces</span><strong>♟ ${this.pieces.length}</strong></div>
       `;
     }
     if (modal) modal.classList.remove('hidden');
@@ -2119,16 +2147,21 @@ class RoyalGambitGame {
     window.RoyalAudio.setIntenseMode(false);
 
     const modal = document.getElementById('resultModal');
+    const starsEl = document.getElementById('resultStarsRow');
     const title = document.getElementById('resultModalTitle');
     const sub = document.getElementById('resultModalSubtitle');
     const stats = document.getElementById('resultModalStats');
-    if (title) title.textContent = '💀 THE SANCTUM FELL';
-    if (sub) sub.textContent = 'The Corrupted Ebony Horde breached your final rank. Adjust your Chess Formation and strike back!';
+    if (starsEl) {
+      starsEl.textContent = '☆☆☆';
+      starsEl.className = 'result-stars-banner defeat-stars';
+    }
+    if (title) title.textContent = '💀 سقطت القلعة الملكية!';
+    if (sub) sub.textContent = 'اخترق جيش الظلام صفك الأخير. أعد تنظيم تشكيلتك التكتيكية واستعد للثأر!';
     if (stats) {
       stats.innerHTML = `
-        <div class="stat-pill"><span>Wave Reached</span><strong>${this.waveIndex} / ${this.currentAct.totalWaves}</strong></div>
-        <div class="stat-pill"><span>Score</span><strong>${this.score.toLocaleString()}</strong></div>
-        <div class="stat-pill"><span>Grandmaster ELO</span><strong>${this.eloRating}</strong></div>
+        <div class="stat-pill"><span>الموجة • Wave</span><strong>${this.waveIndex} / ${this.currentAct.totalWaves}</strong></div>
+        <div class="stat-pill"><span>النقاط • Score</span><strong>${this.score.toLocaleString()}</strong></div>
+        <div class="stat-pill"><span>التصنيف • ELO</span><strong>${this.eloRating}</strong></div>
       `;
     }
     if (modal) modal.classList.remove('hidden');
@@ -2188,129 +2221,7 @@ class RoyalGambitGame {
     });
   }
 
-  populateCodexModal() {
-    const piecesGrid = document.getElementById('codexPiecesGrid');
-    const enemiesGrid = document.getElementById('codexEnemiesGrid');
-    if (piecesGrid) {
-      piecesGrid.innerHTML = Object.values(window.CHESS_DATA.PIECES)
-        .map(p => {
-          const url = window.RoyalSprites ? window.RoyalSprites.pieceDataUrls[p.id] : '';
-          return `
-        <article class="codex-card" style="--accent: ${p.accentColor}">
-          <div class="codex-card-head">
-            <img src="${url}" alt="${p.name}" class="codex-portrait-img" />
-            <div>
-              <h4>${p.arabicTitle ? `${p.arabicTitle} • ` : ''}${p.name}</h4>
-              <span class="codex-badge">${p.roleBadge} • Cost ${p.cost} Mana</span>
-            </div>
-          </div>
-          <p class="codex-rule"><strong>Chess Geometry:</strong> ${p.chessRule}</p>
-          <p class="codex-desc">${p.description}</p>
-        </article>
-      `;
-        })
-        .join('');
-    }
-    if (enemiesGrid) {
-      enemiesGrid.innerHTML = Object.values(window.CHESS_DATA.ENEMIES)
-        .map(e => {
-          const url = window.RoyalSprites ? window.RoyalSprites.enemyDataUrls[e.id] : '';
-          return `
-        <article class="codex-card enemy-card" style="--accent: ${e.color}">
-          <div class="codex-card-head">
-            <img src="${url}" alt="${e.name}" class="codex-portrait-img" />
-            <div>
-              <h4>${e.name}</h4>
-              <span class="codex-badge">${e.title} • HP ${e.maxHp}${e.shieldHp ? ` (+${e.shieldHp} Shield)` : ''}</span>
-            </div>
-          </div>
-          <p class="codex-desc">${e.description}</p>
-        </article>
-      `;
-        })
-        .join('');
-    }
-  }
-
-  populateActsDrawer() {
-    const container = document.getElementById('actsListContainer');
-    const quickMenuContainer = document.getElementById('menuQuickActsGrid');
-
-    const renderActsHtml = () =>
-      window.CHESS_DATA.ACTS.map((act, idx) => {
-        const isCurrent = idx === this.actIndex;
-        const wavesTxt = act.isEndless ? '∞ موجات لا نهائية' : `${act.totalWaves} موجات`;
-        return `
-      <div class="act-card ${isCurrent ? 'active-act' : ''}" data-act-idx="${idx}">
-        <div class="act-card-header">
-          <span class="act-code">${act.code} ${isCurrent ? '• قيد اللعب' : ''}</span>
-          <span class="act-diff">${act.difficulty}</span>
-        </div>
-        <h4>${act.name}</h4>
-        <p>${act.description}</p>
-        <div class="act-meta-pills">
-          <span class="act-meta-pill">⚔ ${wavesTxt}</span>
-          <span class="act-meta-pill">☀ ${act.startingMana || 150} طاقة</span>
-        </div>
-        <button type="button" class="launch-act-btn" data-launch-idx="${idx}">
-          ${isCurrent ? '↻ إعادة المرحلة الحالية' : `⚔ انطلاق إلى ${act.code} ←`}
-        </button>
-      </div>
-    `;
-      }).join('');
-
-    if (container) {
-      container.innerHTML = renderActsHtml();
-      container.querySelectorAll('[data-launch-idx]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.getAttribute('data-launch-idx'));
-          this.startAct(idx);
-        });
-      });
-    }
-
-    if (quickMenuContainer) {
-      quickMenuContainer.innerHTML = window.CHESS_DATA.ACTS.map((act, idx) => {
-        const isCurrent = idx === this.actIndex;
-        return `
-          <button type="button" class="menu-act-pill ${isCurrent ? 'active' : ''}" data-menu-act-idx="${idx}">
-            <strong>${act.code}</strong>
-            <span>${act.name}</span>
-          </button>
-        `;
-      }).join('');
-      quickMenuContainer.querySelectorAll('[data-menu-act-idx]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.getAttribute('data-menu-act-idx'));
-          this.startAct(idx);
-        });
-      });
-    }
-  }
-
-  openModal(id) {
-    this.paused = true;
-    this.populateActsDrawer();
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('hidden');
-    this.updateHUD();
-  }
-
-  hideModals() {
-    ['commandMenuModal', 'codexModal', 'actsModal', 'resultModal'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hidden');
-    });
-    if (!this.gameOver) this.paused = false;
-  }
-
-  // Render a 5x5 Mini Chessboard Attack Matrix inside the Inspector Dock
-  renderMiniChessMatrix(pieceType) {
-    const gridEl = document.getElementById('miniMatrixGrid');
-    if (!gridEl || gridEl.dataset.renderedType === pieceType) return;
-    gridEl.dataset.renderedType = pieceType;
-
-    // Center of 5x5 is (2, 2)
+  buildMiniMatrixCellsHTML(pieceType) {
     const cells = [];
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 5; c++) {
@@ -2351,7 +2262,247 @@ class RoyalGambitGame {
         cells.push(`<span class="${cls}"></span>`);
       }
     }
-    gridEl.innerHTML = cells.join('');
+    return cells.join('');
+  }
+
+  populateCodexModal() {
+    const piecesGrid = document.getElementById('codexPiecesGrid');
+    const enemiesGrid = document.getElementById('codexEnemiesGrid');
+
+    const enemyArabicMeta = {
+      thrall: {
+        arName: 'بيدق الظلام الزاحف',
+        tier: '💀 جندي أساسي',
+        tierClass: 'tier-emerald',
+        counter: '💡 المضاد: الجندي المدرع (Phalanx Pawn) يدفعه للخلف بسهولة ويمنعه من التقدم.'
+      },
+      buckler: {
+        arName: 'حامل الدرع الحديدي',
+        tier: '🛡 مدرع ثقيل',
+        tierClass: 'tier-emerald',
+        counter: '💡 المضاد: فيل الأشعة (Bishop) أو فارس العاصفة (Knight) لتجاوز 50% من درعه الأمامي!'
+      },
+      sprinter: {
+        arName: 'المتسلل الوثّاب',
+        tier: '⚡ نخبة سريعة',
+        tierClass: 'tier-crimson',
+        counter: '💡 المضاد: ضع جندياً في الأمام ليمتص قفزته الأولى، ثم اسحقه بالقلعة أو الفارس.'
+      },
+      assassin: {
+        arName: 'الفارس الشبح القاتل',
+        tier: '🩸 صائد الوزير',
+        tierClass: 'tier-crimson',
+        counter: '💡 المضاد: احمِ الوزير بملك أو جندي قريب؛ الفارس الشبح يقفز بحرف L لاغتيال الخلفية!'
+      },
+      necro: {
+        arName: 'كاهن الفيل الملعون',
+        tier: '🔮 ساحر ظلام',
+        tierClass: 'tier-crimson',
+        counter: '💡 المضاد: فيل الأشعة المقدسة (Radiant Bishop) يطهّر لعناته ويعيد سرعة الهجوم فوراً.'
+      },
+      imp: {
+        arName: 'عفريت الوباء السريع',
+        tier: '🔥 سرب خاطف',
+        tierClass: 'tier-emerald',
+        counter: '💡 المضاد: هالة الملك (Arcane King) أو أشعة القلعة المتقاطعة تمحو الأسراب بثوانٍ.'
+      },
+      gargantua: {
+        arName: 'عملاق القلعة المحطمة',
+        tier: '👑 زعيم الحصار',
+        tierClass: 'tier-boss',
+        counter: '💡 المضاد: ادمج 5 جنود لوزير متوّج [M] أو أطلق كش مات الشاملة [Space] مع بطارية ملكية!'
+      }
+    };
+
+    if (piecesGrid) {
+      piecesGrid.innerHTML = Object.values(window.CHESS_DATA.PIECES)
+        .map(p => {
+          const url = window.RoyalSprites ? window.RoyalSprites.pieceDataUrls[p.id] : '';
+          const matrixHtml = this.buildMiniMatrixCellsHTML(p.id);
+          const powerVal = p.damage > 0 ? `${p.damage} ضرر` : `+${p.manaYield}☀ طاقة`;
+          const hpVal = p.startingShield ? `${p.maxHp} (+${p.startingShield}🛡)` : `${p.maxHp}`;
+          return `
+        <article class="codex-card" style="--accent: ${p.accentColor}">
+          <div class="codex-card-head">
+            <img src="${url}" alt="${p.name}" class="codex-portrait-img" />
+            <div class="codex-head-text">
+              <div class="codex-title-line">
+                <h4>${p.arabicTitle ? `${p.arabicTitle}` : p.name}</h4>
+                <span class="codex-hotkey-pill">[${p.hotkey}]</span>
+              </div>
+              <span class="codex-sub-en">${p.name} • ${p.roleBadge}</span>
+            </div>
+            <div class="codex-mini-matrix" title="هندسة الهجوم 5×5">
+              <div class="mini-matrix-grid">${matrixHtml}</div>
+            </div>
+          </div>
+          <div class="codex-stats-strip">
+            <span class="codex-stat-chip">☀ التكلفة: <strong>${p.cost}</strong></span>
+            <span class="codex-stat-chip">❤️ الصحة: <strong>${hpVal}</strong></span>
+            <span class="codex-stat-chip">⚔ القدرة: <strong>${powerVal}</strong></span>
+            <span class="codex-stat-chip">⏱ الشحن: <strong>${p.cooldown}ث</strong></span>
+          </div>
+          <p class="codex-rule">♟ <strong>هندسة الشطرنج:</strong> ${p.chessRule}</p>
+          <p class="codex-desc">${p.description}</p>
+        </article>
+      `;
+        })
+        .join('');
+    }
+    if (enemiesGrid) {
+      enemiesGrid.innerHTML = Object.values(window.CHESS_DATA.ENEMIES)
+        .map(e => {
+          const url = window.RoyalSprites ? window.RoyalSprites.enemyDataUrls[e.id] : '';
+          const meta = enemyArabicMeta[e.id] || {
+            arName: e.name,
+            tier: '💀 جيش الظلام',
+            tierClass: 'tier-emerald',
+            counter: '💡 المضاد: استخدم التشكيلات المتقاطعة لصد تقدمه.'
+          };
+          return `
+        <article class="codex-card enemy-card" style="--accent: ${e.color}">
+          <div class="codex-card-head">
+            <img src="${url}" alt="${e.name}" class="codex-portrait-img" />
+            <div class="codex-head-text">
+              <div class="codex-title-line">
+                <h4>${meta.arName}</h4>
+                <span class="codex-tier-pill ${meta.tierClass}">${meta.tier}</span>
+              </div>
+              <span class="codex-sub-en">${e.name} • ${e.title}</span>
+            </div>
+          </div>
+          <div class="codex-stats-strip">
+            <span class="codex-stat-chip">❤️ الصحة: <strong>${e.maxHp}</strong></span>
+            <span class="codex-stat-chip">🛡 الدرع: <strong>${e.shieldHp || 0}</strong></span>
+            <span class="codex-stat-chip">⚡ السرعة: <strong>${e.speed}</strong></span>
+            <span class="codex-stat-chip">☠ الضرر/ث: <strong>${e.dps}</strong></span>
+          </div>
+          <p class="codex-desc">${e.description}</p>
+          <div class="codex-counter-tip">${meta.counter}</div>
+        </article>
+      `;
+        })
+        .join('');
+    }
+  }
+
+  populateActsDrawer() {
+    const container = document.getElementById('actsListContainer');
+    const quickMenuContainer = document.getElementById('menuQuickActsGrid');
+
+    const actArabicNames = [
+      'الفصل الأول: اختراق الفناء الملكي',
+      'الفصل الثاني: كسوف الأقطار المظلم',
+      'الفصل الثالث: حصار عملاق القلاع',
+      'الفصل الرابع: نهاية اللعبة اللانهائية'
+    ];
+    const actStars = ['★☆☆☆', '★★☆☆', '★★★☆', '★★★★'];
+
+    const renderActsHtml = () =>
+      window.CHESS_DATA.ACTS.map((act, idx) => {
+        const isCurrent = idx === this.actIndex;
+        const wavesTxt = act.isEndless ? '∞ موجات لا نهائية' : `${act.totalWaves} موجات`;
+
+        // Collect unique enemy types in this Act for visual roster preview
+        const enemyTypesSet = new Set();
+        if (act.waves && act.waves.length > 0) {
+          act.waves.forEach(w => w.spawns.forEach(s => enemyTypesSet.add(s.type)));
+        } else {
+          Object.keys(window.CHESS_DATA.ENEMIES).forEach(k => enemyTypesSet.add(k));
+        }
+
+        const rosterIconsHtml = Array.from(enemyTypesSet)
+          .map(typeId => {
+            const eDef = window.CHESS_DATA.ENEMIES[typeId];
+            const eUrl = window.RoyalSprites ? window.RoyalSprites.enemyDataUrls[typeId] : '';
+            return eDef
+              ? `<span class="act-enemy-icon" title="${eDef.name}"><img src="${eUrl}" alt="${eDef.name}" /></span>`
+              : '';
+          })
+          .join('');
+
+        return `
+      <div class="act-card ${isCurrent ? 'active-act' : ''}" data-act-idx="${idx}">
+        <div class="act-card-header">
+          <span class="act-code">${act.code} ${isCurrent ? '• قيد اللعب حالياً' : ''}</span>
+          <span class="act-diff">${actStars[idx] || '★★★'} • ${act.difficulty}</span>
+        </div>
+        <div>
+          <h4>${actArabicNames[idx] || act.name}</h4>
+          <span class="act-sub-en">${act.name} — ${act.subtitle || ''}</span>
+        </div>
+        <p>${act.description}</p>
+        <div class="act-enemy-roster">
+          <span class="roster-label">💀 وحوش الفصل:</span>
+          <div class="roster-icons-row">${rosterIconsHtml}</div>
+        </div>
+        <div class="act-meta-pills">
+          <span class="act-meta-pill">⚔ ${wavesTxt}</span>
+          <span class="act-meta-pill">☀ ${act.startingMana || 150} طاقة ابتدائية</span>
+          <span class="act-meta-pill">🏆 +45 ELO</span>
+        </div>
+        <button type="button" class="launch-act-btn" data-launch-idx="${idx}">
+          ${isCurrent ? '↻ إعادة تشغيل هذا الفصل' : `⚔ قيادة المعركة في ${act.code} ←`}
+        </button>
+      </div>
+    `;
+      }).join('');
+
+    if (container) {
+      container.innerHTML = renderActsHtml();
+      container.querySelectorAll('[data-launch-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-launch-idx'));
+          this.startAct(idx);
+        });
+      });
+    }
+
+    if (quickMenuContainer) {
+      quickMenuContainer.innerHTML = window.CHESS_DATA.ACTS.map((act, idx) => {
+        const isCurrent = idx === this.actIndex;
+        const wavesTxt = act.isEndless ? '∞ موجات' : `${act.totalWaves} موجات`;
+        return `
+          <button type="button" class="menu-act-pill ${isCurrent ? 'active' : ''}" data-menu-act-idx="${idx}">
+            <div class="menu-act-pill-top">
+              <strong>${act.code}</strong>
+              <small>${wavesTxt}</small>
+            </div>
+            <span>${actArabicNames[idx] || act.name}</span>
+          </button>
+        `;
+      }).join('');
+      quickMenuContainer.querySelectorAll('[data-menu-act-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-menu-act-idx'));
+          this.startAct(idx);
+        });
+      });
+    }
+  }
+
+  openModal(id) {
+    this.paused = true;
+    this.populateActsDrawer();
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
+    this.updateHUD();
+  }
+
+  hideModals() {
+    ['commandMenuModal', 'codexModal', 'actsModal', 'resultModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+    if (!this.gameOver) this.paused = false;
+  }
+
+  // Render a 5x5 Mini Chessboard Attack Matrix inside the Inspector Dock
+  renderMiniChessMatrix(pieceType) {
+    const gridEl = document.getElementById('miniMatrixGrid');
+    if (!gridEl || gridEl.dataset.renderedType === pieceType) return;
+    gridEl.dataset.renderedType = pieceType;
+    gridEl.innerHTML = this.buildMiniMatrixCellsHTML(pieceType);
   }
 
   // Update the Live Tactical Unit Inspector in the Bottom Dock
@@ -2608,15 +2759,51 @@ class RoyalGambitGame {
     const pauseBtn = document.getElementById('pauseBtn');
     if (pauseBtn) pauseBtn.textContent = this.paused ? '▶' : '⏸';
 
-    // Synchronize Royal Command Menu controls
-    setTxt('menuSpeedBtn', `⏩ السرعة: ${this.gameSpeed}x`);
-    setTxt('menuAutoManaBtn', this.autoCollectMana ? '☀ جمع الطاقة: تلقائي' : '☀ جمع الطاقة: يدوي');
-    setTxt('menuGridCoordsBtn', this.showGridOverlay ? '♟ إحداثيات الرقعة: مفعلة' : '♟ إحداثيات الرقعة: مخفية');
-    const isMuted = window.RoyalAudio && window.RoyalAudio.muted;
-    setTxt('menuAudioBtn', isMuted ? '🔇 الصوت: مكتوم' : '🔊 الصوت: مفعل');
+    // Synchronize Royal Command Menu Telemetry & Settings Cards
+    setTxt('menuEloVal', this.eloRating);
+    const rankTitle =
+      this.eloRating >= 1700
+        ? 'أستاذ دولي كبير • Grandmaster Sovereign'
+        : this.eloRating >= 1580
+          ? 'قائد الفرسان الملكي • Arch-Marshall'
+          : 'قائد التاج الملكي • Royal Commander';
+    setTxt('menuRankTitle', rankTitle);
+    setTxt('menuActWaveVal', `${this.currentAct.code} • ${Math.max(1, this.waveIndex)}/${totalW}`);
+    setTxt('menuActNameSub', this.currentAct.name);
+    setTxt('menuSentinelsVal', `🪽 ${remainingSentinels} / 5`);
+    setTxt('menuForcesVal', `${this.pieces.length} قطع • ${Math.floor(this.mana)}☀`);
+
+    const readyLines = this.readyPawnLines ? this.readyPawnLines.length : 0;
+    setTxt(
+      'menuSynergySub',
+      readyLines > 0
+        ? `👑 سطر جنود جاهز للدمج (${readyLines})!`
+        : this.batteryLinks.length > 0
+          ? `⚡ بطارية ملكية نشطة (${this.batteryLinks.length})`
+          : 'الدمج التكتيكي جاهز'
+    );
+
+    setTxt('menuSpeedPill', `${this.gameSpeed}x`);
+    setTxt('menuAutoManaPill', this.autoCollectMana ? 'تلقائي ON' : 'يدوي OFF');
+    setTxt('menuGridCoordsPill', this.showGridOverlay ? 'مفعلة ON' : 'مخفية OFF');
+
+    const isMuted = Boolean(window.RoyalAudio && window.RoyalAudio.muted);
+    setTxt('menuAudioPill', isMuted ? 'مكتوم OFF' : 'مفعل ON');
+    setTxt('menuAudioIcon', isMuted ? '🔇' : '🔊');
     setTxt('audioMuteBtn', isMuted ? '🔇' : '🔊');
+
     const isFs = Boolean(document.fullscreenElement);
-    setTxt('menuFullscreenBtn', isFs ? '🗗 الخروج من ملء الشاشة' : '⛶ ملء الشاشة الكاملة');
+    setTxt('menuFullscreenPill', isFs ? 'نشط ON' : 'تبديل [F]');
+
+    const toggleCardState = (id, active) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('is-on', Boolean(active));
+    };
+    toggleCardState('menuSpeedBtn', this.gameSpeed > 1);
+    toggleCardState('menuAutoManaBtn', this.autoCollectMana);
+    toggleCardState('menuGridCoordsBtn', this.showGridOverlay);
+    toggleCardState('menuAudioBtn', !isMuted);
+    toggleCardState('menuFullscreenBtn', isFs);
   }
 }
 
