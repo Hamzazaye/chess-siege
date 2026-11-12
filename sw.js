@@ -2,7 +2,7 @@
  * CROWN & BLIGHT: THE ROYAL GAMBIT (v4.0 PWA Offline Service Worker)
  * Stale-while-revalidate asset caching for zero-latency offline & mobile play.
  */
-const CACHE_NAME = 'crown-blight-v4';
+const CACHE_NAME = 'crown-blight-v4.1';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -38,17 +38,14 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request)
-        .then(networkResp => {
-          if (networkResp && networkResp.status === 200 && networkResp.type === 'basic') {
-            const clone = networkResp.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return networkResp;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then(networkResp => {
+        if (networkResp && networkResp.status === 200 && networkResp.type === 'basic') {
+          const clone = networkResp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return networkResp;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

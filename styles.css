@@ -3535,3 +3535,1406 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+/* ==========================================================================
+   v4.1 ROYAL ATELIER SCULPTURAL UI/UX OVERHAUL (VISUAL-FIRST • MINIMAL TEXT)
+   ========================================================================== */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.live-tip-ticker.hidden,
+.title-trophy-drawer.hidden {
+  display: none !important;
+}
+
+/* Sculpted Forged-Gold Ornate Modal Frame */
+.royal-ornate-frame {
+  position: relative;
+  border: 1.5px solid rgba(242, 198, 109, 0.68);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 198, 109, 0.13), transparent 58%),
+    linear-gradient(180deg, rgba(19, 25, 42, 0.97) 0%, rgba(9, 12, 22, 0.99) 100%);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.88),
+    0 0 0 1px rgba(255, 240, 178, 0.14) inset,
+    0 0 36px rgba(212, 175, 55, 0.16);
+}
+
+.sleek-modal-header {
+  padding: 13px 20px;
+  background: linear-gradient(180deg, rgba(28, 36, 58, 0.92), rgba(14, 18, 30, 0.96));
+  border-bottom: 1px solid rgba(242, 198, 109, 0.34);
+}
+
+.modal-close-pill {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 50%;
+  font-size: 14px;
+}
+
+/* ================= 1. ICONIC TITLE ATELIER STAGE (PORTALS + MEDALLIONS) ================= */
+#titleOverlay.title-sanctum-overlay {
+  padding: 14px 18px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(12, 18, 36, 0.50) 0%, rgba(6, 9, 18, 0.84) 68%, rgba(3, 5, 11, 0.94) 100%);
+  backdrop-filter: blur(4px);
+}
+
+.title-atelier-stage {
+  width: min(1100px, 100%);
+  max-height: 96dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: auto;
+}
+
+/* Top Floating Jewel Bar */
+.title-floating-topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title-jewel-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.title-jewel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(11, 16, 29, 0.88);
+  border: 1px solid rgba(242, 198, 109, 0.42);
+  color: #fff3d1;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+}
+
+.title-jewel-chip.amber {
+  border-color: rgba(250, 204, 21, 0.55);
+  color: #fde047;
+}
+
+.title-jewel-chip.cyan {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #7dd3fc;
+}
+
+.title-jewel-chip.crimson {
+  border-color: rgba(244, 63, 94, 0.55);
+  color: #fda4af;
+}
+
+.title-corner-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-orb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(24, 31, 50, 0.92), rgba(11, 15, 26, 0.96));
+  border: 1.5px solid rgba(242, 198, 109, 0.52);
+  color: #fef08a;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.title-orb-btn:hover,
+.title-orb-btn.active {
+  transform: translateY(-1px);
+  border-color: #fde047;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.38);
+}
+
+.title-orb-btn small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #fff3d1;
+}
+
+/* Centerpiece Royal Crest Halo & Metallic Logo */
+.title-royal-emblem-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.title-crest-halo-ring {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  padding: 5px;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35), rgba(15, 20, 34, 0.95));
+  border: 2px solid #facc15;
+  box-shadow:
+    0 0 34px rgba(250, 204, 21, 0.42),
+    0 12px 26px rgba(0, 0, 0, 0.78);
+}
+
+.title-crest-halo-ring::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(250, 204, 21, 0.48);
+  animation: royalAstrolabeSpin 26s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes royalAstrolabeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.title-crest-halo-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.title-royal-emblem-hero h1 {
+  margin: 2px 0 0;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(26px, 3.6vw, 42px);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #ffffff 0%, #fef08a 48%, #d97706 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.92));
+}
+
+.title-royal-emblem-hero h1 span {
+  color: #fde047;
+}
+
+.title-tagline-ribbon {
+  display: inline-block;
+  padding: 3px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(242, 198, 109, 0.20), transparent);
+  border-top: 1px solid rgba(242, 198, 109, 0.38);
+  border-bottom: 1px solid rgba(242, 198, 109, 0.38);
+  color: #fde68a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* 3 Sculpted Gothic / Tarot Mode Portals */
+.title-portals-triptych {
+  width: min(940px, 100%);
+  display: grid;
+  grid-template-columns: 1.18fr 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.mode-portal-card {
+  position: relative;
+  min-height: 205px;
+  padding: 18px 16px 15px;
+  border-radius: 92px 92px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  font-family: var(--font-body);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.mode-portal-card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 87px 87px 15px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+
+.portal-campaign {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(250, 204, 21, 0.34), rgba(30, 41, 72, 0.90) 58%, rgba(10, 14, 26, 0.98) 100%);
+  border: 2px solid #facc15;
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.8),
+    0 0 32px rgba(250, 204, 21, 0.26);
+}
+
+.portal-puzzles {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(56, 189, 248, 0.30), rgba(16, 34, 62, 0.92) 58%, rgba(9, 14, 26, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.72);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.76),
+    0 0 24px rgba(56, 189, 248, 0.18);
+}
+
+.portal-daily {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(245, 158, 11, 0.32), rgba(54, 22, 34, 0.92) 58%, rgba(12, 11, 22, 0.98) 100%);
+  border: 1.5px solid rgba(251, 146, 60, 0.72);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.76),
+    0 0 24px rgba(251, 146, 60, 0.18);
+}
+
+.mode-portal-card:hover {
+  transform: translateY(-6px) scale(1.015);
+}
+
+.portal-campaign:hover {
+  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.88), 0 0 44px rgba(250, 204, 21, 0.48);
+}
+
+.portal-puzzles:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.86), 0 0 38px rgba(56, 189, 248, 0.42);
+}
+
+.portal-daily:hover {
+  border-color: #fdba74;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.86), 0 0 38px rgba(251, 146, 60, 0.42);
+}
+
+.portal-roman-watermark {
+  position: absolute;
+  top: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 54px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.08);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.portal-art-stage {
+  position: relative;
+  height: 98px;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 8px;
+  z-index: 1;
+}
+
+.portal-sprite {
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.88));
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.portal-sprite.hero-center {
+  width: 78px;
+  height: 78px;
+  z-index: 2;
+}
+
+.portal-sprite.side-left,
+.portal-sprite.side-right {
+  width: 54px;
+  height: 54px;
+  opacity: 0.92;
+  margin: 0 -10px 4px;
+  z-index: 1;
+}
+
+.mode-portal-card:hover .portal-sprite.hero-center {
+  transform: translateY(-5px) scale(1.08);
+}
+
+.mode-portal-card:hover .portal-sprite.side-left {
+  transform: translate(-6px, -3px) rotate(-5deg);
+}
+
+.mode-portal-card:hover .portal-sprite.side-right {
+  transform: translate(6px, -3px) rotate(5deg);
+}
+
+.portal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.portal-footer strong {
+  font-size: 16.5px;
+  font-weight: 900;
+  color: #fffbeb;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+}
+
+.portal-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fde047 0%, #d97706 100%);
+  color: #0d111b;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
+}
+
+.portal-cta-pill.cyan {
+  background: rgba(14, 116, 144, 0.65);
+  border: 1px solid rgba(125, 211, 252, 0.65);
+  color: #e0f2fe;
+  box-shadow: none;
+}
+
+.portal-cta-pill.amber {
+  background: rgba(180, 83, 9, 0.62);
+  border: 1px solid rgba(253, 186, 116, 0.65);
+  color: #ffedd5;
+  box-shadow: none;
+}
+
+/* Roman Wax Seal Puzzle Chips */
+.title-puzzles-drawer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.puzzle-wax-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 7px;
+  border-radius: 999px;
+  background: rgba(12, 18, 32, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.36);
+  color: #e2e8f0;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.puzzle-wax-seal .wax-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(125, 211, 252, 0.55);
+  color: #bae6fd;
+}
+
+.puzzle-wax-seal:hover {
+  transform: translateY(-2px);
+  border-color: #7dd3fc;
+  background: rgba(18, 32, 56, 0.94);
+}
+
+.puzzle-wax-seal.solved {
+  border-color: rgba(250, 204, 21, 0.65);
+  color: #fef08a;
+}
+
+.puzzle-wax-seal.solved .wax-num {
+  background: linear-gradient(135deg, #fde047, #b45309);
+  border-color: #fff3d1;
+  color: #0d111b;
+}
+
+/* Collapsible Trophy Vault Drawer */
+.title-trophy-drawer {
+  width: min(940px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(10, 15, 28, 0.94);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.78);
+}
+
+/* Sleek Bottom Visual Loadout Dock */
+.title-loadout-dock {
+  width: min(1080px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 15px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(18, 24, 42, 0.92), rgba(9, 13, 24, 0.96));
+  border: 1.5px solid rgba(242, 198, 109, 0.44);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.78);
+}
+
+.loadout-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loadout-cluster-lbl {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #f2c66d;
+  letter-spacing: 0.04em;
+}
+
+.loadout-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(180deg, transparent, rgba(242, 198, 109, 0.4), transparent);
+}
+
+.commander-medallions-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.commander-medallion {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 6px;
+  border-radius: 999px;
+  background: rgba(12, 17, 30, 0.88);
+  border: 1.5px solid rgba(148, 163, 184, 0.26);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.commander-medallion:hover {
+  transform: translateY(-2px);
+  border-color: var(--cmd-accent, #facc15);
+}
+
+.commander-medallion.selected {
+  background: linear-gradient(135deg, rgba(42, 34, 16, 0.88), rgba(14, 19, 34, 0.96));
+  border-color: var(--cmd-accent, #facc15);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.28);
+}
+
+.cmd-portrait-ring {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: 3px;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.26), rgba(9, 13, 24, 0.95));
+  border: 1.5px solid var(--cmd-accent, #facc15);
+  flex-shrink: 0;
+}
+
+.cmd-portrait-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cmd-medallion-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.cmd-medallion-copy strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff3d1;
+  white-space: nowrap;
+}
+
+.cmd-stat-gem {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #fde047;
+  white-space: nowrap;
+}
+
+.doctrine-and-flames-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.doctrine-seals-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.doctrine-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  background: rgba(12, 17, 30, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  font-size: 11.5px;
+}
+
+.doctrine-seal strong {
+  font-size: 11.5px;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.doc-stat-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #7dd3fc;
+}
+
+.ascension-gems-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ascension-gem {
+  min-width: 36px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 10px;
+}
+
+/* ================= 2. SCULPTED PAUSE & COMMAND HUB ================= */
+.command-menu-window {
+  width: min(760px, 95vw);
+}
+
+.compact-sanctum-body {
+  padding: 18px 22px;
+  gap: 15px;
+}
+
+.pause-visual-showcase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(32, 41, 66, 0.72), rgba(12, 16, 28, 0.92));
+  border: 1px solid rgba(242, 198, 109, 0.36);
+  flex-wrap: wrap;
+}
+
+.pause-crest-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pause-crest-identity .hero-crest-medallion {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid #facc15;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pause-crest-identity .hero-crest-medallion img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-campaign-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250, 204, 21, 0.42);
+  color: #fde047;
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.hero-game-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: #fff3d1;
+  margin-top: 3px;
+}
+
+.pause-medallions-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(76px, 1fr));
+  gap: 8px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.pause-jewel-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  border-radius: 13px;
+  background: rgba(10, 14, 25, 0.88);
+  border: 1px solid rgba(242, 198, 109, 0.32);
+  text-align: center;
+}
+
+.pause-jewel-stat .jewel-icon {
+  font-size: 14px;
+  color: #facc15;
+}
+
+.pause-jewel-stat.cyan .jewel-icon {
+  color: #38bdf8;
+}
+
+.pause-jewel-stat.emerald .jewel-icon {
+  color: #34d399;
+}
+
+.pause-jewel-stat strong {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff3d1;
+}
+
+.pause-jewel-stat small {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.pause-action-triad {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.pause-big-cta,
+.pause-sec-cta {
+  min-height: 44px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+/* 5 Square Jewel Toggle Tiles */
+.jewel-toggles-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.jewel-toggle-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: rgba(12, 17, 30, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  color: #cbd5e1;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jewel-toggle-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(242, 198, 109, 0.6);
+}
+
+.jewel-toggle-tile.is-on {
+  background: linear-gradient(160deg, rgba(34, 48, 44, 0.72), rgba(12, 17, 30, 0.95));
+  border-color: rgba(57, 217, 138, 0.55);
+}
+
+.jt-glyph {
+  font-size: 18px;
+  color: #fde047;
+  line-height: 1;
+}
+
+.jt-state {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(9, 13, 24, 0.9);
+  color: #94a3b8;
+}
+
+.jewel-toggle-tile.is-on .jt-state {
+  color: #6ee7b7;
+  background: rgba(57, 217, 138, 0.16);
+}
+
+.jt-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.pause-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.pause-bottom-row .menu-quick-acts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.roman-seal-pill {
+  padding: 8px 4px;
+  align-items: center;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.roman-seal-pill strong {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+}
+
+/* ================= 3. ILLUSTRATED 5-ACT BIOME GALLERY ================= */
+.acts-map-window {
+  width: min(1160px, 96vw);
+}
+
+.acts-biome-gallery {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.biome-act-card {
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  gap: 0;
+  background: rgba(12, 16, 28, 0.96);
+}
+
+.biome-art-banner {
+  position: relative;
+  height: 138px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(242, 198, 109, 0.28);
+}
+
+.biome-theme-1 .biome-art-banner {
+  background: radial-gradient(circle at 50% 30%, rgba(250, 204, 21, 0.34), rgba(22, 42, 82, 0.95));
+}
+.biome-theme-2 .biome-art-banner {
+  background: radial-gradient(circle at 50% 30%, rgba(168, 85, 247, 0.38), rgba(26, 20, 62, 0.96));
+}
+.biome-theme-3 .biome-art-banner {
+  background: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.36), rgba(13, 38, 48, 0.96));
+}
+.biome-theme-4 .biome-art-banner {
+  background: radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.40), rgba(54, 16, 28, 0.96));
+}
+.biome-theme-5 .biome-art-banner {
+  background: radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.42), rgba(24, 12, 38, 0.98));
+}
+
+.biome-roman-watermark {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 42px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.14);
+  line-height: 1;
+}
+
+.biome-active-tag {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #facc15;
+  color: #0d111b;
+  font-size: 9.5px;
+  font-weight: 900;
+}
+
+.biome-boss-portrait {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.9));
+  transition: transform 0.2s ease;
+}
+
+.biome-act-card:hover .biome-boss-portrait {
+  transform: scale(1.08) translateY(-3px);
+}
+
+.biome-lock-seal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 9, 18, 0.58);
+  font-size: 32px;
+  backdrop-filter: blur(2px);
+}
+
+.biome-card-body {
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.biome-stars-row i {
+  font-style: normal;
+  font-size: 18px;
+  color: rgba(148, 163, 184, 0.32);
+  margin: 0 2px;
+}
+
+.biome-stars-row i.on {
+  color: #facc15;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.65);
+}
+
+.biome-endless-pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fde047;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.biome-act-code {
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.biome-card-body h4 {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff3d1;
+  margin: 0;
+}
+
+.biome-card-body .roster-icons-row {
+  justify-content: center;
+}
+
+.biome-stats-strip {
+  display: inline-flex;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fde68a;
+}
+
+.biome-play-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+/* ================= 4. COLLECTIBLE FOIL CODEX & VISUAL FORMULAS ================= */
+.visual-formulas-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.formula-card {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(26, 34, 56, 0.88), rgba(11, 15, 26, 0.96));
+  border: 1px solid rgba(242, 198, 109, 0.42);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+}
+
+.formula-card.cyan {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.formula-card.emerald {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.formula-equation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 900;
+  color: #fffbeb;
+}
+
+.formula-equation .f-arrow {
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+.formula-equation .f-crown {
+  color: #facc15;
+  font-size: 24px;
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.65);
+}
+
+.formula-equation .f-boost {
+  color: #38bdf8;
+}
+
+.formula-equation .f-shield {
+  color: #34d399;
+}
+
+.formula-card strong {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.foil-cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+  gap: 12px;
+}
+
+.foil-unit-card {
+  padding: 12px;
+  border-radius: 18px;
+  gap: 9px;
+  align-items: stretch;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
+    linear-gradient(180deg, rgba(22, 29, 46, 0.94), rgba(10, 14, 24, 0.98));
+}
+
+.foil-spotlight-stage {
+  position: relative;
+  height: 86px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 55%, rgba(242, 198, 109, 0.22), rgba(8, 12, 22, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+}
+
+.foil-spotlight-stage.enemy-stage {
+  background: radial-gradient(circle at 50% 55%, rgba(244, 63, 94, 0.20), rgba(8, 12, 22, 0.92));
+}
+
+.foil-spotlight-stage .codex-hotkey-pill,
+.foil-spotlight-stage .codex-tier-pill {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+}
+
+.foil-spotlight-stage .codex-mini-matrix {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  width: 42px;
+  height: 42px;
+}
+
+.foil-unit-sprite {
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.85));
+}
+
+.foil-title-block {
+  text-align: center;
+}
+
+.foil-title-block h4 {
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.foil-role-pill {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.foil-icon-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.foil-icon-stats span {
+  padding: 4px 3px;
+  border-radius: 8px;
+  background: rgba(9, 13, 23, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #fff3d1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.foil-power-ribbon {
+  margin-top: auto;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: rgba(250, 204, 21, 0.09);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  color: #fef08a;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.foil-counter-chip {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.28), rgba(15, 23, 42, 0.92));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #e0f2fe;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.foil-counter-sprite {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.8));
+}
+
+/* ================= 5. RESULT DUEL SHOWCASE & ILLUMINATED TAROT DECREES ================= */
+.result-modal-sub:empty {
+  display: none;
+}
+
+#resultModal .result-stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.victory-crown-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.victory-sprites-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.victory-lineup-sprite {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.85));
+}
+
+.victory-mini-chips {
+  display: inline-flex;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fde68a;
+}
+
+.breach-duel-showcase {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 2px;
+}
+
+.duel-fighter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(9, 13, 24, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  text-align: start;
+}
+
+.duel-fighter.breach-foe {
+  border-color: rgba(244, 63, 94, 0.48);
+}
+
+.duel-fighter.counter-ally {
+  border-color: rgba(52, 211, 153, 0.55);
+  background: rgba(6, 48, 38, 0.45);
+}
+
+.duel-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  padding: 4px;
+  flex-shrink: 0;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.duel-avatar.crimson {
+  border-color: rgba(244, 63, 94, 0.6);
+}
+
+.duel-avatar.gold {
+  border-color: rgba(250, 204, 21, 0.7);
+}
+
+.duel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.duel-meta strong {
+  display: block;
+  font-size: 12.5px;
+  color: #fff3d1;
+}
+
+.duel-meta small {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.duel-fighter.counter-ally .duel-meta small {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.duel-vs-spark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #facc15;
+  font-weight: 900;
+}
+
+.duel-vs-spark span {
+  font-size: 20px;
+}
+
+.duel-vs-spark small {
+  font-size: 10px;
+  color: #fde68a;
+}
+
+/* Illuminated Tarot Decree Cards */
+.tarot-decree-card {
+  position: relative;
+  min-height: 250px;
+  padding: 20px 16px 16px;
+  border-radius: 28px 28px 16px 16px;
+  border-width: 1.5px;
+}
+
+.tarot-decree-card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 23px 23px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  pointer-events: none;
+}
+
+.tarot-decree-card .decree-icon-orb {
+  width: 66px;
+  height: 66px;
+  font-size: 30px;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.3);
+}
+
+.tarot-decree-card.tier-economy {
+  border-color: rgba(250, 204, 21, 0.65);
+}
+
+.tarot-decree-card.tier-defense {
+  border-color: rgba(56, 189, 248, 0.65);
+}
+
+.tarot-decree-card.tier-royalty {
+  border-color: rgba(192, 132, 252, 0.7);
+}
+
+/* Responsive Breakpoints for Portals, Biome Gallery & Duel Showcase */
+@media (max-width: 1060px) {
+  .acts-biome-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .title-loadout-dock {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loadout-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 780px) {
+  .title-portals-triptych,
+  .visual-formulas-row,
+  .pause-action-triad,
+  .pause-bottom-row,
+  .breach-duel-showcase {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-portal-card {
+    min-height: 148px;
+    border-radius: 28px;
+    flex-direction: row;
+    padding: 12px 16px;
+    text-align: start;
+  }
+
+  .mode-portal-card::before {
+    border-radius: 23px;
+  }
+
+  .portal-art-stage {
+    width: 110px;
+    height: 74px;
+    margin-top: 0;
+  }
+
+  .portal-footer {
+    align-items: flex-end;
+  }
+
+  .acts-biome-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jewel-toggles-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pause-medallions-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .acts-biome-gallery,
+  #resultModal .result-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

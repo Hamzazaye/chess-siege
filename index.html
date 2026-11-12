@@ -24,12 +24,12 @@
     <!-- ================= PORTRAIT MOBILE LANDSCAPE HINT BANNER ================= -->
     <div class="landscape-hint-banner" id="landscapeHint" role="note">
       <span>⟳</span>
-      <span id="landscapeHintTxt">يرجى تدوير الهاتف للوضع الأفقي لأفضل رؤية لرقعة الشطرنج 10×5</span>
+      <span id="landscapeHintTxt">تدوير للوضع الأفقي</span>
     </div>
 
     <!-- ================= FLOATING TOP ROYAL COMMAND PODS ================= -->
     <header class="floating-top-hud">
-      <!-- POD 1 (LEFT): Sleek Unified Sovereign Crest & Mana Treasury Bar -->
+      <!-- POD 1 (LEFT): Sovereign Crest & Mana Treasury -->
       <div class="hud-wing left-treasury-wing" id="manaPodBox" title="Sovereign Crown Mana">
         <div class="royal-emblem" aria-hidden="true">
           <img src="assets/royal-crest.png" alt="" class="royal-crest-img" onerror="this.style.display='none'" />
@@ -50,7 +50,7 @@
             </svg>
           </div>
           <div class="mana-readout">
-            <span class="pod-label" id="manaTitleLabel">طاقة التاج</span>
+            <span class="pod-label" id="manaTitleLabel">الطاقة</span>
             <strong class="pod-value" id="manaCounterVal" dir="ltr">150</strong>
           </div>
         </div>
@@ -58,14 +58,12 @@
         <div class="hud-v-divider" aria-hidden="true"></div>
 
         <div class="title-and-sentinels">
-          <span class="act-badge" id="actTitleBadge" dir="ltr">ACT I: The Courtyard Breach</span>
-          <span class="sentinel-chip" id="sentinelCountBadge">
-            ♜ 5/5 القلاع المجنحة
-          </span>
+          <span class="act-badge" id="actTitleBadge" dir="ltr">ACT I</span>
+          <span class="sentinel-chip" id="sentinelCountBadge">♜ 5/5</span>
         </div>
       </div>
 
-      <!-- POD 2 (CENTER): Grandmaster Astrolabe & Wave Siege Chronometer -->
+      <!-- POD 2 (CENTER): Wave Astrolabe -->
       <div class="hud-center-astrolabe">
         <div class="astrolabe-main-row">
           <div class="wave-pod">
@@ -80,7 +78,7 @@
 
           <button type="button" class="early-wave-btn" id="callWaveBtn">
             <span id="nextWaveLabelText">⚔ الموجة التالية</span>
-            <small id="earlyBonusSubTxt">+25☀ مكافأة</small>
+            <small id="earlyBonusSubTxt">+25☀</small>
           </button>
 
           <div class="elo-score-cluster">
@@ -89,26 +87,23 @@
               <strong class="pod-value" id="scoreCounterVal" dir="ltr">0</strong>
             </div>
             <div class="mini-stat-box">
-              <span class="pod-label" id="eloLabelTxt">التصنيف</span>
+              <span class="pod-label" id="eloLabelTxt">ELO</span>
               <strong class="pod-value" id="eloCounterVal" dir="ltr">1500</strong>
             </div>
           </div>
         </div>
 
-        <!-- Floating Tactical Status & Synergy Ribbon right beneath the Center Astrolabe -->
+        <!-- Compact Icon-Driven Status & Synergy Chips (Zero Text Clutter!) -->
         <div class="stage-top-ribbon">
-          <div class="tactical-status-pill mode-deploy" id="tacticalStatusPill">
-            اختر مربعاً لنشر الجندي المدرع — أو انقر على أي قطعة في الرقعة لتحريكها بحركة الشطرنج!
-          </div>
+          <div class="tactical-status-pill mode-deploy" id="tacticalStatusPill"></div>
           <div class="active-synergies-row" id="activeSynergiesRow"></div>
-          <div class="live-tip-ticker" id="liveTipTicker">
-            <span class="tip-badge">✦</span>
-            <span id="liveTipBannerText">دمج سطر الجنود (PAWN-LINE MERGE): صفّ 5 جنود مدرعين في نفس العمود أو الصف واضغط [M]!</span>
+          <div class="live-tip-ticker hidden" id="liveTipTicker">
+            <span id="liveTipBannerText"></span>
           </div>
         </div>
       </div>
 
-      <!-- POD 3 (RIGHT): War-Council Controls (Monochrome Forged-Gold Vector Icons) -->
+      <!-- POD 3 (RIGHT): Sleek Icon Controls -->
       <div class="hud-wing right-council-wing">
         <button type="button" class="hud-btn gold-outline" id="openMenuBtn" title="[Esc]">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -116,18 +111,18 @@
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openActsBtn">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6zM9 3v15M15 6v15"/></svg>
-          <span id="openActsBtnLabel">المراحل</span>
+          <span id="openActsBtnLabel">الحملة</span>
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openCodexBtn">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2V4zm20 0h-7a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h8V4z"/></svg>
-          <span id="openCodexBtnLabel">الدليل</span>
+          <span id="openCodexBtnLabel">البطاقات</span>
         </button>
-        <button type="button" class="hud-btn hide-on-mobile" id="langToggleBtn" title="Switch Language AR / EN">
+        <button type="button" class="hud-btn hide-on-mobile" id="langToggleBtn" title="AR / EN">
           <bdi dir="ltr" id="langToggleText">EN</bdi>
         </button>
         <button type="button" class="hud-btn active hide-on-tablet" id="autoManaBtn">
           <span class="ui-glyph-sun">☀</span>
-          <span id="autoManaText">تلقائي: ON</span>
+          <span id="autoManaText">ON</span>
         </button>
         <button type="button" class="hud-btn" id="speedBtn">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
@@ -148,11 +143,11 @@
       </div>
     </header>
 
-    <!-- Interactive 3-Step Spotlight Onboarding Tutorial Banner -->
+    <!-- Compact 3-Step Visual Onboarding Pill -->
     <div class="tutorial-spotlight-banner hidden" id="tutorialBanner" role="region" aria-live="polite">
       <span class="tutorial-step-pill" id="tutorialStepBadge" dir="ltr">1 / 3</span>
       <span class="tutorial-step-copy" id="tutorialStepText"></span>
-      <button type="button" class="tutorial-skip-btn" id="tutorialSkipBtn">تخطي ✕</button>
+      <button type="button" class="tutorial-skip-btn" id="tutorialSkipBtn">✕</button>
     </div>
 
     <!-- Golden Achievement Unlock Toast -->
@@ -166,16 +161,16 @@
 
     <!-- Dramatic Wave / Act Announcement Banner -->
     <div class="wave-announcement hidden" id="waveAnnouncement" role="status" aria-live="polite">
-      <h2 id="waveBannerTitle">ACT I: THE COURTYARD BREACH</h2>
-      <p id="waveBannerSub">Sunlit Ivory &amp; Obsidian Bastion</p>
+      <h2 id="waveBannerTitle">ACT I</h2>
+      <p id="waveBannerSub"></p>
     </div>
 
-    <!-- Floating On-Screen Cinematic 5-Pawn Merge Trigger Button -->
+    <!-- Floating Cinematic 5-Pawn Merge Trigger -->
     <button type="button" class="screen-merge-cta hidden" id="screenMergeCtaBtn">
       <span class="merge-cta-crown">♛</span>
       <span class="merge-cta-text">
-        <strong id="mergeCtaTitleTxt">اندماج ملكي جاهز على الشاشة!</strong>
-        <small id="mergeCtaSubTxt">اضغط هنا أو [M] لدمج سطر الـ 5 جنود إلى وزير ملكي ♛</small>
+        <strong id="mergeCtaTitleTxt">اندماج الوزير جاهز!</strong>
+        <small id="mergeCtaSubTxt">[M] ♟×5 ➔ ♛</small>
       </span>
     </button>
 
@@ -185,14 +180,12 @@
     <!-- ================= FLOATING BOTTOM GRANDMASTER RELIQUARY DOCK ================= -->
     <footer class="floating-bottom-altar">
       <div class="reliquary-dock-inner">
-        <!-- SECTION A: 7 Gothic-Arched Royal Chess Relic Cards -->
         <div class="chess-deck-bar" id="chessDeckBar" role="toolbar" aria-label="Royal Chess Piece Deployment Deck"></div>
 
-        <!-- SECTION B: Live 5x5 Chess Attack Matrix & Unit Inspector -->
         <div class="tactical-inspector" id="tacticalInspectorCard">
           <div class="mini-matrix-wrap">
             <div class="mini-matrix-grid" id="miniMatrixGrid"></div>
-            <span class="mini-matrix-caption" id="matrixCaptionTxt">هندسة الحركة</span>
+            <span class="mini-matrix-caption" id="matrixCaptionTxt">المدى</span>
           </div>
 
           <img src="" alt="" class="inspector-portrait" id="inspectorPortrait" />
@@ -200,7 +193,7 @@
           <div class="inspector-meta">
             <div class="inspector-title-row">
               <strong id="inspectorName">الجندي المدرع</strong>
-              <bdi dir="ltr" class="inspector-stat-chip" id="inspectorStats">HP 640 (+65❖) • 60☀</bdi>
+              <bdi dir="ltr" class="inspector-stat-chip" id="inspectorStats">♥640 • 60☀</bdi>
             </div>
             <p class="inspector-rule" id="inspectorRule"></p>
           </div>
@@ -208,7 +201,6 @@
           <div class="inspector-quick-actions" id="inspectorQuickActions"></div>
         </div>
 
-        <!-- SECTION C: Royal Decree Orbs (Sacrifice & Checkmate Overload) -->
         <div class="dock-specials">
           <button type="button" class="sacrifice-btn" id="shovelBtn" title="[S]">
             <span class="sac-icon">⚔</span>
@@ -219,8 +211,8 @@
           <button type="button" class="ultimate-btn" id="ultimateBtn" disabled title="[Space]">
             <div class="ultimate-fill" id="ultimateFillBar"></div>
             <div class="ultimate-content">
-              <span class="ult-crown" id="ultCrownTxt">♛ كش مات الشاملة</span>
-              <span class="ultimate-label" id="ultimateText" dir="ltr">25% [SPACE]</span>
+              <span class="ult-crown" id="ultCrownTxt">♛ كش مات</span>
+              <span class="ultimate-label" id="ultimateText" dir="ltr">25%</span>
             </div>
           </button>
         </div>
@@ -228,356 +220,368 @@
     </footer>
   </div>
 
-  <!-- ================= ROYAL COMMAND MENU MODAL ================= -->
+  <!-- ================= 1. SCULPTED ROYAL COMMAND HUB (PAUSE & SETTINGS — ZERO WALL OF TEXT!) ================= -->
   <div class="modal-backdrop hidden" id="commandMenuModal" role="dialog" aria-modal="true" aria-labelledby="commandMenuTitle">
-    <div class="modal-window command-menu-window">
-      <div class="modal-header">
+    <div class="modal-window command-menu-window royal-ornate-frame">
+      <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="commandMenuTitle">♚ القائمة الملكية الرئيسية</h3>
+          <h3 id="commandMenuTitle">♚ غرفة القيادة</h3>
           <nav class="sanctum-modal-nav">
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (15)</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="commandMenuModal">⚙ القيادة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeMenuBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeMenuBtn">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="menu-hero-crest-banner">
-          <div class="hero-crest-medallion">
-            <img src="assets/royal-crest.png" alt="Crown & Blight Crest" />
-            <span class="hero-crest-crown">♛</span>
+
+      <div class="modal-body compact-sanctum-body">
+        <!-- Sleek Visual Crest & Live Match Medallions (No Long Paragraph!) -->
+        <div class="pause-visual-showcase">
+          <div class="pause-crest-identity">
+            <div class="hero-crest-medallion">
+              <img src="assets/royal-crest.png" alt="Crown & Blight Crest" />
+              <span class="hero-crest-crown">♛</span>
+            </div>
+            <div>
+              <span class="hero-campaign-pill" id="menuHeroProgressPill">ACT I</span>
+              <h2 class="hero-game-title" id="menuHeroGameTitle">CROWN &amp; BLIGHT</h2>
+              <p class="sr-only" id="menuHeroSubTxt"></p>
+            </div>
           </div>
-          <div class="hero-crest-copy">
-            <div class="hero-crest-badges">
-              <span class="hero-edition-pill" dir="ltr">AAA TACTICAL CHESS DEFENSE • v4.0</span>
-              <span class="hero-campaign-pill" id="menuHeroProgressPill">الفصل 1 من 5</span>
+
+          <div class="pause-medallions-strip">
+            <div class="pause-jewel-stat gold">
+              <span class="jewel-icon">♛</span>
+              <strong id="menuEloVal" dir="ltr">1500</strong>
+              <small id="menuTelEloLbl">ELO</small>
+              <span class="sr-only" id="menuRankTitle"></span>
             </div>
-            <h2 class="hero-game-title" id="menuHeroGameTitle">حرب التاج والظلام • CROWN &amp; BLIGHT</h2>
-            <p class="hero-game-subtitle" id="menuHeroSubTxt">
-              هندسة الشطرنج الحقيقية على رقعة 10×5 في مواجهة جحافل الظلام — ابنِ اقتصاد كؤوس النور، شكّل جدار الجنود المدرعين، وادمج 5 جنود في سطر لترقيتهم سينمائياً إلى وزير متوّج!
-            </p>
-          </div>
-          <div class="hero-economy-pulse">
-            <div class="econ-pulse-item">
-              <span id="menuEconIncomeLbl">معدل إنتاج الطاقة</span>
-              <strong id="menuIncomeRateVal" dir="ltr">+53☀ / 10s</strong>
+            <div class="pause-jewel-stat cyan">
+              <span class="jewel-icon">⚔</span>
+              <strong id="menuActWaveVal" dir="ltr">1/6</strong>
+              <small id="menuTelWaveLbl">الموجة</small>
+              <span class="sr-only" id="menuActNameSub"></span>
             </div>
-            <div class="econ-pulse-item">
-              <span id="menuEconArmyLbl">قيمة الجيش بالميدان</span>
-              <strong id="menuArmyValueVal" dir="ltr">100☀</strong>
+            <div class="pause-jewel-stat amber">
+              <span class="jewel-icon">♜</span>
+              <strong id="menuSentinelsVal" dir="ltr">5/5</strong>
+              <small id="menuTelSentLbl">القلاع</small>
+              <span class="sr-only" id="menuTelSentSub"></span>
             </div>
-            <div class="econ-pulse-item">
-              <span id="menuEconKillsLbl">الوحوش المدمّرة</span>
-              <strong id="menuKillsVal" dir="ltr">⚔ 0</strong>
+            <div class="pause-jewel-stat emerald">
+              <span class="jewel-icon">☀</span>
+              <strong id="menuIncomeRateVal" dir="ltr">+53☀</strong>
+              <small id="menuEconIncomeLbl">الإنتاج</small>
+              <span class="sr-only" id="menuArmyValueVal"></span>
+              <span class="sr-only" id="menuEconArmyLbl"></span>
+              <span class="sr-only" id="menuKillsVal"></span>
+              <span class="sr-only" id="menuEconKillsLbl"></span>
+              <span class="sr-only" id="menuTelForcesLbl"></span>
+              <span class="sr-only" id="menuForcesVal"></span>
+              <span class="sr-only" id="menuSynergySub"></span>
             </div>
           </div>
         </div>
 
-        <div class="menu-telemetry-banner">
-          <div class="telemetry-card highlight-gold">
-            <span class="telemetry-label" id="menuTelEloLbl">التصنيف الملكي</span>
-            <strong class="telemetry-val" id="menuEloVal" dir="ltr">1500</strong>
-            <small class="telemetry-sub" id="menuRankTitle">قائد التاج الملكي</small>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-label" id="menuTelWaveLbl">المرحلة والموجة</span>
-            <strong class="telemetry-val" id="menuActWaveVal" dir="ltr">ACT I • 1/6</strong>
-            <small class="telemetry-sub" id="menuActNameSub" dir="ltr">The Courtyard Breach</small>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-label" id="menuTelSentLbl">القلاع المجنحة</span>
-            <strong class="telemetry-val" id="menuSentinelsVal" dir="ltr">♜ 5 / 5</strong>
-            <small class="telemetry-sub" id="menuTelSentSub">خط الدفاع الأخير للصفوف</small>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-label" id="menuTelForcesLbl">قوات الميدان والطاقة</span>
-            <strong class="telemetry-val" id="menuForcesVal">0 قطع • 150☀</strong>
-            <small class="telemetry-sub" id="menuSynergySub">الدمج التكتيكي جاهز</small>
-          </div>
+        <!-- Big Iconic Action Triad -->
+        <div class="pause-action-triad">
+          <button type="button" class="launch-act-btn pause-big-cta" id="menuResumeBtn">▶ استئناف</button>
+          <button type="button" class="hud-btn gold-outline pause-sec-cta" id="menuRestartBtn">↻ إعادة</button>
+          <button type="button" class="hud-btn gold-outline pause-sec-cta" id="menuOpenTitleBtn">
+            ♛ <span id="setTitleHubTitle">الرئيسية</span>
+            <span class="sr-only" id="setTitleHubSub"></span>
+          </button>
+          <button type="button" class="sr-only" id="menuOpenActsBtn"></button>
+          <button type="button" class="sr-only" id="menuOpenCodexBtn"></button>
         </div>
 
-        <div class="menu-hero-actions">
-          <button type="button" class="launch-act-btn menu-primary-btn" id="menuResumeBtn">
-            ▶ استئناف المعركة الآن
-          </button>
-          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuRestartBtn">
-            ↻ إعادة المرحلة الحالية
-          </button>
-          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenActsBtn">
-            ❖ خريطة الحملة (5 فصول)
-          </button>
-          <button type="button" class="hud-btn gold-outline menu-secondary-btn" id="menuOpenCodexBtn">
-            ◈ موسوعة الشطرنج والوحوش
-          </button>
-        </div>
-
+        <!-- Jewel Icon-First Toggle Matrix (Zero Subtext Clutter!) -->
         <div>
-          <h4 class="codex-section-title" id="menuSettingsHeader">⚙ إعدادات المعركة والعرض</h4>
-          <div class="menu-settings-grid">
-            <button type="button" class="menu-setting-card is-on" id="menuSpeedBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon">»</span>
-                <div class="setting-text">
-                  <strong id="setSpeedTitle">سرعة المعركة</strong>
-                  <small id="setSpeedSub">التحكم في وتيرة الوقت</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill" id="menuSpeedPill">1x</bdi>
+          <h4 class="codex-section-title" id="menuSettingsHeader">⚙ الإعدادات السريعة</h4>
+          <div class="jewel-toggles-row">
+            <button type="button" class="jewel-toggle-tile is-on" id="menuSpeedBtn">
+              <span class="jt-glyph">»</span>
+              <bdi dir="ltr" class="jt-state" id="menuSpeedPill">1x</bdi>
+              <span class="jt-label" id="setSpeedTitle">السرعة</span>
+              <span class="sr-only" id="setSpeedSub"></span>
             </button>
 
-            <button type="button" class="menu-setting-card is-on" id="menuAutoManaBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon">☀</span>
-                <div class="setting-text">
-                  <strong id="setAutoTitle">جمع الطاقة الملكية</strong>
-                  <small id="setAutoSub">التقاط بلورات النور آلياً</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill" id="menuAutoManaPill">AUTO: ON</bdi>
+            <button type="button" class="jewel-toggle-tile is-on" id="menuAutoManaBtn">
+              <span class="jt-glyph">☀</span>
+              <bdi dir="ltr" class="jt-state" id="menuAutoManaPill">ON</bdi>
+              <span class="jt-label" id="setAutoTitle">جمع تلقائي</span>
+              <span class="sr-only" id="setAutoSub"></span>
             </button>
 
-            <button type="button" class="menu-setting-card is-on" id="menuGridCoordsBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon">♟</span>
-                <div class="setting-text">
-                  <strong id="setGridTitle">إحداثيات رقعة الشطرنج</strong>
-                  <small id="setGridSub">إظهار ترقيم المربعات A1–J5</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill" id="menuGridCoordsPill">GRID: ON</bdi>
+            <button type="button" class="jewel-toggle-tile is-on" id="menuGridCoordsBtn">
+              <span class="jt-glyph">♟</span>
+              <bdi dir="ltr" class="jt-state" id="menuGridCoordsPill">A1</bdi>
+              <span class="jt-label" id="setGridTitle">الإحداثيات</span>
+              <span class="sr-only" id="setGridSub"></span>
             </button>
 
-            <button type="button" class="menu-setting-card is-on" id="menuAudioBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon" id="menuAudioIcon">♫</span>
-                <div class="setting-text">
-                  <strong id="setAudioTitle">الموسيقى والمؤثرات</strong>
-                  <small id="setAudioSub">الأوركسترا الملكية وأصوات القتال</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill" id="menuAudioPill">AUDIO: ON</bdi>
+            <button type="button" class="jewel-toggle-tile is-on" id="menuAudioBtn">
+              <span class="jt-glyph" id="menuAudioIcon">♫</span>
+              <bdi dir="ltr" class="jt-state" id="menuAudioPill">ON</bdi>
+              <span class="jt-label" id="setAudioTitle">الصوت</span>
+              <span class="sr-only" id="setAudioSub"></span>
             </button>
 
-            <button type="button" class="menu-setting-card" id="menuFullscreenBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon">⛶</span>
-                <div class="setting-text">
-                  <strong id="setFullTitle">وضع الشاشة الكاملة</strong>
-                  <small id="setFullSub">تجربة سينمائية بدون حواف</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill" id="menuFullscreenPill">[F] FULL</bdi>
-            </button>
-
-            <button type="button" class="menu-setting-card" id="menuOpenTitleBtn">
-              <div class="setting-card-meta">
-                <span class="setting-icon">♛</span>
-                <div class="setting-text">
-                  <strong id="setTitleHubTitle">الشاشة الرئيسية والأطوار</strong>
-                  <small id="setTitleHubSub">اختيار القائد / العقيدة / الألغاز</small>
-                </div>
-              </div>
-              <bdi dir="ltr" class="setting-pill">TITLE HUB</bdi>
+            <button type="button" class="jewel-toggle-tile" id="menuFullscreenBtn">
+              <span class="jt-glyph">⛶</span>
+              <bdi dir="ltr" class="jt-state" id="menuFullscreenPill">[F]</bdi>
+              <span class="jt-label" id="setFullTitle">ملء الشاشة</span>
+              <span class="sr-only" id="setFullSub"></span>
             </button>
           </div>
 
-          <div class="audio-sliders-row">
+          <div class="audio-sliders-row sleek-sliders">
             <label class="audio-slider-control">
-              <span id="sfxSliderLbl">⚔ المؤثرات الصوتية</span>
+              <span id="sfxSliderLbl">⚔ SFX</span>
               <input type="range" id="sfxVolSlider" min="0" max="100" value="80" />
             </label>
             <label class="audio-slider-control">
-              <span id="musicSliderLbl">♫ الموسيقى الملكية</span>
+              <span id="musicSliderLbl">♫ Music</span>
               <input type="range" id="musicVolSlider" min="0" max="100" value="52" />
             </label>
           </div>
         </div>
 
-        <div>
-          <h4 class="codex-section-title" id="menuQuickActsHeader">⚔ انتقال سريع بين فصول الحملة</h4>
-          <div class="menu-quick-acts" id="menuQuickActsGrid"></div>
-        </div>
-
-        <div class="menu-shortcuts-box">
-          <h4 class="codex-section-title" id="menuShortcutsHeader">♚ اختصارات التحكم (الماوس ولوحة المفاتيح ويد التحكم)</h4>
-          <div class="shortcuts-chips" dir="ltr">
-            <span><kbd>1</kbd>–<kbd>7</kbd> Deck</span>
-            <span><kbd>WASD</kbd> / <kbd>Arrows</kbd> Cursor</span>
-            <span><kbd>Enter</kbd> Deploy / Move</span>
-            <span><kbd>Q</kbd> / <kbd>E</kbd> Cycle Card</span>
-            <span><kbd>M</kbd> 5-Pawn Merge ♛</span>
-            <span><kbd>U</kbd> Promote Pawn</span>
-            <span><kbd>S</kbd> Sacrifice (+60%☀)</span>
-            <span><kbd>Space</kbd> Checkmate Overload</span>
-            <span><kbd>Gamepad</kbd> D-Pad + A/B/X/Y/LB/RB</span>
+        <!-- Compact Visual Act Strip & Keycaps -->
+        <div class="pause-bottom-row">
+          <div class="pause-acts-mini">
+            <h4 class="codex-section-title" id="menuQuickActsHeader">❖ الفصول</h4>
+            <div class="menu-quick-acts" id="menuQuickActsGrid"></div>
+          </div>
+          <div class="pause-keys-mini">
+            <h4 class="codex-section-title" id="menuShortcutsHeader">⌨ التحكم</h4>
+            <div class="shortcuts-chips" dir="ltr">
+              <span><kbd>1-7</kbd> ♟</span>
+              <span><kbd>WASD</kbd> ✥</span>
+              <span><kbd>M</kbd> ♛</span>
+              <span><kbd>U</kbd> ↑</span>
+              <span><kbd>S</kbd> 💥</span>
+              <span><kbd>Space</kbd> ⚡</span>
+              <span>🎮 Pad</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ================= ROYAL CODEX MODAL (CHESS GEOMETRY & BESTIARY) ================= -->
+  <!-- ================= 2. COLLECTIBLE FOIL CARDS CODEX (VISUAL FORMULAS + ICON STATS!) ================= -->
   <div class="modal-backdrop hidden" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
-    <div class="modal-window">
-      <div class="modal-header">
+    <div class="modal-window royal-ornate-frame">
+      <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="codexModalTitle">◈ الموسوعة الملكية الشاملة</h3>
+          <h3 id="codexModalTitle">◈ بطاقات الشطرنج والوحوش</h3>
           <nav class="sanctum-modal-nav">
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">◈ الموسوعة الملكية (15)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
           <div class="codex-tabs" role="tablist">
             <button type="button" class="codex-tab-btn active" data-codex-tab="all">الكل (15)</button>
-            <button type="button" class="codex-tab-btn" data-codex-tab="pieces">♟ قطع الشطرنج (7)</button>
-            <button type="button" class="codex-tab-btn" data-codex-tab="enemies">⚔ جيش الظلام (8)</button>
+            <button type="button" class="codex-tab-btn" data-codex-tab="pieces">♟ القطع (7)</button>
+            <button type="button" class="codex-tab-btn" data-codex-tab="enemies">⚔ الوحوش (8)</button>
           </div>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeCodexBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeCodexBtn">✕</button>
       </div>
       <div class="modal-body">
-        <div id="codexRulesSection" class="codex-rules-banner">
-          <div class="codex-rules-main">
-            <h4 class="codex-section-title" id="codexRulesHeader">♛ قواعد الدمج والاقتصاد المتوازن</h4>
-            <p class="codex-desc" id="codexRulesDesc">
-              ساحة المعركة رقعة شطرنج 10×5 حيث تهاجم كل قطعة وتتحرك وفق هندسة الشطرنج الحقيقية. صفّ 5 جنود مدرعين في نفس السطر واضغط [M] لدمجهم سينمائياً إلى وزير ملكي متوّج!
-            </p>
+        <!-- 3 Visual Formula Cards Instead of Prose Paragraphs! -->
+        <div id="codexRulesSection" class="visual-formulas-row">
+          <span class="sr-only" id="codexRulesHeader"></span>
+          <span class="sr-only" id="codexRulesDesc"></span>
+          <div class="formula-card gold">
+            <div class="formula-equation" dir="ltr"><span>♟ × 5</span><span class="f-arrow">➔</span><span class="f-crown">♛</span></div>
+            <strong id="formulaMergeLbl">[M] دمج 5 جنود ➔ وزير متوّج</strong>
+          </div>
+          <div class="formula-card cyan">
+            <div class="formula-equation" dir="ltr"><span>♜ + ♛</span><span class="f-arrow">➔</span><span class="f-boost">+30%⚡</span></div>
+            <strong id="formulaBatteryLbl">بطارية ملكية على خط واحد</strong>
+          </div>
+          <div class="formula-card emerald">
+            <div class="formula-equation" dir="ltr"><span>♚ ⇄ ♜</span><span class="f-arrow">➔</span><span class="f-shield">+220🛡</span></div>
+            <strong id="formulaCastleLbl">تبييت ملكي (مسار خالٍ)</strong>
           </div>
         </div>
 
         <div id="codexPiecesSection">
-          <h4 class="codex-section-title" id="codexPiecesHeader">♟ قطع الشطرنج الملكية (7 وحدات)</h4>
-          <div class="codex-grid" id="codexPiecesGrid"></div>
+          <h4 class="codex-section-title" id="codexPiecesHeader">♟ القطع الملكية</h4>
+          <div class="codex-grid foil-cards-grid" id="codexPiecesGrid"></div>
         </div>
 
         <div id="codexEnemiesSection">
-          <h4 class="codex-section-title" id="codexEnemiesHeader">⚔ جيش الشطرنج الأسود الملعون (8 وحوش)</h4>
-          <div class="codex-grid" id="codexEnemiesGrid"></div>
+          <h4 class="codex-section-title" id="codexEnemiesHeader">⚔ وحوش الظلام</h4>
+          <div class="codex-grid foil-cards-grid" id="codexEnemiesGrid"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ================= CAMPAIGN ACTS MODAL ================= -->
+  <!-- ================= 3. ILLUSTRATED 5-ACT BIOME CAMPAIGN MAP ================= -->
   <div class="modal-backdrop hidden" id="actsModal" role="dialog" aria-modal="true" aria-labelledby="actsModalTitle">
-    <div class="modal-window">
-      <div class="modal-header">
+    <div class="modal-window royal-ornate-frame acts-map-window">
+      <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="actsModalTitle">❖ خريطة الحملة الملكية</h3>
+          <h3 id="actsModalTitle">❖ خريطة الحملة</h3>
           <nav class="sanctum-modal-nav">
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة والإعدادات</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ خريطة الحملة (5)</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ الموسوعة الملكية (15)</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
         </div>
-        <button type="button" class="hud-btn modal-close-pill" id="closeActsBtn">✕ العودة للمعركة [Esc]</button>
+        <button type="button" class="hud-btn modal-close-pill" id="closeActsBtn">✕</button>
       </div>
       <div class="modal-body">
-        <div class="acts-grid" id="actsListContainer"></div>
+        <div class="acts-biome-gallery" id="actsListContainer"></div>
       </div>
     </div>
   </div>
 
-  <!-- ================= BESPOKE VICTORY (WIN) & DEFEAT (LOST) ROYAL DECREE MODAL ================= -->
+  <!-- ================= 4. DRAMATIC VICTORY & DEFEAT SHOWCASE MODAL ================= -->
   <div class="modal-backdrop hidden is-victory" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
-    <div class="modal-window result-window">
+    <div class="modal-window result-window royal-ornate-frame">
       <div class="result-hero-header">
         <div class="result-crest-medallion" id="resultCrestBox">
           <span class="result-crest-glyph" id="resultCrestGlyph">♛</span>
         </div>
-        <span class="result-ribbon-tag" id="resultRibbonTag">مرسوم النصر الملكي</span>
+        <span class="result-ribbon-tag" id="resultRibbonTag">SOVEREIGN VICTORY</span>
         <div class="result-stars-banner victory-stars" id="resultStarsRow">
           <span class="result-star earned">★</span>
           <span class="result-star earned">★</span>
           <span class="result-star earned">★</span>
         </div>
-        <h3 id="resultModalTitle" class="result-modal-heading">♛ كش مات — انتصار ملكي ساحق!</h3>
+        <h3 id="resultModalTitle" class="result-modal-heading">♛ انتصار ملكي!</h3>
         <p id="resultModalSubtitle" class="result-modal-sub"></p>
         <div class="result-breach-strip hidden" id="resultBreachStrip"></div>
       </div>
 
-      <div class="result-stats-grid" id="resultModalStats"></div>
-
+      <!-- Visual Duel / Commendation Strip -->
       <div class="result-advisor-box" id="resultAdvisorBox">
-        <div class="advisor-header">
-          <span class="advisor-badge" id="resultAdvisorBadge">♚ تحليل القائد الأعلى</span>
-        </div>
-        <p class="advisor-text" id="resultAdvisorText"></p>
+        <span class="advisor-badge" id="resultAdvisorBadge"></span>
+        <div class="advisor-text" id="resultAdvisorText"></div>
       </div>
 
+      <!-- Crisp Icon Trophies Grid -->
+      <div class="result-stats-grid" id="resultModalStats"></div>
+
       <div class="result-actions">
-        <button type="button" class="launch-act-btn result-primary-cta" id="modalNextActBtn">⚔ المرحلة التالية ←</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalRetryBtn">↻ إعادة المرحلة</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalActsBtn">❖ خريطة الحملة</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalCodexBtn">◈ الموسوعة المضادة</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalMainMenuBtn">♚ مركز القيادة</button>
+        <button type="button" class="launch-act-btn result-primary-cta" id="modalNextActBtn">⚔ التالي ←</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalRetryBtn">↻ إعادة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalActsBtn">❖ الخريطة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalCodexBtn">◈ البطاقات</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalMainMenuBtn">♚ القيادة</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= ROYAL DECREE DRAFT MODAL (EVERY 2 WAVES) ================= -->
+  <!-- ================= 5. ILLUMINATED TAROT DECREE DRAFT MODAL ================= -->
   <div class="modal-backdrop hidden" id="decreeModal" role="dialog" aria-modal="true" aria-labelledby="decreeModalTitle">
-    <div class="modal-window decree-window">
+    <div class="modal-window decree-window royal-ornate-frame">
       <div class="decree-header">
-        <span class="decree-eyebrow" id="decreeEyebrowTxt">مرسوم ملكي — اختر بركة واحدة</span>
-        <h3 id="decreeModalTitle">المجلس الملكي للحرب</h3>
+        <span class="decree-eyebrow" id="decreeEyebrowTxt">✦ اختر مرسوماً ملكياً ✦</span>
+        <h3 id="decreeModalTitle">بركات التاج</h3>
       </div>
       <div class="decree-cards-grid" id="decreeCardsGrid"></div>
     </div>
   </div>
 
-  <!-- ================= AAA TITLE SANCTUARY OVERLAY ================= -->
+  <!-- ================= 6. ICONIC AAA VISUAL TITLE SANCTUARY (PORTALS + SPRITE MEDALLIONS!) ================= -->
   <div class="title-sanctum-overlay" id="titleOverlay" role="dialog" aria-modal="true" aria-labelledby="titleHeroName">
-    <div class="title-sanctum-card">
-      <div class="title-top-row">
-        <span class="hero-edition-pill" dir="ltr">AAA TACTICAL CHESS DEFENSE • v4.0 COMMERCIAL EDITION</span>
-        <button type="button" class="hud-btn gold-outline" id="titleLangBtn">
-          <bdi id="titleLangText">English</bdi>
-        </button>
+    <div class="title-atelier-stage">
+      <!-- Top Floating Corner Bar -->
+      <div class="title-floating-topbar">
+        <div class="title-jewel-progress" id="titleCampaignProgress"></div>
+        <div class="title-corner-btns">
+          <button type="button" class="title-orb-btn" id="titleTrophyToggleBtn" title="Royal Seals & Achievements">
+            <span>🏆</span>
+            <small id="titleAchCountPill" dir="ltr">0/10</small>
+          </button>
+          <button type="button" class="title-orb-btn" id="titleLangBtn">
+            <span>🌐</span>
+            <bdi id="titleLangText">English</bdi>
+          </button>
+        </div>
       </div>
 
-      <div class="title-brand-row">
-        <div class="title-crest-wrap">
+      <!-- Centerpiece Sculpted Crest & Metallic Logo -->
+      <div class="title-royal-emblem-hero">
+        <div class="title-crest-halo-ring">
           <img src="assets/royal-crest.png" alt="Crown & Blight Crest" />
         </div>
-        <div class="title-copy">
-          <h1 id="titleHeroName" dir="ltr">CROWN &amp; BLIGHT: <span>THE ROYAL GAMBIT</span></h1>
-          <p class="title-sub-ar" id="titleSubText">حرب التاج والظلام — هندسة الشطرنج الحقيقية في مواجهة جحافل الموتى الأحياء على رقعة 10×5</p>
-          <div class="title-progress-pill" id="titleCampaignProgress"></div>
+        <h1 id="titleHeroName" dir="ltr">CROWN <span>&amp;</span> BLIGHT</h1>
+        <p class="title-tagline-ribbon" id="titleSubText">الشطرنج الملكي 10×5</p>
+      </div>
+
+      <!-- 3 Sculpted Gothic/Tarot Mode Portals (Visual Art First!) -->
+      <div class="title-portals-triptych">
+        <!-- Portal 1: Campaign (Featured Gold Centerpiece) -->
+        <button type="button" class="mode-portal-card portal-campaign" id="titleLaunchCampaignBtn">
+          <div class="portal-arch-glow"></div>
+          <span class="portal-roman-watermark" id="portalCampaignWatermark" dir="ltr">I</span>
+          <div class="portal-art-stage" id="portalCampaignSprites">
+            <span class="portal-fallback-glyph">♛</span>
+          </div>
+          <div class="portal-footer">
+            <strong id="titleLaunchCampaignTxt">الحملة الملكية</strong>
+            <span class="portal-cta-pill" id="portalCampaignSubPill">▶ العب الآن</span>
+          </div>
+        </button>
+
+        <!-- Portal 2: Checkmate Puzzles (Sapphire Geometry) -->
+        <button type="button" class="mode-portal-card portal-puzzles" id="titlePuzzlesBtn">
+          <div class="portal-arch-glow"></div>
+          <span class="portal-roman-watermark" dir="ltr">♟</span>
+          <div class="portal-art-stage" id="portalPuzzleSprites">
+            <span class="portal-fallback-glyph">♞</span>
+          </div>
+          <div class="portal-footer">
+            <strong id="titlePuzzlesTxt">ألغاز الكش مات</strong>
+            <span class="portal-cta-pill cyan" id="portalPuzzleSubPill" dir="ltr">0 / 5 ★</span>
+          </div>
+        </button>
+
+        <!-- Portal 3: Daily Gambit (Solar Astrolabe) -->
+        <button type="button" class="mode-portal-card portal-daily" id="titleDailyBtn">
+          <div class="portal-arch-glow"></div>
+          <span class="portal-roman-watermark" dir="ltr">☀</span>
+          <div class="portal-art-stage" id="portalDailySprites">
+            <span class="portal-fallback-glyph">⚱</span>
+          </div>
+          <div class="portal-footer">
+            <strong id="titleDailyTxt">المقامرة اليومية</strong>
+            <span class="portal-cta-pill amber" id="portalDailySubPill">⚡ تحدي اليوم</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Collapsible Visual Puzzle Seals Drawer (Opens on Hover/Toggle or Puzzle Click) -->
+      <div class="title-puzzles-drawer" id="titlePuzzleList"></div>
+
+      <!-- Collapsible Trophy Vault Popover (Hidden until 🏆 clicked!) -->
+      <div class="title-trophy-drawer hidden" id="titleAchievementsStrip" aria-label="Royal Achievements"></div>
+
+      <!-- Sleek Bottom Visual Loadout Bar (Portraits & Gem Seals — Zero Paragraphs!) -->
+      <div class="title-loadout-dock">
+        <div class="loadout-cluster">
+          <span class="loadout-cluster-lbl" id="titleCommanderHeader">♚ القائد</span>
+          <div class="commander-medallions-row" id="titleCommanderGrid"></div>
+        </div>
+
+        <div class="loadout-divider"></div>
+
+        <div class="loadout-cluster">
+          <span class="loadout-cluster-lbl" id="titleDoctrineHeader">⚔ العقيدة والصعود</span>
+          <div class="doctrine-and-flames-row">
+            <div class="doctrine-seals-row" id="titleDoctrineGrid"></div>
+            <div class="ascension-gems-row" id="titleAscensionGrid"></div>
+          </div>
         </div>
       </div>
-
-      <div class="title-section-head">
-        <span id="titleCommanderHeader">اختر قائد الميدان</span>
-      </div>
-      <div class="commander-grid" id="titleCommanderGrid"></div>
-
-      <div class="title-section-head">
-        <span id="titleDoctrineHeader">عقيدة الجيش ومستوى الصعود</span>
-      </div>
-      <div class="doctrine-ascension-row">
-        <div class="doctrine-grid" id="titleDoctrineGrid"></div>
-        <div class="ascension-grid" id="titleAscensionGrid"></div>
-      </div>
-
-      <div class="title-actions-row">
-        <button type="button" class="launch-act-btn title-main-cta" id="titleLaunchCampaignBtn">
-          <span>♛</span>
-          <span id="titleLaunchCampaignTxt">بدء الحملة الملكية</span>
-        </button>
-        <button type="button" class="hud-btn gold-outline title-mode-btn" id="titleDailyBtn">
-          <span>☀</span>
-          <span id="titleDailyTxt">المقامرة اليومية (بذرة موحدة)</span>
-        </button>
-        <button type="button" class="hud-btn gold-outline title-mode-btn" id="titlePuzzlesBtn">
-          <span>♟</span>
-          <span id="titlePuzzlesTxt">ألغاز الكش مات (5)</span>
-        </button>
-      </div>
-
-      <div class="title-puzzles-strip" id="titlePuzzleList"></div>
-      <div class="achievements-strip" id="titleAchievementsStrip" aria-label="Royal Achievements"></div>
     </div>
   </div>
 
