@@ -130,8 +130,10 @@ class RoyalBoardRenderer {
 
     this.drawBackdrop(ctx, timeSeconds);
     this.drawBoard(ctx, timeSeconds);
+    this.drawFloorDecals(ctx);
     this.drawSynergyLinks(ctx, timeSeconds);
     this.drawTacticalOverlays(ctx, timeSeconds);
+    this.drawTelegraphZones(ctx, timeSeconds);
     this.drawRoyalSentinels(ctx, timeSeconds);
 
     // Draw Pieces & Undead sorted by row for 2.5D depth
@@ -261,6 +263,135 @@ class RoyalBoardRenderer {
     ctx.beginPath();
     ctx.arc(this.width * 0.5, this.height * 0.5, this.tileSize * 4.2, 0, Math.PI * 2);
     ctx.fill();
+
+    // Per-Act Atmospheric Biome Color Grading Wash (Acts I - V)
+    const actId = (act && act.id) || 1;
+    const biomeGrades = {
+      1: ['rgba(250, 204, 21, 0.055)', 'rgba(15, 23, 42, 0.06)'],
+      2: ['rgba(168, 85, 247, 0.075)', 'rgba(20, 184, 166, 0.065)'],
+      3: ['rgba(56, 189, 248, 0.085)', 'rgba(30, 41, 59, 0.14)'],
+      4: ['rgba(244, 63, 94, 0.095)', 'rgba(88, 28, 135, 0.085)'],
+      5: ['rgba(99, 102, 241, 0.11)', 'rgba(16, 185, 129, 0.08)']
+    };
+    const grade = biomeGrades[actId] || biomeGrades[1];
+    const gradeGrad = ctx.createLinearGradient(0, 0, this.width, this.height);
+    gradeGrad.addColorStop(0, grade[0]);
+    gradeGrad.addColorStop(1, grade[1]);
+    ctx.fillStyle = gradeGrad;
+    ctx.fillRect(0, 0, this.width, this.height);
+  }
+
+  drawFloorDecals(ctx) {
+    const decals = this.game.floorDecals;
+    if (!decals || decals.length === 0) return;
+    ctx.save();
+    for (const d of decals) {
+      const alpha = Math.max(0, Math.min(1, d.life / d.maxLife)) * 0.72;
+      const pt = this.tileCenter(d.col, d.row);
+      ctx.save();
+      ctx.translate(pt.x, pt.y + this.tileSize * 0.12);
+      ctx.globalAlpha = alpha;
+      if (d.kind === 'gold') {
+        ctx.strokeStyle = '#facc15';
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.14)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.tileSize * 0.36, this.tileSize * 0.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else if (d.kind === 'frost') {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.tileSize * 0.33, this.tileSize * 0.16, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        const scorchGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, this.tileSize * 0.36);
+        scorchGrad.addColorStop(0, 'rgba(15, 23, 42, 0.78)');
+        scorchGrad.addColorStop(0.6, 'rgba(244, 63, 94, 0.18)');
+        scorchGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        ctx.fillStyle = scorchGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.tileSize * 0.36, this.tileSize * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  drawTelegraphZones(ctx, t) {
+    const zones = this.game.telegraphZones;
+    const isEn = this.game.lang === 'en';
+    if (zones && zones.length > 0) {
+      ctx.save();
+      for (const z of zones) {
+        if (z.col < 0 || z.col >= this.cols || z.row < 0 || z.row >= this.rows) continue;
+        const x = this.boardLeft + z.col * this.tileSize;
+        const y = this.boardTop + z.row * this.tileSize;
+        const prog = 1 - Math.max(0, z.timer / (z.duration || 1.1));
+        const pulse = 0.45 + Math.abs(Math.sin(t * 11)) * 0.45;
+
+        ctx.fillStyle = `rgba(244, 63, 94, ${0.14 + prog * 0.22})`;
+        ctx.fillRect(x + 3, y + 3, this.tileSize - 6, this.tileSize - 6);
+
+        ctx.strokeStyle = `rgba(251, 113, 133, ${pulse})`;
+        ctx.lineWidth = 2.4;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(x + 4, y + 4, this.tileSize - 8, this.tileSize - 8);
+        ctx.setLineDash([]);
+
+        ctx.font = '800 9.5px "Orbitron", "Cairo", sans-serif';
+        ctx.fillStyle = '#fecdd3';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.95)';
+        ctx.shadowBlur = 4;
+        const warnTxt = z.label || (isEn ? '⚠ CHECK!' : '⚠ كش!');
+        ctx.fillText(warnTxt, x + this.tileSize * 0.5, y + 15);
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
+
+    // Keyboard / Gamepad Tactical Grid Cursor
+    if (this.game.cursorActive && this.game.cursorCell) {
+      const { col, row } = this.game.cursorCell;
+      if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+        const x = this.boardLeft + col * this.tileSize;
+        const y = this.boardTop + row * this.tileSize;
+        const s = this.tileSize;
+        const br = Math.max(10, s * 0.22);
+        const pad = 3 + Math.sin(t * 7) * 1.5;
+
+        ctx.save();
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        // Top-left
+        ctx.moveTo(x + pad, y + pad + br);
+        ctx.lineTo(x + pad, y + pad);
+        ctx.lineTo(x + pad + br, y + pad);
+        // Top-right
+        ctx.moveTo(x + s - pad - br, y + pad);
+        ctx.lineTo(x + s - pad, y + pad);
+        ctx.lineTo(x + s - pad, y + pad + br);
+        // Bottom-left
+        ctx.moveTo(x + pad, y + s - pad - br);
+        ctx.lineTo(x + pad, y + s - pad);
+        ctx.lineTo(x + pad + br, y + s - pad);
+        // Bottom-right
+        ctx.moveTo(x + s - pad - br, y + s - pad);
+        ctx.lineTo(x + s - pad, y + s - pad);
+        ctx.lineTo(x + s - pad, y + s - pad - br);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
   }
 
   drawAmbientEmbers(ctx, t) {
@@ -635,7 +766,8 @@ class RoyalBoardRenderer {
         ctx.font = '800 10.5px "Cairo", "Orbitron", sans-serif';
         ctx.fillStyle = '#fef08a';
         ctx.textAlign = 'center';
-        ctx.fillText('♛ اضغط لدمج السطر ← وزير [M]', midPt.x, bobY + 2);
+        const mergeBannerTxt = this.game.lang === 'en' ? '♛ CLICK OR [M] TO FUSE QUEEN' : '♛ اضغط لدمج السطر ← وزير [M]';
+        ctx.fillText(mergeBannerTxt, midPt.x, bobY + 2);
       }
       ctx.restore();
     }
@@ -905,14 +1037,28 @@ class RoyalBoardRenderer {
 
     let drawX = center.x;
     let drawY = center.y;
+    let jumpLift = 0;
+    let scaleX = 1;
+    let scaleY = 1;
     if (piece.moveAnimTimer > 0) {
       const prog = 1 - piece.moveAnimTimer / piece.moveAnimDuration;
       const ease = 1 - Math.pow(1 - prog, 3);
       drawX = piece.moveFromX + (center.x - piece.moveFromX) * ease;
       drawY = piece.moveFromY + (center.y - piece.moveFromY) * ease;
-      if (piece.type === 'knight') {
-        drawY -= Math.sin(prog * Math.PI) * 42;
-      }
+      const arcPeak = piece.type === 'knight' ? 46 : 16;
+      jumpLift = Math.sin(prog * Math.PI) * arcPeak;
+      // Subtle stretch in mid-air, squash upon touch-down
+      const squashWave = Math.sin(prog * Math.PI * 2) * 0.08;
+      scaleX = 1 - squashWave;
+      scaleY = 1 + squashWave;
+    } else if (piece.recoilTimer > 0) {
+      const rWave = Math.sin((piece.recoilTimer / 0.18) * Math.PI);
+      scaleX = 1 + rWave * 0.07;
+      scaleY = 1 - rWave * 0.05;
+    } else if (piece.shoveTimer > 0) {
+      const sWave = Math.sin((piece.shoveTimer / 0.30) * Math.PI);
+      scaleX = 1 + sWave * 0.11;
+      scaleY = 1 - sWave * 0.08;
     }
 
     const recoil = piece.recoilTimer > 0 ? Math.sin((piece.recoilTimer / 0.18) * Math.PI) * -6 : 0;
@@ -922,10 +1068,19 @@ class RoyalBoardRenderer {
     ctx.save();
     ctx.translate(drawX + recoil + shoveLunge, drawY);
 
-    // 0. Compact Contact Shadow Anchoring Piece to Stone Tile (ChatGPT Art Director Spec)
-    ctx.fillStyle = 'rgba(13, 17, 27, 0.72)';
+    // 0. Compact Contact Shadow Anchoring Piece to Stone Tile (shrinks slightly with 3D jump height!)
+    const shadowScale = Math.max(0.58, 1 - jumpLift / 95);
+    ctx.fillStyle = `rgba(13, 17, 27, ${0.72 * shadowScale})`;
     ctx.beginPath();
-    ctx.ellipse(0, this.tileSize * 0.29, this.tileSize * 0.34, this.tileSize * 0.12, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      0,
+      this.tileSize * 0.29,
+      this.tileSize * 0.34 * shadowScale,
+      this.tileSize * 0.12 * shadowScale,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // 1. Synergy / King Aura / Ready Pawn-Line Merge Ring under base
@@ -999,11 +1154,15 @@ class RoyalBoardRenderer {
       ctx.restore();
     }
 
-    // 2. High-Res 3D Piece Sprite
+    // 2. High-Res 3D Piece Sprite (with parabolic jump lift & squash-and-stretch)
     const sprite = window.RoyalSprites && window.RoyalSprites.pieceSprites[piece.type];
     const spriteSize = this.tileSize * 0.92;
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      ctx.drawImage(sprite, -spriteSize / 2, -spriteSize / 2 + bob - 4, spriteSize, spriteSize);
+      ctx.save();
+      ctx.translate(0, -jumpLift + bob - 4);
+      ctx.scale(scaleX, scaleY);
+      ctx.drawImage(sprite, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+      ctx.restore();
     }
 
     // 3. Pawn XP / Line-Merge Status Bar
@@ -1016,21 +1175,23 @@ class RoyalBoardRenderer {
       ctx.fillStyle = piece.inReadyPawnLine || xpRatio >= 1 ? '#facc15' : '#38bdf8';
       ctx.fillRect(-barW / 2, barY, barW * (piece.inReadyPawnLine ? 1 : xpRatio), 5);
 
+      const isEn = this.game.lang === 'en';
       if (piece.inReadyPawnLine) {
-        ctx.font = '800 9px "Orbitron", sans-serif';
+        ctx.font = '800 9px "Orbitron", "Cairo", sans-serif';
         ctx.fillStyle = '#fef08a';
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
         ctx.shadowBlur = 4;
-        ctx.fillText('♛ MERGE [M]', 0, -this.tileSize * 0.41);
+        ctx.fillText(isEn ? '♛ MERGE [M]' : '♛ دمج [M]', 0, -this.tileSize * 0.41);
         ctx.shadowBlur = 0;
       } else if (xpRatio >= 1) {
-        ctx.font = '800 9px "Orbitron", sans-serif';
+        const pCost = (this.game.decreeState && this.game.decreeState.promoteCost) || 125;
+        ctx.font = '800 9px "Orbitron", "Cairo", sans-serif';
         ctx.fillStyle = '#fef08a';
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
         ctx.shadowBlur = 4;
-        ctx.fillText('♛ CROWN (125☀)', 0, -this.tileSize * 0.41);
+        ctx.fillText(isEn ? `♛ CROWN (${pCost}☀)` : `♛ تتويج (${pCost}☀)`, 0, -this.tileSize * 0.41);
         ctx.shadowBlur = 0;
       }
     }
@@ -1504,13 +1665,26 @@ class RoyalBoardRenderer {
     ctx.shadowBlur = 12;
 
     const bannerY = Math.max(82, this.boardTop * 0.72);
+    const isEn = this.game.lang === 'en';
     ctx.font = '900 22px "Cairo", "Cinzel", serif';
     ctx.fillStyle = '#fef08a';
-    ctx.fillText('♛ اندماج ملكي سينمائي • تحوّل الفيلق إلى الوزير المتوّج! ♛', this.width * 0.5, bannerY);
+    ctx.fillText(
+      isEn
+        ? '♛ ROYAL ASCENSION • PHALANX FUSED INTO SOVEREIGN QUEEN! ♛'
+        : '♛ اندماج ملكي سينمائي • تحوّل الفيلق إلى الوزير المتوّج! ♛',
+      this.width * 0.5,
+      bannerY
+    );
 
-    ctx.font = '700 13px "Orbitron", sans-serif';
+    ctx.font = '700 13px "Orbitron", "Cairo", sans-serif';
     ctx.fillStyle = '#38bdf8';
-    ctx.fillText('5 PHALANX PAWNS ASCENDED INTO SOVEREIGN QUEEN (+300 ROYAL SHIELD)', this.width * 0.5, bannerY + 24);
+    ctx.fillText(
+      isEn
+        ? '5 PHALANX PAWNS ASCENDED INTO SOVEREIGN QUEEN (+300 ROYAL SHIELD)'
+        : 'اندماج 5 جنود مدرعين إلى وزير ملكي متوّج (+300 درع ذهبي)',
+      this.width * 0.5,
+      bannerY + 24
+    );
     ctx.restore();
 
     ctx.restore();

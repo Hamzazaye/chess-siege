@@ -650,7 +650,165 @@ const ROYAL_DECREES = [
       state.promoteCost = 65;
       state.queenDmgMult *= 1.25;
     }
+  },
+  {
+    id: 'en_passant',
+    icon: '♟',
+    tier: 'GAMBIT',
+    nameEn: 'En Passant Execution',
+    nameAr: 'إعدام الأخذ بالتجاوز',
+    descEn: 'Sliding any Piece adjacent to an enemy slashes for 145 DMG and executes non-bosses under 30% HP!',
+    descAr: 'تحريك أي قطعة بمحاذاة عدو يضربه بـ 145 ضرر ويعدم غير الزعماء تحت 30% صحة فوراً!',
+    apply(state) { state.enPassant = true; }
+  },
+  {
+    id: 'martyr_gambit',
+    icon: '🔥',
+    tier: 'GAMBIT',
+    nameEn: 'Blood Sacrifice Pact',
+    nameAr: 'ميثاق التضحية الدموية',
+    descEn: 'Sacrificing [S] a piece permanently grants +18% Damage and +120 Shield to adjacent allies.',
+    descAr: 'التضحية [S] بأي قطعة تمنح الحلفاء المجاورين +18% ضرراً دائماً و+120 درعاً.',
+    apply(state) { state.martyrPact = true; }
+  },
+  {
+    id: 'twin_prisms',
+    icon: '✦',
+    tier: 'SYNERGY',
+    nameEn: 'Twin-Prism Sanctum',
+    nameAr: 'المنشور المزدوج المقدس',
+    descEn: 'Radiant Bishops inflict BOTH Solar Burn AND 40% Frost Slow regardless of square color!',
+    descAr: 'فيلة الأشعة تطبق الحرق الشمسي والإبطاء الجليدي 40% معاً على أي مربع!',
+    apply(state) { state.twinPrisms = true; }
+  },
+  {
+    id: 'compound_interest',
+    icon: '👑',
+    tier: 'ECONOMY',
+    nameEn: 'Royal Compound Treasury',
+    nameAr: 'الفائدة المركبة للتاج',
+    descEn: 'Gain +12% interest (up to +55 Mana) on unspent Mana at the end of every wave.',
+    descAr: 'اربح فائدة +12% (حتى +55 طاقة) على رصيد طاقتك عند نهاية كل موجة.',
+    apply(state) { state.interestRate = 0.12; }
+  },
+  {
+    id: 'cursed_crown',
+    icon: '💀',
+    tier: 'CURSED GAMBIT',
+    nameEn: 'Blood-Crown Bargain',
+    nameAr: 'صفقة التاج الملعون',
+    descEn: 'Sacrifice 1 Back-Rank Sentinel Chariot now to gain +220 Mana & +35% All Piece Damage!',
+    descAr: 'ضحِّ بعربة حراسة خلفية واحدة الآن مقابل +220 طاقة و+35% ضرر لجميع القطع!',
+    apply(state, game) {
+      const intact = (game.chariots || []).find(c => !c.used && !c.active);
+      if (intact) intact.used = true;
+      game.mana += 220;
+      game.totalManaEarned += 220;
+      state.damageMult *= 1.35;
+    }
+  },
+  {
+    id: 'chain_arc',
+    icon: '⚡',
+    tier: 'OFFENSE',
+    nameEn: 'Tempest Chain-Arc',
+    nameAr: 'قوس العاصفة المتسلسل',
+    descEn: 'Knight L-Strikes arc lightning to 1 extra nearby enemy for 60% splash damage.',
+    descAr: 'ضربات الفارس ترتد بصاعقة إضافية إلى عدو قريب بضرر 60%.',
+    apply(state) { state.knightChain = true; }
+  },
+  {
+    id: 'imperial_guard',
+    icon: '♚',
+    tier: 'DEFENSE',
+    nameEn: 'Imperial Guard Decree',
+    nameAr: 'الحرس الإمبراطوري للملك',
+    descEn: 'King Aura range expands to 2 squares and regenerates 14 HP/s for all allies inside.',
+    descAr: 'تتسع هالة الملك إلى مربعين وتجدد 14 صحة/ثانية لكل حليف بداخلها.',
+    apply(state) { state.kingExpandedAura = true; }
+  },
+  {
+    id: 'starlight_nova',
+    icon: '🌟',
+    tier: 'ROYALTY',
+    nameEn: 'Sovereign Starlight',
+    nameAr: 'نجمة السيادة العظمى',
+    descEn: 'Queens gain +1.0 square range and recharge Checkmate Ultimate 40% faster on kills.',
+    descAr: 'يزداد مدى الوزير بمقدار +1.0 مربع ويشحن الضربة القاضية أسرع بـ 40%.',
+    apply(state) {
+      state.queenBonusRange = (state.queenBonusRange || 0) + 1.0;
+      state.ultChargeMult = (state.ultChargeMult || 1.0) * 1.4;
+    }
+  },
+  {
+    id: 'chalice_aegis',
+    icon: '⚱',
+    tier: 'ECONOMY',
+    nameEn: 'Sanctified Reliquaries',
+    nameAr: 'أقداح الحماية المقدسة',
+    descEn: 'Every Chalice harvest pulses +35 Shield to adjacent Chess Pieces.',
+    descAr: 'كل دفعة طاقة من كأس النور تمنح +35 درعاً للقطع المجاورة.',
+    apply(state) { state.chaliceShieldPulse = 35; }
+  },
+  {
+    id: 'obsidian_shrapnel',
+    icon: '💥',
+    tier: 'SIEGE',
+    nameEn: 'Obsidian Detonation',
+    nameAr: 'شظايا السبج المتفجرة',
+    descEn: 'Slain enemies explode for 45 AoE damage to nearby undead in the same rank.',
+    descAr: 'ينفجر كل وحش يُقتل مسبباً 45 ضرراً جماعياً للوحوش المجاورة في مساره.',
+    apply(state) { state.deathExplosionDmg = (state.deathExplosionDmg || 0) + 45; }
   }
+];
+
+const ARMY_DOCTRINES = {
+  phalanx: {
+    id: 'phalanx',
+    icon: '🛡',
+    nameEn: 'Shield Phalanx',
+    nameAr: 'كتيبة التروس',
+    descEn: 'Standard Pawn knockback wall (+25 Pawn Shield, steady lane control).',
+    descAr: 'جدار الدفع القياسي (+25 درع للجندي وتحكم متين بالمسار).'
+  },
+  halberd: {
+    id: 'halberd',
+    icon: '⚔',
+    nameEn: 'Halberd Vanguard',
+    nameAr: 'طليعة المطارد',
+    descEn: 'Pawns deal 2.4x Bleed Damage & earn XP 50% faster, with lighter knockback.',
+    descAr: 'الجنود يسببون 2.4x ضرر نزيف ويكسبون الخبرة أسرع بـ 50%.'
+  },
+  artillery: {
+    id: 'artillery',
+    icon: '♜',
+    nameEn: 'Royal Artillery',
+    nameAr: 'المدفعية الملكية',
+    descEn: 'Rooks & Bishops gain +1.0 Range & +18% Damage; Pawns cost +10 Mana.',
+    descAr: 'القلاع والفيلة تكسب +1.0 مدى و+18% ضرر؛ تكلفة الجندي +10 طاقة.'
+  }
+};
+
+const ASCENSION_RANKS = [
+  { level: 0, nameEn: 'Standard (1500 ELO)', nameAr: 'قياسي (1500 ELO)', hpMult: 1.0, spdMult: 1.0, eloBonus: 0 },
+  { level: 1, nameEn: 'Ascension I • Iron Tide (+18% Enemy HP)', nameAr: 'صعود I • مد الحديد (+18% صحة الوحوش)', hpMult: 1.18, spdMult: 1.0, eloBonus: 15 },
+  { level: 2, nameEn: 'Ascension II • Blitzkrieg (+12% Speed)', nameAr: 'صعود II • هجوم خاطف (+12% سرعة)', hpMult: 1.25, spdMult: 1.12, eloBonus: 30 },
+  { level: 3, nameEn: 'Ascension III • Famine (-25 Start Mana)', nameAr: 'صعود III • تقشف التاج (-25 طاقة بداية)', hpMult: 1.35, spdMult: 1.15, manaPenalty: 25, eloBonus: 50 },
+  { level: 4, nameEn: 'Ascension IV • Dark Covenant (+50% Shields)', nameAr: 'صعود IV • العهد المظلم (+50% دروع الوحوش)', hpMult: 1.48, spdMult: 1.18, shieldMult: 1.5, manaPenalty: 25, eloBonus: 75 },
+  { level: 5, nameEn: 'Ascension V • Immortal 2800 ELO', nameAr: 'صعود V • الأستاذ الخالد 2800 ELO', hpMult: 1.65, spdMult: 1.22, shieldMult: 1.75, manaPenalty: 35, eloBonus: 110 }
+];
+
+const ROYAL_ACHIEVEMENTS = [
+  { id: 'first_blood', icon: '⚔', nameEn: 'First Shatter', nameAr: 'الحطام الأول', descEn: 'Shatter your first Undead invader.', descAr: 'حطّم أول غازٍ من جيش الظلام.' },
+  { id: 'royal_fork', icon: '♞', nameEn: 'Knightmare Fork', nameAr: 'شوكة الفارس', descEn: 'Strike 2+ enemies simultaneously with a Tempest Knight.', descAr: 'اضرب عدوين أو أكثر معاً بشوكة الفارس.' },
+  { id: 'grand_castle', icon: '♜', nameEn: 'Royal Castling', nameAr: 'التبييت الملكي', descEn: 'Execute an unobstructed King-Rook Castling maneuver.', descAr: 'نفّذ مناورة التبييت الملكي بين الملك والقلعة.' },
+  { id: 'ascended_merge', icon: '♛', nameEn: 'Ascended Sovereign', nameAr: 'التتويج الخماسي', descEn: 'Fuse 5 Phalanx Pawns into an Ascended Queen.', descAr: 'ادمج 5 جنود في سطر واحد إلى وزير ملكي متوّج.' },
+  { id: 'en_passant_kill', icon: '♟', nameEn: 'En Passant Master', nameAr: 'سيد الأخذ بالتجاوز', descEn: 'Execute an enemy with an En Passant slide.', descAr: 'اقضِ على عدو بمناورة الأخذ بالتجاوز.' },
+  { id: 'flawless_act', icon: '★', nameEn: 'Unbroken Citadel', nameAr: 'القلعة العصيّة', descEn: 'Clear a Campaign Act with all 5/5 Sentinels intact.', descAr: 'أنهِ فصلاً كاملاً مع بقاء جميع القلاع المجنحة (5/5).' },
+  { id: 'queen_slayer', icon: '💀', nameEn: 'Regicide', nameAr: 'قاهر الوزيرة الملعونة', descEn: 'Defeat the Blight Sovereign Queen Boss.', descAr: 'اهزم زعيمة الظلال الوزيرة الملعونة.' },
+  { id: 'puzzle_solver', icon: '◈', nameEn: 'Endgame Tactician', nameAr: 'تكتيكي النهايات', descEn: 'Solve a Sentinel-free Checkmate Puzzle.', descAr: 'حلّ لغز كش مات تكتيكي بدون قلاع حماية.' },
+  { id: 'puzzle_master', icon: '👑', nameEn: 'Grandmaster Problemist', nameAr: 'عبقري الألغاز', descEn: 'Solve all 5 Checkmate Puzzles.', descAr: 'أكمل حل جميع ألغاز الكش مات الخمسة.' },
+  { id: 'ascension_win', icon: '🔥', nameEn: 'Ascendant Victor', nameAr: 'فاتح الصعود', descEn: 'Win any Act on Ascension I or higher.', descAr: 'انتصر في أي فصل على مستوى الصعود I أو أعلى.' }
 ];
 
 const CHESS_PUZZLES = [
@@ -659,21 +817,21 @@ const CHESS_PUZZLES = [
     code: 'PUZZLE I',
     nameEn: 'The Royal L-Fork',
     nameAr: 'الشوكة الملكية المزدوجة',
-    descEn: 'Defeat dual Shielded Bucklers & an Assassin using Knight L-Strikes and Rook Castling!',
-    descAr: 'اهزم الحراس المدرعين والقاتل المتخفي عبر شوكة الفارس وتبييت القلعة!',
+    descEn: 'NO SENTINELS! Use Knight L-Strikes and King-Rook Castling to hold Ranks 2–4!',
+    descAr: 'بدون عربات حماية! استخدم شوكة الفارس وتبييت الملك والقلعة لحماية المسارات!',
     startingMana: 180,
     pieces: [
-      { type: 'king', row: 2, col: 1 },
-      { type: 'rook', row: 2, col: 0 },
-      { type: 'knight', row: 1, col: 3 }
+      { type: 'king', row: 2, col: 0 },
+      { type: 'rook', row: 2, col: 3 },
+      { type: 'knight', row: 1, col: 4 }
     ],
     waves: [
       {
-        label: 'PUZZLE: THE ROYAL FORK',
+        label: 'PUZZLE I: THE ROYAL FORK',
         isFlag: true,
         spawns: [
-          { type: 'buckler', count: 3, interval: 1.6, fixedRows: [1, 2, 3] },
-          { type: 'assassin', count: 2, interval: 2.2, fixedRows: [0, 4] }
+          { type: 'buckler', count: 3, interval: 1.8, fixedRows: [1, 2, 3] },
+          { type: 'assassin', count: 2, interval: 2.4, fixedRows: [0, 2] }
         ]
       }
     ]
@@ -683,23 +841,23 @@ const CHESS_PUZZLES = [
     code: 'PUZZLE II',
     nameEn: 'Five-Rank Phalanx Ascension',
     nameAr: 'ارتقاء الكتيبة الخماسية',
-    descEn: '4 Phalanx Pawns await on File D! Place the 5th Pawn on D1 and press [M] to trigger the Queen Merge!',
-    descAr: '4 جنود مصطفون على العمود D! ضع الجندي الخامس في D1 واضغط [M] لتفجير الدمج الملكي!',
-    startingMana: 160,
+    descEn: 'Place the 5th Pawn on File D (d5) and press [M] to fuse an Ascended Queen before the Boss arrives!',
+    descAr: 'ضع الجندي الخامس في d5 واضغط [M] لدمج الوزير المتوّج قبل وصول الزعيمة!',
+    startingMana: 150,
     pieces: [
       { type: 'pawn', row: 1, col: 3 },
       { type: 'pawn', row: 2, col: 3 },
       { type: 'pawn', row: 3, col: 3 },
       { type: 'pawn', row: 4, col: 3 },
-      { type: 'chalice', row: 2, col: 0 }
+      { type: 'rook', row: 2, col: 1 }
     ],
     waves: [
       {
-        label: 'PUZZLE: ASCENDED QUEEN',
+        label: 'PUZZLE II: ASCENDED QUEEN',
         isFlag: true,
         spawns: [
-          { type: 'plague_queen', count: 1, interval: 2.0 },
-          { type: 'buckler', count: 4, interval: 1.8 }
+          { type: 'plague_queen', count: 1, interval: 2.2, fixedRows: [2] },
+          { type: 'buckler', count: 4, interval: 1.9, fixedRows: [1, 3, 2, 0] }
         ]
       }
     ]
@@ -709,9 +867,9 @@ const CHESS_PUZZLES = [
     code: 'PUZZLE III',
     nameEn: 'Sanctify the Hexed Cathedral',
     nameAr: 'تطهير الكاتدرائية الملعونة',
-    descEn: 'Hex-casting Necro-Bishops bombard your Queen! Deploy Bishops diagonally to cleanse & burn them down.',
-    descAr: 'كهنة الظلام يلقون اللعنات على وزيرتك! انشر الفيلة قطرياً لتطهير اللعنة وحرقهم.',
-    startingMana: 240,
+    descEn: 'Deploy Radiant Bishops on diagonals from your Queen to cleanse Necro-Bishop Hexes!',
+    descAr: 'انشر الفيلة على نفس قطر الوزير لتطهير اللعنات وحرق كهنة الظلام!',
+    startingMana: 300,
     pieces: [
       { type: 'queen', row: 2, col: 2 },
       { type: 'pawn', row: 2, col: 4 },
@@ -720,12 +878,63 @@ const CHESS_PUZZLES = [
     ],
     waves: [
       {
-        label: 'PUZZLE: HEX CLEANSE',
+        label: 'PUZZLE III: HEX CLEANSE',
         isFlag: true,
         spawns: [
-          { type: 'necro', count: 4, interval: 1.8 },
-          { type: 'gargantua', count: 1, interval: 3.0 },
-          { type: 'imp', count: 6, interval: 1.2 }
+          { type: 'necro', count: 4, interval: 1.9, fixedRows: [1, 3, 2, 1] },
+          { type: 'imp', count: 6, interval: 1.2, fixedRows: [1, 2, 3, 1, 2, 3] }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pz_castle',
+    code: 'PUZZLE IV',
+    nameEn: 'Unobstructed Sanctuary Castle',
+    nameAr: 'مناورة التبييت المنقذة',
+    descEn: 'Slide the blocking Pawn forward out of Rank 3 so King & Rook can Castle to repel the Gargantua!',
+    descAr: 'حرّك الجندي العائق من المسار الثالث للأمام لتمكين التبييت بين الملك والقلعة ضد العملاق!',
+    startingMana: 200,
+    pieces: [
+      { type: 'king', row: 2, col: 0 },
+      { type: 'pawn', row: 2, col: 2 },
+      { type: 'rook', row: 2, col: 4 },
+      { type: 'queen', row: 1, col: 2 }
+    ],
+    waves: [
+      {
+        label: 'PUZZLE IV: CASTLING GAMBIT',
+        isFlag: true,
+        spawns: [
+          { type: 'gargantua', count: 1, interval: 2.5, fixedRows: [2] },
+          { type: 'sprinter', count: 4, interval: 1.8, fixedRows: [1, 2, 3, 2] }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pz_battery',
+    code: 'PUZZLE V',
+    nameEn: 'Grandmaster Royal Battery',
+    nameAr: 'البطارية الملكية العظمى',
+    descEn: 'Slide your Queen & Rooks into orthogonal alignment (+30% Battery) to melt twin Bosses!',
+    descAr: 'حرك الوزير والقلاع على خط واحد لتشكيل البطارية الملكية (+30%) وصهر الزعيمين!',
+    startingMana: 260,
+    pieces: [
+      { type: 'queen', row: 0, col: 1 },
+      { type: 'rook', row: 4, col: 2 },
+      { type: 'bishop', row: 2, col: 1 },
+      { type: 'pawn', row: 2, col: 5 },
+      { type: 'pawn', row: 3, col: 5 }
+    ],
+    waves: [
+      {
+        label: 'PUZZLE V: GRAND BATTERY',
+        isFlag: true,
+        spawns: [
+          { type: 'gargantua', count: 1, interval: 2.5, fixedRows: [2] },
+          { type: 'plague_queen', count: 1, interval: 3.0, fixedRows: [3] },
+          { type: 'assassin', count: 3, interval: 2.0, fixedRows: [2, 3, 2] }
         ]
       }
     ]
@@ -734,20 +943,20 @@ const CHESS_PUZZLES = [
 
 const CHESS_TIPS = [
   'دمج سطر الجنود (PAWN-LINE MERGE): صفّ 5 جنود مدرعين في نفس العمود أو الصف واضغط [M] لدمجهم سينمائياً إلى وزير ملكي متوّج (820 HP + 300🛡)!',
-  'الجندي المدافع (PHALANX PAWN): لا يطلق الليزر — يدفع الوحوش للخلف بدرعه ويستعيد درعه عند الترابط القطري، كما يتحرك عند اكتمال 100 XP دون قفل!',
+  'الجندي المدافع (PHALANX PAWN): لا يطلق الليزر — يدفع الوحوش للخلف بدرعه، ويتحرك بحرية حتى عند 100 XP (اضغط [U] للترقية)!',
   'البطارية الملكية (ROYAL BATTERY): اصطفاف القلعة أو الفيل أو الوزير على نفس الخط يمنح +30% قوة هجوم إضافية!',
   'تطهير اللعنات (HEX CLEANSE): كاهن الفيل الملعون يبطئ سرعة هجوم أقوى قطعك — ضع فيل الأشعة المقدسة على قطره لتطهيره فوراً!',
-  'التبييت الملكي (CASTLING): ضع الملك والقلعة في نفس الصف أو العمود واضغط تبييت لتبادل موقعهما ومنح الصف درعاً ذهبياً شاملاً!',
-  'اقتصاد المعركة (ROYAL TREASURY): كل نهاية موجة تمنحك مكافأة خزينة (+20☀ + 5☀ لكل كأس نور)، واستدعاء الموجة مبكراً يمنحك مكافأة الخزينة + 25☀ معاً!'
+  'التبييت الملكي (CASTLING): تأكد من خلو المربعات بين الملك والقلعة ثم نفّذ التبييت لمنح الصف درعاً ذهبياً شاملاً!',
+  'تحكم لوحة المفاتيح ويد التحكم: استخدم WASD/الأسهم أو يد التحكم للتنقل و[Enter] للنشر أو التحريك!'
 ];
 
 const CHESS_TIPS_EN = [
   'PAWN-LINE MERGE: Align 5 Phalanx Pawns on any Rank or File and press [M] for a Full-Screen Cinematic Queen Ascension (820 HP + 300🛡)!',
-  'PHALANX PAWN: Pure melee shield pusher that knocks foes back — even at 100 XP you can freely click to move it or press [U] to Promote!',
+  'PHALANX PAWN: Pure melee shield pusher that knocks foes back — even at 100 XP you can freely slide it or press [U] to Promote!',
   'ROYAL BATTERY: Align Rook + Queen or Bishop + Queen along orthogonal/diagonal sightlines for +30% Royal Battery Damage!',
   'HEX CLEANSE: Necro-Bishops slow your Queens from diagonals — align a Radiant Bishop diagonally to cleanse the curse and boost DPS!',
-  'ROYAL CASTLING: Align Arcane King with Aegis Rook and cast Castle to swap positions and grant +200 Golden Shield across the rank!',
-  'EARLY WAVE BONUS: Calling the next wave early awards BOTH the +25☀ Early Call bonus AND the Wave-Clear Treasury bonus!'
+  'UNOBSTRUCTED CASTLING: Keep the squares between King and Rook clear to trigger Royal Castling and grant +220 Golden Shield!',
+  'GAMEPAD & KEYBOARD CURSOR: Use WASD / Arrow Keys or any Controller D-Pad + [Enter / A] to command the entire 10×5 board!'
 ];
 
 const I18N = {
@@ -755,43 +964,79 @@ const I18N = {
     dir: 'rtl',
     langName: 'العربية',
     manaTitle: 'طاقة التاج',
-    wavePrefix: 'WAVE',
-    nextWaveBtn: 'الموجة التالية',
-    earlyBonusPrefix: 'مكافأة',
+    scoreLabel: 'النقاط',
+    eloLabel: 'التصنيف',
+    wavePrefix: 'الموجة',
+    nextWaveBtn: '⚔ الموجة التالية',
+    earlyBonusSub: '+25☀ مكافأة',
     menuBtn: 'القائمة',
     actsBtn: 'المراحل',
     codexBtn: 'الدليل',
     sacrificeLabel: 'تضحية',
     sacrificeHint: '+60%☀',
+    ultCrownTitle: '♛ كش مات الشاملة',
+    mergeCtaTitle: 'اندماج ملكي جاهز على الشاشة!',
+    mergeCtaSub: 'اضغط هنا أو [M] لدمج سطر الـ 5 جنود إلى وزير ملكي ♛',
+    matrixCaption: 'هندسة الحركة',
     endlessLabel: 'موجة لا نهائية',
+    titleSub: 'حرب التاج والظلام — هندسة الشطرنج الحقيقية في مواجهة جحافل الموتى الأحياء على رقعة 10×5',
     titleStartCampaign: 'بدء الحملة الملكية',
-    titlePuzzles: 'ألغاز الكش مات',
-    titleDaily: 'المقامرة اليومية',
-    titleCommanderLabel: 'اختر قائد الميدان (Commander)',
-    titleModeLabel: 'نمط المعركة',
+    titlePuzzles: 'ألغاز الكش مات (5)',
+    titleDaily: 'المقامرة اليومية (بذرة موحدة)',
+    titleCommanderLabel: 'اختر قائد الميدان',
+    titleDoctrineLabel: 'عقيدة الجيش ومستوى الصعود',
     decreeEyebrow: 'مرسوم ملكي — اختر بركة واحدة',
-    decreeTitle: 'المجلس الملكي للحرب'
+    decreeTitle: 'المجلس الملكي للحرب',
+    cmdMenuTitle: '♚ القائمة الملكية الرئيسية',
+    navSettings: '⚙ القيادة والإعدادات',
+    navActs: '❖ خريطة الحملة (5)',
+    navCodex: '◈ الموسوعة الملكية (15)',
+    closeModalEsc: '✕ العودة للمعركة [Esc]',
+    codexTitle: '◈ الموسوعة الملكية الشاملة',
+    codexTabAll: 'الكل (15)',
+    codexTabPieces: '♟ قطع الشطرنج (7)',
+    codexTabEnemies: '⚔ جيش الظلام (8)',
+    actsTitle: '❖ خريطة الحملة الملكية',
+    rotatePhoneMsg: 'يرجى تدوير الهاتف للوضع الأفقي لأفضل رؤية لرقعة الشطرنج 10×5'
   },
   en: {
     dir: 'ltr',
     langName: 'English',
     manaTitle: 'CROWN MANA',
+    scoreLabel: 'SCORE',
+    eloLabel: 'ELO RATING',
     wavePrefix: 'WAVE',
-    nextWaveBtn: 'Next Wave',
-    earlyBonusPrefix: 'Bonus',
+    nextWaveBtn: '⚔ Next Wave',
+    earlyBonusSub: '+25☀ BONUS',
     menuBtn: 'Menu',
     actsBtn: 'Campaign',
     codexBtn: 'Codex',
     sacrificeLabel: 'Sacrifice',
     sacrificeHint: '+60%☀',
+    ultCrownTitle: '♛ Checkmate Overload',
+    mergeCtaTitle: '5-Pawn Royal Ascension Ready!',
+    mergeCtaSub: 'Click here or press [M] to fuse 5 Pawns into an Ascended Queen ♛',
+    matrixCaption: 'Attack Matrix',
     endlessLabel: 'Endless Tide',
+    titleSub: 'Authentic 10×5 Tactical Chess Geometry meets Real-Time Undead Siege Defense',
     titleStartCampaign: 'Launch Royal Campaign',
-    titlePuzzles: 'Checkmate Puzzles',
-    titleDaily: 'Daily Gambit Seed',
+    titlePuzzles: 'Checkmate Puzzles (5)',
+    titleDaily: 'Seeded Daily Gambit',
     titleCommanderLabel: 'Select Battlefield Commander',
-    titleModeLabel: 'Battle Mode',
+    titleDoctrineLabel: 'Army Doctrine & Grandmaster Ascension',
     decreeEyebrow: 'ROYAL DECREE DRAFT — CHOOSE ONE BLESSING',
-    decreeTitle: 'Council of the Crown'
+    decreeTitle: 'Council of the Crown',
+    cmdMenuTitle: '♚ Royal Sanctum Command Hub',
+    navSettings: '⚙ Command & Settings',
+    navActs: '❖ Campaign Map (5)',
+    navCodex: '◈ Royal Codex (15)',
+    closeModalEsc: '✕ Return to Battle [Esc]',
+    codexTitle: '◈ Royal Grandmaster Codex',
+    codexTabAll: 'All Entries (15)',
+    codexTabPieces: '♟ Chess Defenders (7)',
+    codexTabEnemies: '⚔ Blight Bestiary (8)',
+    actsTitle: '❖ Royal Campaign Operations',
+    rotatePhoneMsg: 'Rotate device to Landscape for optimal 10×5 Chessboard command'
   }
 };
 
@@ -802,6 +1047,9 @@ const CHESS_DATA_EXPORT = {
   TIPS: CHESS_TIPS,
   TIPS_EN: CHESS_TIPS_EN,
   COMMANDERS: ROYAL_COMMANDERS,
+  DOCTRINES: ARMY_DOCTRINES,
+  ASCENSIONS: ASCENSION_RANKS,
+  ACHIEVEMENTS: ROYAL_ACHIEVEMENTS,
   DECREES: ROYAL_DECREES,
   PUZZLES: CHESS_PUZZLES,
   I18N

@@ -232,9 +232,24 @@ class RoyalAudioEngine {
     this.playTone({ freq: 540, endFreq: 720, type: 'sine', duration: 0.06, gain: 0.12 });
   }
 
+  playMarbleSlam(weight = 1.0, pan = 0) {
+    if (this.muted || this.sfxVolume <= 0.01) return;
+    this.init();
+    if (!this.ctx || !this.sfxGain) return;
+
+    // Sharp ivory-on-slate contact click + deep stone table body resonance
+    const clickFreq = Math.max(680, 1480 - weight * 360);
+    const bodyFreq = Math.max(62, 165 - weight * 48);
+    this.playNoise({ duration: 0.045, filterFreq: clickFreq, filterType: 'bandpass', gain: 0.36, pan });
+    this.playNoise({ duration: 0.12 + weight * 0.05, filterFreq: 240, filterType: 'lowpass', gain: 0.28 * weight, delay: 0.008, pan });
+    this.playTone({ freq: bodyFreq * 1.45, endFreq: bodyFreq, type: 'sine', duration: 0.14 + weight * 0.04, gain: 0.26, attack: 0.004, pan });
+  }
+
   playPlacePiece(pieceType = 'pawn', col = 4) {
     const pan = this.panFromCol(col);
-    this.playNoise({ duration: 0.08, filterFreq: 1350, filterType: 'bandpass', gain: 0.34, pan });
+    const weightMap = { chalice: 0.75, pawn: 0.85, bishop: 1.0, knight: 1.15, queen: 1.3, king: 1.45, rook: 1.65 };
+    this.playMarbleSlam(weightMap[pieceType] || 1.0, pan);
+
     const pitchMap = {
       chalice: [523.25, 659.25, 783.99],
       pawn: [329.63, 440.0],
@@ -249,9 +264,9 @@ class RoyalAudioEngine {
       this.playTone({
         freq: f,
         type: 'triangle',
-        duration: 0.22,
-        gain: 0.19,
-        delay: idx * 0.04,
+        duration: 0.2,
+        gain: 0.15,
+        delay: 0.02 + idx * 0.04,
         pan
       });
     });
@@ -260,12 +275,14 @@ class RoyalAudioEngine {
   playChessMove(isKnight = false, col = 4) {
     const pan = this.panFromCol(col);
     if (isKnight) {
-      this.playTone({ freq: 220, endFreq: 660, type: 'sawtooth', duration: 0.14, gain: 0.22, pan });
-      this.playTone({ freq: 587.33, endFreq: 196, type: 'triangle', duration: 0.24, gain: 0.26, delay: 0.09, pan });
-      this.playNoise({ duration: 0.22, filterFreq: 650, filterType: 'lowpass', gain: 0.36, delay: 0.09, pan });
+      this.playTone({ freq: 220, endFreq: 660, type: 'sawtooth', duration: 0.13, gain: 0.18, pan });
+      this.playMarbleSlam(1.45, pan);
+      this.playTone({ freq: 587.33, endFreq: 196, type: 'triangle', duration: 0.24, gain: 0.24, delay: 0.09, pan });
     } else {
-      this.playNoise({ duration: 0.14, filterFreq: 1100, filterType: 'bandpass', gain: 0.25, pan });
-      this.playTone({ freq: 293.66, endFreq: 440, type: 'sine', duration: 0.16, gain: 0.18, delay: 0.03, pan });
+      // Stone scrape + crisp snap onto target tile
+      this.playNoise({ duration: 0.09, filterFreq: 920, filterType: 'bandpass', gain: 0.22, pan });
+      this.playMarbleSlam(1.05, pan);
+      this.playTone({ freq: 293.66, endFreq: 440, type: 'sine', duration: 0.14, gain: 0.15, delay: 0.04, pan });
     }
   }
 
@@ -325,14 +342,34 @@ class RoyalAudioEngine {
     const pan = this.panFromCol(col);
     this.playNoise({
       duration: isBoss ? 0.45 : 0.16,
-      filterFreq: isBoss ? 450 : 1200,
-      filterType: 'lowpass',
-      gain: isBoss ? 0.42 : 0.2,
+      filterFreq: isBoss ? 450 : 1450,
+      filterType: isBoss ? 'lowpass' : 'bandpass',
+      gain: isBoss ? 0.42 : 0.24,
       pan
+    });
+    // Crystalline obsidian stone-piece clatter partials
+    const shards = isBoss ? [740, 580, 410, 260] : [920, 640];
+    shards.forEach((f, i) => {
+      this.playTone({
+        freq: f,
+        endFreq: f * 0.55,
+        type: 'triangle',
+        duration: 0.07,
+        gain: 0.12,
+        delay: i * 0.035,
+        pan
+      });
     });
     if (isBoss) {
       this.playTone({ freq: 130.81, endFreq: 48, type: 'sawtooth', duration: 0.55, gain: 0.34, pan });
     }
+  }
+
+  playAchievement() {
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    notes.forEach((freq, i) => {
+      this.playTone({ freq, type: 'triangle', duration: 0.36, gain: 0.2, delay: i * 0.06 });
+    });
   }
 
   playDecreePick() {
@@ -390,93 +427,127 @@ class RoyalAudioEngine {
     });
   }
 
-  // 16-Step Dynamic Dark-Royal Harpsichord, Cello & Timpani Score
+  // 64-Step Symphonic Baroque-to-Siege Score with Web Audio currentTime Lookahead Scheduling
   startMusic() {
     if (this.muted || !this.musicEnabled) return;
     this.init();
     if (!this.ctx || this.musicTimer) return;
 
-    // D minor -> Bb -> C -> A7 Baroque Progression (16 steps)
-    const bassLine = [
-      146.83, 146.83, 146.83, 220.0,
-      116.54, 116.54, 130.81, 130.81,
-      146.83, 174.61, 130.81, 116.54,
-      110.0, 138.59, 164.81, 110.0
+    // 4-Bar (64-step) Baroque & Dark Cathedral Progression (~18.6s cycle, zero loop fatigue)
+    const bass64 = [
+      // Movement A: D minor Cathedral Prelude
+      146.83, 146.83, 220.0, 146.83, 116.54, 116.54, 174.61, 116.54,
+      130.81, 130.81, 196.0, 130.81, 110.0, 138.59, 164.81, 110.0,
+      // Movement B: Descending Lament (Gm -> Dm -> A7 -> Dm)
+      196.0, 196.0, 146.83, 196.0, 146.83, 146.83, 220.0, 146.83,
+      110.0, 110.0, 164.81, 138.59, 146.83, 220.0, 146.83, 146.83,
+      // Movement C: Royal Ascent (F -> C -> Bb -> A7)
+      174.61, 174.61, 261.63, 174.61, 130.81, 130.81, 196.0, 130.81,
+      116.54, 146.83, 174.61, 116.54, 110.0, 138.59, 164.81, 220.0,
+      // Movement D: Grandmaster Cadence
+      146.83, 220.0, 293.66, 220.0, 155.56, 196.0, 233.08, 196.0,
+      110.0, 164.81, 220.0, 138.59, 146.83, 110.0, 73.42, 146.83
     ];
-    const arpCalm = [
-      293.66, 349.23, 440.0, 587.33,
-      349.23, 466.16, 523.25, 392.0,
-      293.66, 440.0, 523.25, 466.16,
-      440.0, 554.37, 659.25, 440.0
+
+    const melodyCalm64 = [
+      293.66, 349.23, 440.0, 587.33, 466.16, 440.0, 349.23, 293.66,
+      392.0, 440.0, 523.25, 392.0, 329.63, 349.23, 440.0, 329.63,
+      392.0, 466.16, 587.33, 523.25, 440.0, 349.23, 440.0, 587.33,
+      554.37, 440.0, 329.63, 440.0, 293.66, 349.23, 440.0, 293.66,
+      523.25, 587.33, 698.46, 523.25, 392.0, 523.25, 659.25, 523.25,
+      466.16, 587.33, 523.25, 440.0, 329.63, 440.0, 554.37, 659.25,
+      587.33, 523.25, 466.16, 440.0, 392.0, 466.16, 392.0, 349.23,
+      329.63, 440.0, 554.37, 440.0, 293.66, 0, 220.0, 293.66
     ];
-    const arpIntense = [
-      587.33, 698.46, 880.0, 587.33,
-      466.16, 698.46, 783.99, 523.25,
-      587.33, 880.0, 783.99, 698.46,
-      659.25, 830.61, 880.0, 554.37
+
+    const melodyIntense64 = [
+      587.33, 698.46, 880.0, 587.33, 466.16, 698.46, 880.0, 698.46,
+      523.25, 659.25, 783.99, 523.25, 554.37, 659.25, 880.0, 554.37,
+      783.99, 698.46, 587.33, 783.99, 587.33, 698.46, 880.0, 1174.66,
+      830.61, 659.25, 554.37, 880.0, 587.33, 440.0, 587.33, 880.0,
+      698.46, 880.0, 1046.5, 880.0, 659.25, 783.99, 1046.5, 783.99,
+      587.33, 698.46, 932.33, 698.46, 554.37, 659.25, 880.0, 1108.73,
+      1174.66, 880.0, 698.46, 587.33, 622.25, 698.46, 932.33, 698.46,
+      659.25, 880.0, 1108.73, 880.0, 587.33, 440.0, 293.66, 587.33
     ];
+
+    const stepDur = 0.29;
+    this.nextNoteTime = this.ctx.currentTime + 0.05;
 
     this.musicTimer = setInterval(() => {
       if (this.muted || !this.musicEnabled || !this.ctx || this.ctx.state !== 'running') return;
-      if (this.musicVolume <= 0.01) return;
-
-      const step = this.musicStep % 16;
-      const mult = Math.pow(2, this.actToneShift / 12);
-      const bassFreq = bassLine[step] * mult;
-      const melodyFreq = (this.isIntenseWave ? arpIntense[step] : arpCalm[step]) * mult;
-
-      // Deep Cello Bass Pulse + Timpani on downbeats
-      if (step % 2 === 0) {
-        this.playMusicNote(bassFreq, 'triangle', 0.44, 0.55, step % 4 === 0 ? -0.15 : 0.15);
-      }
-      if (step % 4 === 0 || (this.isIntenseWave && step % 2 === 0)) {
-        this.playTimpaniThump(bassFreq * 0.5, this.isIntenseWave ? 0.35 : 0.18);
+      if (this.musicVolume <= 0.01) {
+        this.nextNoteTime = this.ctx.currentTime + 0.1;
+        return;
       }
 
-      // Delicate Baroque Pluck
-      this.playMusicNote(melodyFreq, 'sine', 0.25, 0.42, ((step % 4) - 1.5) * 0.22);
-      if (this.isIntenseWave && step % 2 === 1) {
-        this.playMusicNote(melodyFreq * 0.5, 'sawtooth', 0.18, 0.25, 0);
+      if (this.nextNoteTime < this.ctx.currentTime - 0.3) {
+        this.nextNoteTime = this.ctx.currentTime + 0.02;
       }
 
-      this.musicStep++;
-    }, 280);
+      while (this.nextNoteTime < this.ctx.currentTime + 0.15) {
+        const step = this.musicStep % 64;
+        const mult = Math.pow(2, this.actToneShift / 12);
+        const bassFreq = bass64[step] * mult;
+        const rawMel = this.isIntenseWave ? melodyIntense64[step] : melodyCalm64[step];
+        const melodyFreq = rawMel * mult;
+        const t = this.nextNoteTime;
+
+        if (step % 2 === 0) {
+          this.scheduleMusicNote(t, bassFreq, 'triangle', 0.46, 0.44, step % 4 === 0 ? -0.18 : 0.18);
+        }
+        if (step % 4 === 0 || (this.isIntenseWave && step % 2 === 0)) {
+          this.scheduleTimpani(t, bassFreq * 0.5, this.isIntenseWave ? 0.32 : 0.16);
+        }
+        if (melodyFreq > 20) {
+          this.scheduleMusicNote(t, melodyFreq, 'sine', 0.24, 0.34, ((step % 4) - 1.5) * 0.24);
+          // Warm Harpsichord Harmonic Overtone
+          this.scheduleMusicNote(t, melodyFreq * 2, 'triangle', 0.09, 0.08, ((step % 4) - 1.5) * -0.2);
+        }
+        // Cathedral Organ / Choir Pad Fifth on Bar Downbeats during Intense/Boss Waves
+        if (this.isIntenseWave && step % 8 === 0) {
+          this.scheduleMusicNote(t, bassFreq * 1.5, 'sawtooth', 1.6, 0.12, -0.35);
+          this.scheduleMusicNote(t, bassFreq * 2.0, 'triangle', 1.6, 0.14, 0.35);
+        }
+
+        this.nextNoteTime += stepDur;
+        this.musicStep++;
+      }
+    }, 65);
   }
 
-  playTimpaniThump(freq, gainVal) {
+  scheduleTimpani(when, freq, gainVal) {
     if (!this.ctx || !this.musicGain) return;
-    const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(Math.max(45, freq * 1.4), now);
-    osc.frequency.exponentialRampToValueAtTime(Math.max(36, freq), now + 0.18);
+    osc.frequency.setValueAtTime(Math.max(45, freq * 1.4), when);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(36, freq), when + 0.18);
 
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(gainVal, now + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(gainVal, when + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.24);
     osc.connect(g);
     g.connect(this.musicGain);
-    osc.start(now);
-    osc.stop(now + 0.26);
+    osc.start(when);
+    osc.stop(when + 0.26);
   }
 
-  playMusicNote(freq, type, duration, gainVal, pan = 0) {
+  scheduleMusicNote(when, freq, type, duration, gainVal, pan = 0) {
     if (!this.ctx || !this.musicGain) return;
-    const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.setValueAtTime(freq, when);
 
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(gainVal, now + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(gainVal, when + 0.018);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + duration);
 
     osc.connect(g);
     this.routeToBus(g, pan, 'music');
-    osc.start(now);
-    osc.stop(now + duration + 0.03);
+    osc.start(when);
+    osc.stop(when + duration + 0.03);
   }
 
   stopMusic() {
