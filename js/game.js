@@ -12,9 +12,15 @@ class RoyalGambitGame {
     this.cols = 10;
     this.rows = 5;
 
+    this.profile = this.loadProfile();
+    this.lang = this.profile.lang || 'ar';
+    this.commanderId = this.profile.commander || 'bastion';
+    this.gameMode = 'campaign'; // 'campaign' | 'daily' | 'puzzle'
+    this.puzzleIndex = 0;
+
     this.actIndex = 0;
     this.currentAct = window.CHESS_DATA.ACTS[0];
-    this.eloRating = Number(localStorage.getItem('royal_gambit_elo') || 1500);
+    this.eloRating = Number(this.profile.elo || localStorage.getItem('royal_gambit_elo') || 1500);
     this.unlockedActs = Number(localStorage.getItem('royal_gambit_unlocked') || 5);
 
     this.mana = 150;
@@ -23,7 +29,8 @@ class RoyalGambitGame {
     this.gameSpeed = 1;
     this.autoCollectMana = true;
     this.showGridOverlay = true;
-    this.paused = false;
+    this.onTitleScreen = true;
+    this.paused = true;
     this.gameOver = false;
     this.victory = false;
 
@@ -40,13 +47,17 @@ class RoyalGambitGame {
     this.pawnChainLinks = [];
     this.readyPawnLines = [];
     this.mergeCinematic = null;
+    this.activeDecrees = [];
+    this.decreeState = this.createDefaultDecreeState();
 
     this.selectedDeckPieceId = 'pawn';
     this.selectedBoardPiece = null;
     this.shovelMode = false;
     this.hoverCell = null;
+    this.dragState = null;
     this.cardCooldowns = {};
     this.lastInspectedKey = '';
+    this._lastHudSig = '';
 
     this.waveIndex = 0;
     this.waveInProgress = false;
@@ -55,6 +66,7 @@ class RoyalGambitGame {
     this.skyManaTimer = 4.8;
     this.tipTimer = 0;
     this.tipIndex = 0;
+    this.hitStopTimer = 0;
 
     this.entityIdCounter = 1;
     this.screenShake = 0;
@@ -63,29 +75,157 @@ class RoyalGambitGame {
     this.renderer = new window.RoyalBoardRenderer(this.canvas, this);
 
     this.bindEvents();
+    this.applyVolumeSettings();
     this.buildDeckBar();
     this.populateCodexModal();
     this.populateActsDrawer();
-    this.startAct(0);
+    this.renderTitleScreen();
+    this.applyLanguage(this.lang);
+    this.startAct(0, { keepTitleOpen: true });
     this.renderer.resize();
 
     requestAnimationFrame(ts => this.loop(ts));
   }
 
-  startAct(actIdx) {
-    this.actIndex = Math.max(0, Math.min(window.CHESS_DATA.ACTS.length - 1, actIdx));
-    this.currentAct = window.CHESS_DATA.ACTS[this.actIndex];
+  loadProfile() {
+    try {
+      const raw = localStorage.getItem('royal_gambit_profile_v2');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          elo: Number(parsed.elo || localStorage.getItem('royal_gambit_elo') || 1500),
+          lang: parsed.lang === 'en' ? 'en' : 'ar',
+          commander: window.CHESS_DATA.COMMANDERS[parsed.commander] ? parsed.commander : 'bastion',
+          actStars: parsed.actStars || {},
+          actBestScores: parsed.actBestScores || {},
+          endlessBestWave: Number(parsed.endlessBestWave || 0),
+          dailyBestScore: Number(parsed.dailyBestScore || 0),
+          dailyDateKey: parsed.dailyDateKey || '',
+          solvedPuzzles: parsed.solvedPuzzles || {},
+          sfxVol: parsed.sfxVol !== undefined ? Number(parsed.sfxVol) : 0.8,
+          musicVol: parsed.musicVol !== undefined ? Number(parsed.musicVol) : 0.52
+        };
+      }
+    } catch {
+      // Ignore storage errors cleanly
+    }
+    return {
+      elo: Number(localStorage.getItem('royal_gambit_elo') || 1500),
+      lang: 'ar',
+      commander: 'bastion',
+      actStars: {},
+      actBestScores: {},
+      endlessBestWave: 0,
+      dailyBestScore: 0,
+      dailyDateKey: '',
+      solvedPuzzles: {},
+      sfxVol: 0.8,
+      musicVol: 0.52
+    };
+  }
 
-    this.mana = this.currentAct.startingMana || 150;
+  saveProfile() {
+    try {
+      this.profile.elo = this.eloRating;
+      this.profile.lang = this.lang;
+      this.profile.commander = this.commanderId;
+      localStorage.setItem('royal_gambit_profile_v2', JSON.stringify(this.profile));
+      localStorage.setItem('royal_gambit_elo', String(this.eloRating));
+    } catch {
+      // Ignore storage quota errors cleanly
+    }
+  }
+
+  createDefaultDecreeState() {
+    return {
+      damageMult: 1.0,
+      atkSpeedMult: 1.0,
+      chaliceRateMult: 1.0,
+      moveCdMult: 1.0,
+      pawnKnockbackMult: 1.0,
+      knightDmgMult: 1.0,
+      knightStun: false,
+      casterDmgMult: 1.0,
+      bonusHeal: 0,
+      rookDmgMult: 1.0,
+      rookExecuteThreshold: 0,
+      batteryBonus: 0,
+      killManaBonus: 0,
+      promoteCost: 125,
+      queenDmgMult: 1.0
+    };
+  }
+
+  getCommander() {
+    return window.CHESS_DATA.COMMANDERS[this.commanderId] || window.CHESS_DATA.COMMANDERS.bastion;
+  }
+
+  getPieceCost(pieceId) {
+    const def = window.CHESS_DATA.PIECES[pieceId];
+    if (!def) return 0;
+    const cmd = this.getCommander();
+    let cost = def.cost;
+    if (pieceId === 'pawn' && cmd.mods.pawnDiscount) cost -= cmd.mods.pawnDiscount;
+    if (pieceId === 'knight' && cmd.mods.knightDiscount) cost -= cmd.mods.knightDiscount;
+    return Math.max(25, cost);
+  }
+
+  startAct(actIdx, options = {}) {
+    const keepTitle = Boolean(options.keepTitleOpen);
+    this.gameMode = options.mode || 'campaign';
+    this.puzzleIndex = Number(options.puzzleIndex || 0);
+
+    this.actIndex = Math.max(0, Math.min(window.CHESS_DATA.ACTS.length - 1, actIdx));
+    let baseAct = window.CHESS_DATA.ACTS[this.actIndex];
+
+    if (this.gameMode === 'puzzle') {
+      const puz = window.CHESS_DATA.PUZZLES[this.puzzleIndex] || window.CHESS_DATA.PUZZLES[0];
+      baseAct = {
+        id: 90 + this.puzzleIndex,
+        code: puz.code,
+        name: puz.nameEn,
+        subtitle: puz.nameAr,
+        difficulty: 'Tactical Puzzle',
+        startingMana: puz.startingMana,
+        skyDropInterval: 11.5,
+        boardTheme: window.CHESS_DATA.ACTS[1].boardTheme,
+        totalWaves: puz.waves.length,
+        waves: puz.waves,
+        isPuzzle: true,
+        puzzleDef: puz
+      };
+    } else if (this.gameMode === 'daily') {
+      baseAct = {
+        ...window.CHESS_DATA.ACTS[2],
+        id: 80,
+        code: 'DAILY',
+        name: 'Daily Royal Gambit',
+        subtitle: new Date().toISOString().slice(0, 10),
+        startingMana: 200,
+        isDaily: true
+      };
+    }
+
+    this.currentAct = baseAct;
+    const cmd = this.getCommander();
+
+    this.activeDecrees = [];
+    this.decreeState = this.createDefaultDecreeState();
+    if (cmd.mods.dmgMult) this.decreeState.damageMult *= cmd.mods.dmgMult;
+    if (cmd.mods.moveCdMult) this.decreeState.moveCdMult *= cmd.mods.moveCdMult;
+
+    this.mana = (this.currentAct.startingMana || 150) + (cmd.mods.startingManaBonus || 0);
     this.score = 0;
     this.ultimateCharge = 25;
-    this.paused = false;
+    this.onTitleScreen = keepTitle;
+    this.paused = keepTitle;
     this.gameOver = false;
     this.victory = false;
     this.enemiesKilled = 0;
     this.totalManaEarned = this.mana;
     this.breachInfo = null;
     this.waveClearRewarded = false;
+    this.hitStopTimer = 0;
 
     this.pieces = [];
     this.enemies = [];
@@ -102,7 +242,9 @@ class RoyalGambitGame {
 
     this.selectedBoardPiece = null;
     this.shovelMode = false;
+    this.dragState = null;
     this.lastInspectedKey = '';
+    this._lastHudSig = '';
     this.cardCooldowns = {};
     Object.keys(window.CHESS_DATA.PIECES).forEach(k => {
       this.cardCooldowns[k] = 0;
@@ -126,18 +268,36 @@ class RoyalGambitGame {
     this.waveSpawnQueue = [];
     this.waveCooldownTimer = 3.2;
     this.skyManaTimer = 4.0;
-    window.RoyalAudio.setIntenseMode(false);
+
+    if (window.RoyalAudio) {
+      window.RoyalAudio.setIntenseMode(false);
+      window.RoyalAudio.setActMood(this.actIndex);
+    }
 
     this.hideModals();
+    const titleEl = document.getElementById('titleOverlay');
+    if (titleEl) {
+      titleEl.classList.toggle('hidden', !keepTitle);
+    }
     this.updateWaveThreatIcons();
+    this.updateTipTicker();
     this.updateHUD();
-    this.announceBanner(
-      `${this.currentAct.code}: ${this.currentAct.name}`,
-      this.currentAct.subtitle
-    );
+    if (!keepTitle) {
+      this.announceBanner(
+        `${this.currentAct.code}: ${this.currentAct.name}`,
+        this.currentAct.subtitle
+      );
+    }
   }
 
   spawnStarterFormation() {
+    if (this.gameMode === 'puzzle' && this.currentAct.puzzleDef) {
+      for (const p of this.currentAct.puzzleDef.pieces) {
+        this.placePieceInternal(p.type, p.col, p.row, true);
+      }
+      this.recalculateSynergies();
+      return;
+    }
     this.placePieceInternal('chalice', 0, 1, true);
     this.placePieceInternal('chalice', 0, 3, true);
     this.recalculateSynergies();
@@ -147,6 +307,72 @@ class RoyalGambitGame {
     window.addEventListener('resize', () => this.renderer.resize());
     window.addEventListener('orientationchange', () => {
       setTimeout(() => this.renderer.resize(), 120);
+    });
+
+    this.canvas.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || this.paused || this.gameOver || this.onTitleScreen) return;
+      const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
+      if (!pos.valid) return;
+      const existing = this.getPieceAt(pos.col, pos.row);
+      if (existing && existing.moveCd <= 0 && !this.shovelMode && !existing.inReadyPawnLine) {
+        this.dragState = {
+          kind: 'board',
+          piece: existing,
+          pieceType: existing.type,
+          startX: e.clientX,
+          startY: e.clientY,
+          x: pos.x,
+          y: pos.y,
+          active: false,
+          pointerId: e.pointerId
+        };
+      }
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (!this.dragState) return;
+      const dist = Math.hypot(e.clientX - this.dragState.startX, e.clientY - this.dragState.startY);
+      if (dist > 14) {
+        this.dragState.active = true;
+        if (this.dragState.kind === 'board') {
+          this.selectedBoardPiece = this.dragState.piece;
+        } else if (this.dragState.kind === 'deck') {
+          this.selectedDeckPieceId = this.dragState.pieceType;
+          this.selectedBoardPiece = null;
+        }
+      }
+      const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
+      this.hoverCell = pos;
+      this.dragState.x = pos.x;
+      this.dragState.y = pos.y;
+    });
+
+    window.addEventListener('pointerup', e => {
+      if (!this.dragState) return;
+      const drag = this.dragState;
+      this.dragState = null;
+      if (!drag.active) return;
+
+      this._suppressNextClick = true;
+      setTimeout(() => { this._suppressNextClick = false; }, 60);
+
+      const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
+      if (!pos.valid || this.paused || this.gameOver) return;
+
+      window.RoyalAudio.init();
+      window.RoyalAudio.startMusic();
+
+      if (drag.kind === 'deck') {
+        this.tryDeployPiece(drag.pieceType, pos.col, pos.row);
+      } else if (drag.kind === 'board' && drag.piece) {
+        const legal = this.getLegalMovesForPiece(drag.piece);
+        const move = legal.find(m => m.col === pos.col && m.row === pos.row);
+        if (move) {
+          this.executeChessMove(drag.piece, move);
+          this.selectedBoardPiece = null;
+          this.updateHUD();
+        }
+      }
     });
 
     this.canvas.addEventListener('mousemove', e => {
@@ -187,6 +413,7 @@ class RoyalGambitGame {
     });
 
     this.canvas.addEventListener('click', e => {
+      if (this._suppressNextClick) return;
       window.RoyalAudio.init();
       window.RoyalAudio.startMusic();
 
@@ -202,6 +429,15 @@ class RoyalGambitGame {
       if (!pos.valid || this.paused || this.gameOver) return;
 
       this.handleBoardClick(pos.col, pos.row);
+    });
+
+    this.canvas.addEventListener('dblclick', e => {
+      const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
+      if (!pos.valid || this.paused || this.gameOver) return;
+      const existing = this.getPieceAt(pos.col, pos.row);
+      if (existing && existing.type === 'pawn' && existing.xp >= 100) {
+        this.tryPromotePawn(existing);
+      }
     });
 
     this.canvas.addEventListener('contextmenu', e => {
@@ -223,6 +459,10 @@ class RoyalGambitGame {
         }
       } else if (key === 'm') {
         this.tryMergePawnLine(this.selectedBoardPiece);
+      } else if (key === 'u') {
+        if (this.selectedBoardPiece && this.selectedBoardPiece.type === 'pawn' && this.selectedBoardPiece.xp >= 100) {
+          this.tryPromotePawn(this.selectedBoardPiece);
+        }
       } else if (key === 's' || key === 'x') {
         this.toggleShovel();
       } else if (key === 'f') {
@@ -322,6 +562,57 @@ class RoyalGambitGame {
       this.hideModals();
       this.openModal('codexModal');
     });
+    // Audio Sliders + Language Switch + Mobile Floating Bar
+    const bindSlider = (id, key, setter) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = String(Math.round((this.profile[key] || 0.7) * 100));
+      el.addEventListener('input', () => {
+        const val = Number(el.value) / 100;
+        this.profile[key] = val;
+        setter(val);
+        this.saveProfile();
+      });
+    };
+    bindSlider('sfxVolSlider', 'sfxVol', v => window.RoyalAudio.setSfxVolume(v));
+    bindSlider('musicVolSlider', 'musicVol', v => window.RoyalAudio.setMusicVolume(v));
+
+    bindBtn('langToggleBtn', () => {
+      window.RoyalAudio.playUiClick();
+      this.setLanguage(this.lang === 'ar' ? 'en' : 'ar');
+    });
+    bindBtn('titleLangBtn', () => {
+      window.RoyalAudio.playUiClick();
+      this.setLanguage(this.lang === 'ar' ? 'en' : 'ar');
+    });
+    bindBtn('titleLaunchCampaignBtn', () => {
+      window.RoyalAudio.init();
+      window.RoyalAudio.playUiClick();
+      window.RoyalAudio.startMusic();
+      const firstUnbeaten = Math.min(3, Math.max(0, Number(this.profile.lastAct || 0)));
+      this.startAct(firstUnbeaten, { mode: 'campaign' });
+    });
+    bindBtn('titleDailyBtn', () => {
+      window.RoyalAudio.init();
+      window.RoyalAudio.playUiClick();
+      window.RoyalAudio.startMusic();
+      this.startAct(2, { mode: 'daily' });
+    });
+    bindBtn('titlePuzzlesBtn', () => {
+      window.RoyalAudio.init();
+      window.RoyalAudio.playUiClick();
+      window.RoyalAudio.startMusic();
+      this.startAct(0, { mode: 'puzzle', puzzleIndex: 0 });
+    });
+    bindBtn('menuOpenTitleBtn', () => {
+      this.hideModals();
+      this.onTitleScreen = true;
+      this.paused = true;
+      this.renderTitleScreen();
+      const titleEl = document.getElementById('titleOverlay');
+      if (titleEl) titleEl.classList.remove('hidden');
+    });
+
     bindBtn('modalMainMenuBtn', () => {
       this.hideModals();
       this.openModal('commandMenuModal');
@@ -400,12 +691,21 @@ class RoyalGambitGame {
       (this.currentAct.isEndless || this.waveIndex < this.currentAct.waves.length);
     if (!canCall) return;
 
-    this.mana += 25;
-    this.totalManaEarned += 25;
+    // Never forfeit Wave Clear Treasury Bonus if player calls next wave aggressively early!
+    let earlyTotal = 25;
+    if (this.waveIndex >= 1 && !this.waveClearRewarded) {
+      this.waveClearRewarded = true;
+      const activeChalices = this.countPiecesOfType('chalice');
+      earlyTotal += 20 + activeChalices * 5;
+      this.score += 75;
+    }
+
+    this.mana += earlyTotal;
+    this.totalManaEarned += earlyTotal;
     this.score += 50;
     window.RoyalAudio.playManaCollect();
     this.addFloatingText(
-      '+25☀ مكافأة استدعاء الموجة!',
+      `+${earlyTotal}☀ ${this.lang === 'en' ? 'Early Call + Treasury!' : 'استدعاء مبكر + خزينة!'}`,
       this.renderer.width * 0.5,
       this.renderer.boardTop + 24,
       '#fef08a',
@@ -427,7 +727,7 @@ class RoyalGambitGame {
       return;
     }
 
-    // One-click merge if clicking a Pawn that belongs to a ready 5-Pawn Line!
+    // One-click merge if clicking a Pawn that belongs to a ready 5-Pawn Line (when Queen slot available)
     if (existing && existing.type === 'pawn' && existing.inReadyPawnLine) {
       this.tryMergePawnLine(existing);
       return;
@@ -435,9 +735,6 @@ class RoyalGambitGame {
 
     if (this.selectedBoardPiece) {
       if (existing && existing.id === this.selectedBoardPiece.id) {
-        if (existing.type === 'pawn' && existing.xp >= 100) {
-          this.tryPromotePawn(existing);
-        }
         this.selectedBoardPiece = null;
         this.updateHUD();
         return;
@@ -453,14 +750,10 @@ class RoyalGambitGame {
       }
 
       if (existing) {
-        if (existing.type === 'pawn' && existing.xp >= 100) {
-          this.tryPromotePawn(existing);
-          this.selectedBoardPiece = null;
-          this.updateHUD();
-          return;
-        }
+        // Select clicked piece cleanly (never lock 100-XP Pawns out of moving; use [U], double-click, or button to promote)
         this.selectedBoardPiece = existing;
         this.selectedDeckPieceId = null;
+        window.RoyalAudio.playUiClick();
         this.updateHUD();
         return;
       }
@@ -471,11 +764,8 @@ class RoyalGambitGame {
     }
 
     if (existing) {
-      if (existing.type === 'pawn' && existing.xp >= 100) {
-        this.tryPromotePawn(existing);
-        return;
-      }
       this.selectedBoardPiece = existing;
+      window.RoyalAudio.playUiClick();
       this.updateHUD();
       return;
     }
@@ -505,6 +795,7 @@ class RoyalGambitGame {
     if (!def) return;
     if (this.getPieceAt(col, row)) return;
 
+    const cost = this.getPieceCost(pieceId);
     const center = this.renderer.tileCenter(col, row);
 
     if (def.maxCount && this.countPiecesOfType(pieceId) >= def.maxCount) {
@@ -524,17 +815,17 @@ class RoyalGambitGame {
       return;
     }
 
-    if (this.mana < def.cost) {
+    if (this.mana < cost) {
       this.flashManaWarning();
-      this.addFloatingText(`NEED ${def.cost} MANA!`, center.x, center.y, '#fbbf24', false);
+      this.addFloatingText(`NEED ${cost} MANA!`, center.x, center.y, '#fbbf24', false);
       return;
     }
 
-    this.mana -= def.cost;
+    this.mana -= cost;
     this.cardCooldowns[pieceId] = def.cooldown;
 
     this.placePieceInternal(pieceId, col, row, false);
-    window.RoyalAudio.playPlacePiece(pieceId);
+    window.RoyalAudio.playPlacePiece(pieceId, col);
 
     this.spawnParticles(center.x, center.y, def.accentColor, 14);
     this.recalculateSynergies();
@@ -543,14 +834,18 @@ class RoyalGambitGame {
 
   placePieceInternal(pieceId, col, row, isFreeStarter = false) {
     const def = window.CHESS_DATA.PIECES[pieceId];
+    const cmd = this.getCommander();
+    const hpMult = (cmd.mods && cmd.mods.hpMult) || 1.0;
+    const bonusShield = (cmd.mods && cmd.mods.bonusShield) || 0;
+    const maxHp = Math.round(def.maxHp * hpMult);
     const piece = {
       id: this.entityIdCounter++,
       type: pieceId,
       col,
       row,
-      hp: def.maxHp,
-      maxHp: def.maxHp,
-      shieldHp: def.startingShield || 0,
+      hp: maxHp,
+      maxHp,
+      shieldHp: (def.startingShield || 0) + bonusShield,
       attackTimer: isFreeStarter ? 2.5 : def.attackInterval * 0.5,
       moveCd: 0,
       xp: 0,
@@ -961,7 +1256,10 @@ class RoyalGambitGame {
     }
     if (pawn.xp < 100) return;
 
-    const promoteCost = window.CHESS_DATA.PIECES.pawn.promoteCost || 125;
+    const promoteCost =
+      (this.decreeState && this.decreeState.promoteCost) ||
+      window.CHESS_DATA.PIECES.pawn.promoteCost ||
+      125;
     const center = this.renderer.tileCenter(pawn.col, pawn.row);
 
     if (this.mana < promoteCost) {
@@ -1123,26 +1421,29 @@ class RoyalGambitGame {
       }
     }
 
-    // Check Vertical Columns (5 Pawns across all 5 Ranks in column c)
-    const allPawns = this.pieces.filter(p => p.type === 'pawn');
-    for (let c = 0; c < this.cols; c++) {
-      const colPawns = allPawns.filter(p => p.col === c).sort((a, b) => a.row - b.row);
-      if (colPawns.length >= 5) {
-        this.readyPawnLines.push({ kind: 'col', index: c, pawns: colPawns.slice(0, 5) });
-        colPawns.slice(0, 5).forEach(p => {
-          p.inReadyPawnLine = true;
-        });
+    // Check Vertical Columns & Horizontal Rows (ONLY highlight merge lines when Queen cap < maxCount!)
+    const queenMax = (window.CHESS_DATA.PIECES.queen && window.CHESS_DATA.PIECES.queen.maxCount) || 2;
+    const canMergeQueen = this.countPiecesOfType('queen') < queenMax;
+    if (canMergeQueen) {
+      const allPawns = this.pieces.filter(p => p.type === 'pawn');
+      for (let c = 0; c < this.cols; c++) {
+        const colPawns = allPawns.filter(p => p.col === c).sort((a, b) => a.row - b.row);
+        if (colPawns.length >= 5) {
+          this.readyPawnLines.push({ kind: 'col', index: c, pawns: colPawns.slice(0, 5) });
+          colPawns.slice(0, 5).forEach(p => {
+            p.inReadyPawnLine = true;
+          });
+        }
       }
-    }
 
-    // Check Horizontal Rows (5+ Pawns in the same Rank r)
-    for (let r = 0; r < this.rows; r++) {
-      const rowPawns = allPawns.filter(p => p.row === r).sort((a, b) => a.col - b.col);
-      if (rowPawns.length >= 5) {
-        this.readyPawnLines.push({ kind: 'row', index: r, pawns: rowPawns.slice(0, 5) });
-        rowPawns.slice(0, 5).forEach(p => {
-          p.inReadyPawnLine = true;
-        });
+      for (let r = 0; r < this.rows; r++) {
+        const rowPawns = allPawns.filter(p => p.row === r).sort((a, b) => a.col - b.col);
+        if (rowPawns.length >= 5) {
+          this.readyPawnLines.push({ kind: 'row', index: r, pawns: rowPawns.slice(0, 5) });
+          rowPawns.slice(0, 5).forEach(p => {
+            p.inReadyPawnLine = true;
+          });
+        }
       }
     }
   }
@@ -1230,9 +1531,14 @@ class RoyalGambitGame {
       if (this.mergeCinematic) {
         this.updateMergeCinematic(rawDt);
       }
-      const simSpeed = this.mergeCinematic ? 0.12 : this.gameSpeed;
-      const dt = rawDt * simSpeed;
-      this.update(dt);
+      if (this.hitStopTimer > 0) {
+        this.hitStopTimer = Math.max(0, this.hitStopTimer - rawDt);
+        this.updateVFX(rawDt * 0.45);
+      } else {
+        const simSpeed = this.mergeCinematic ? 0.12 : this.gameSpeed;
+        const dt = rawDt * simSpeed;
+        this.update(dt);
+      }
     }
 
     this.renderer.render(timestamp / 1000);
@@ -1241,6 +1547,14 @@ class RoyalGambitGame {
 
   update(dt) {
     if (this.screenShake > 0) this.screenShake = Math.max(0, this.screenShake - dt * 1.5);
+
+    this.tipTimer += dt;
+    if (this.tipTimer >= 13.0) {
+      this.tipTimer = 0;
+      const list = this.lang === 'en' ? window.CHESS_DATA.TIPS_EN : window.CHESS_DATA.TIPS;
+      this.tipIndex = (this.tipIndex + 1) % list.length;
+      this.updateTipTicker();
+    }
 
     for (const k of Object.keys(this.cardCooldowns)) {
       if (this.cardCooldowns[k] > 0) {
@@ -1260,7 +1574,6 @@ class RoyalGambitGame {
     this.updateWaves(dt);
     this.updatePieces(dt);
     this.updateEnemies(dt);
-    this.updateProjectiles(dt);
     this.updateChariots(dt);
     this.updateVFX(dt);
 
@@ -1287,15 +1600,29 @@ class RoyalGambitGame {
         this.totalManaEarned += waveBonus;
         this.score += 75;
         this.addFloatingText(
-          `+${waveBonus}☀ مكافأة تطهير الموجة ${this.waveIndex}!`,
+          `+${waveBonus}☀ ${this.lang === 'en' ? `Wave ${this.waveIndex} Clear!` : `مكافأة تطهير الموجة ${this.waveIndex}!`}`,
           this.renderer.width * 0.5,
           this.renderer.boardTop + 32,
           '#facc15',
           true
         );
+
+        // If this was the final wave of a campaign Act / Puzzle, trigger Victory immediately!
+        if (!this.currentAct.isEndless && this.waveIndex >= this.currentAct.waves.length) {
+          this.handleActVictory();
+          return;
+        }
+
+        // Royal Decree Draft after waves 2, 4, 6 in Campaign/Daily, or every 3 waves in Endless!
+        const shouldDraft = this.gameMode !== 'puzzle' && (
+          this.currentAct.isEndless ? this.waveIndex % 3 === 0 : this.waveIndex % 2 === 0
+        );
+        if (shouldDraft) {
+          this.openDecreeDraft();
+          return;
+        }
       }
 
-      // If this was the final wave of a campaign Act, trigger Victory Decree immediately!
       if (!this.currentAct.isEndless && this.waveIndex >= this.currentAct.waves.length) {
         this.handleActVictory();
         return;
@@ -1330,10 +1657,14 @@ class RoyalGambitGame {
     this.waveSpawnQueue = [];
     for (const group of waveDef.spawns) {
       for (let i = 0; i < group.count; i++) {
+        const fixedRow =
+          Array.isArray(group.fixedRows) && group.fixedRows.length > 0
+            ? group.fixedRows[i % group.fixedRows.length]
+            : this.pickStrategicSpawnRow(group.type, i);
         this.waveSpawnQueue.push({
           type: group.type,
-          row: this.pickStrategicSpawnRow(group.type),
-          delay: i === 0 ? 0.6 : group.interval * (0.75 + Math.random() * 0.4)
+          row: fixedRow,
+          delay: i === 0 ? 0.6 : group.interval * (0.75 + this.getWaveRandom(i) * 0.4)
         });
       }
     }
@@ -1347,6 +1678,22 @@ class RoyalGambitGame {
     } else {
       window.RoyalAudio.setIntenseMode(false);
     }
+  }
+
+  getWaveRandom(seedOffset = 0) {
+    if (this.gameMode !== 'daily') return Math.random();
+    const dayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const s = Number(dayStr) + this.waveIndex * 97 + seedOffset * 31;
+    const x = Math.sin(s) * 10000;
+    return x - Math.floor(x);
+  }
+
+  getIncomingLaneCount(row) {
+    let count = 0;
+    for (let i = 0; i < Math.min(8, this.waveSpawnQueue.length); i++) {
+      if (this.waveSpawnQueue[i].row === row) count++;
+    }
+    return count;
   }
 
   updateWaveThreatIcons(waveDef = null) {
@@ -1374,15 +1721,15 @@ class RoyalGambitGame {
       .join('');
   }
 
-  pickStrategicSpawnRow(enemyType) {
+  pickStrategicSpawnRow(enemyType, seedOffset = 0) {
     if (enemyType === 'assassin' || enemyType === 'necro') {
       const royalty = this.pieces.filter(p => p.type === 'queen' || p.type === 'king' || p.type === 'bishop');
       if (royalty.length > 0) {
-        const chosen = royalty[Math.floor(Math.random() * royalty.length)];
+        const chosen = royalty[Math.floor(this.getWaveRandom(seedOffset) * royalty.length)];
         return chosen.row;
       }
     }
-    return Math.floor(Math.random() * this.rows);
+    return Math.floor(this.getWaveRandom(seedOffset + 11) * this.rows);
   }
 
   generateEndlessWave(waveNum) {
@@ -1464,9 +1811,17 @@ class RoyalGambitGame {
         piece.hp = Math.min(piece.maxHp, piece.hp + 5 * dt);
       }
 
-      let speedMult = 1.0;
+      const cmd = this.getCommander();
+      let speedMult = (this.decreeState && this.decreeState.atkSpeedMult) || 1.0;
       if (piece.buffedByKing) speedMult += 0.3;
       if (piece.buffedByChalice) speedMult += 0.15;
+      if (cmd.mods.casterSpdMult && (piece.type === 'bishop' || piece.type === 'queen')) {
+        speedMult *= cmd.mods.casterSpdMult;
+      }
+      if (piece.type === 'chalice') {
+        const chRate = (this.decreeState && this.decreeState.chaliceRateMult) || 1.0;
+        speedMult *= chRate / (cmd.mods.chaliceIntervalMult || 1.0);
+      }
       if (piece.hexTimer > 0) speedMult *= 0.6;
 
       piece.attackTimer -= dt * speedMult;
@@ -1481,8 +1836,10 @@ class RoyalGambitGame {
   performPieceAttack(piece, bonusMultiplier = 1.0) {
     const def = window.CHESS_DATA.PIECES[piece.type];
     const center = this.renderer.tileCenter(piece.col, piece.row);
-    const batteryMult = piece.inBattery ? 1.3 : 1.0;
-    const totalMult = bonusMultiplier * batteryMult;
+    const batteryPct = 0.3 + ((this.decreeState && this.decreeState.batteryBonus) || 0);
+    const batteryMult = piece.inBattery ? 1 + batteryPct : 1.0;
+    const totalMult =
+      bonusMultiplier * batteryMult * ((this.decreeState && this.decreeState.damageMult) || 1.0);
 
     switch (piece.type) {
       case 'chalice': {
@@ -1507,68 +1864,79 @@ class RoyalGambitGame {
         this.spawnShockwave(center.x + 18, center.y, 8, 42, '#38bdf8');
         this.spawnParticles(center.x + 22, center.y, '#38bdf8', 10);
 
+        const kbMult = (this.decreeState && this.decreeState.pawnKnockbackMult) || 1.0;
         for (const target of meleeEnemies) {
           this.damageEnemy(target, def.damage * totalMult, false, 0.8);
           // Physically shove enemies backward down the rank (balanced by enemy weight class!)
-          const shoveDist = target.isBoss ? 0.04 : target.type === 'buckler' ? 0.12 : 0.24;
-          target.colPos = Math.min(this.cols + 0.2, target.colPos + shoveDist);
+          const baseShove = target.isBoss ? 0.04 : target.type === 'buckler' ? 0.12 : 0.24;
+          target.colPos = Math.min(this.cols + 0.2, target.colPos + baseShove * kbMult);
           target.slowTimer = Math.max(target.slowTimer, 0.70);
         }
 
-        this.addFloatingText('❖ دفع بالدرع!', center.x + 18, center.y - 18, '#7dd3fc', false);
+        this.addFloatingText(
+          this.lang === 'en' ? '❖ SHIELD PUSH!' : '❖ دفع بالدرع!',
+          center.x + 18,
+          center.y - 18,
+          '#7dd3fc',
+          false
+        );
         piece.xp = Math.min(100, piece.xp + 15);
-        window.RoyalAudio.playAttack('pawn');
+        window.RoyalAudio.playAttack('pawn', piece.col);
         return true;
       }
 
       case 'rook': {
-        const rankEnemies = this.enemies.filter(
-          e => Math.round(e.row) === piece.row && Math.abs(e.colPos - (piece.col + 0.5)) <= 5.2
-        );
-        const fileEnemies = this.enemies.filter(
-          e => Math.abs(e.colPos - (piece.col + 0.5)) <= 0.65
-        );
+        // True First-Enemy Line-of-Sight Blocking along 4 Cardinal Directions (max 5.5 squares)
+        const maxDist = 5.5;
+        const pCol = piece.col + 0.5;
+        const cardinalBest = { E: null, W: null, S: null, N: null };
 
-        if (rankEnemies.length === 0 && fileEnemies.length === 0) return false;
-
-        if (rankEnemies.length > 0) {
-          const minCol = Math.max(0, piece.col - 5.2);
-          const maxCol = Math.min(this.cols, piece.col + 5.5);
-          this.beams.push({
-            x1: this.renderer.boardLeft + (minCol + 0.5) * this.renderer.tileSize,
-            y1: center.y,
-            x2: this.renderer.boardLeft + maxCol * this.renderer.tileSize,
-            y2: center.y,
-            color: '#fb923c',
-            width: 5.5,
-            life: 0.25,
-            maxLife: 0.25
-          });
-          for (const e of rankEnemies) {
-            const dist = Math.abs(e.colPos - (piece.col + 0.5));
-            this.damageEnemy(e, def.damage * totalMult, false, dist);
+        for (const e of this.enemies) {
+          const dCol = e.colPos - pCol;
+          const dRow = e.row - piece.row;
+          if (Math.round(e.row) === piece.row && Math.abs(dCol) <= maxDist) {
+            const dir = dCol >= 0 ? 'E' : 'W';
+            const d = Math.abs(dCol);
+            if (!cardinalBest[dir] || d < cardinalBest[dir].dist) {
+              cardinalBest[dir] = { enemy: e, dist: d };
+            }
+          } else if (Math.abs(dCol) <= 0.6 && Math.abs(dRow) <= maxDist) {
+            const dir = dRow >= 0 ? 'S' : 'N';
+            const d = Math.abs(dRow);
+            if (!cardinalBest[dir] || d < cardinalBest[dir].dist) {
+              cardinalBest[dir] = { enemy: e, dist: d };
+            }
           }
         }
 
-        if (fileEnemies.length > 0) {
+        const hits = Object.values(cardinalBest).filter(Boolean);
+        if (hits.length === 0) return false;
+
+        const rookDmg = def.damage * totalMult * ((this.decreeState && this.decreeState.rookDmgMult) || 1.0);
+        const execThresh = (this.decreeState && this.decreeState.rookExecuteThreshold) || 0;
+
+        for (const h of hits) {
+          const e = h.enemy;
+          const ex = this.renderer.boardLeft + e.colPos * this.renderer.tileSize;
+          const ey = this.renderer.boardTop + (e.row + 0.5) * this.renderer.tileSize;
           this.beams.push({
             x1: center.x,
-            y1: this.renderer.boardTop,
-            x2: center.x,
-            y2: this.renderer.boardTop + this.rows * this.renderer.tileSize,
+            y1: center.y,
+            x2: ex,
+            y2: ey,
             color: '#fb923c',
             width: 5.5,
             life: 0.25,
             maxLife: 0.25
           });
-          for (const e of fileEnemies) {
-            const dist = Math.abs(e.row - piece.row);
-            this.damageEnemy(e, def.damage * totalMult, false, dist);
+          this.damageEnemy(e, rookDmg, false, h.dist);
+          if (execThresh > 0 && !e.isBoss && e.hp > 0 && e.hp / e.maxHp <= execThresh) {
+            this.damageEnemy(e, e.hp + 999, true, 0.5);
           }
         }
 
         piece.recoilTimer = 0.18;
-        window.RoyalAudio.playAttack('rook');
+        window.RoyalAudio.playAttack('rook', piece.col);
         return true;
       }
 
@@ -1601,6 +1969,7 @@ class RoyalGambitGame {
 
         const isFork = hitEnemies.length >= 2;
         const forkMult = isFork ? 1.4 : 1.0;
+        const knightMult = (this.decreeState && this.decreeState.knightDmgMult) || 1.0;
 
         for (const item of hitEnemies) {
           const ex = this.renderer.boardLeft + item.enemy.colPos * this.renderer.tileSize;
@@ -1616,7 +1985,10 @@ class RoyalGambitGame {
             maxLife: 0.25,
             isLightning: true
           });
-          this.damageEnemy(item.enemy, def.damage * totalMult * forkMult, true, 2.0);
+          this.damageEnemy(item.enemy, def.damage * totalMult * forkMult * knightMult, true, 2.0);
+          if (this.decreeState && this.decreeState.knightStun) {
+            item.enemy.slowTimer = Math.max(item.enemy.slowTimer, 1.4);
+          }
         }
 
         if (isFork) {
@@ -1630,7 +2002,7 @@ class RoyalGambitGame {
         }
 
         piece.recoilTimer = 0.18;
-        window.RoyalAudio.playAttack('knight');
+        window.RoyalAudio.playAttack('knight', piece.col);
         return true;
       }
 
@@ -1667,9 +2039,12 @@ class RoyalGambitGame {
           });
         }
 
+        const casterMult = (this.decreeState && this.decreeState.casterDmgMult) || 1.0;
+        const healAmt = 18 + ((this.decreeState && this.decreeState.bonusHeal) || 0);
+
         for (const e of diagEnemies) {
           const dist = Math.hypot(e.colPos - (piece.col + 0.5), e.row - piece.row);
-          this.damageEnemy(e, def.damage * totalMult * (isLightSquare ? 1.2 : 1.0), true, dist);
+          this.damageEnemy(e, def.damage * totalMult * casterMult * (isLightSquare ? 1.2 : 1.0), true, dist);
           if (isLightSquare) {
             e.burnTimer = 2.8;
           } else {
@@ -1682,7 +2057,7 @@ class RoyalGambitGame {
             ally.id !== piece.id &&
             Math.abs(ally.col - piece.col) === Math.abs(ally.row - piece.row)
           ) {
-            ally.hp = Math.min(ally.maxHp, ally.hp + 18);
+            ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
             if (ally.hexTimer > 0) {
               ally.hexTimer = 0;
               const ac = this.renderer.tileCenter(ally.col, ally.row);
@@ -1692,7 +2067,7 @@ class RoyalGambitGame {
         }
 
         piece.recoilTimer = 0.18;
-        window.RoyalAudio.playAttack('bishop');
+        window.RoyalAudio.playAttack('bishop', piece.col);
         return true;
       }
 
@@ -1711,12 +2086,12 @@ class RoyalGambitGame {
           e.colPos = Math.min(this.cols + 0.2, e.colPos + 0.25);
         }
         piece.recoilTimer = 0.18;
-        window.RoyalAudio.playAttack('king');
+        window.RoyalAudio.playAttack('king', piece.col);
         return true;
       }
 
       case 'queen': {
-        const maxRange = def.maxRange || 3.8;
+        const maxRange = def.maxRange || 4.6;
         // Group candidates by 8 discrete starburst ray directions; keep only the closest enemy per ray!
         const rayMap = new Map();
 
@@ -1750,8 +2125,11 @@ class RoyalGambitGame {
         if (rayMap.size === 0) return false;
 
         const rayCandidates = Array.from(rayMap.values()).sort((a, b) => a.dist - b.dist);
-        const maxRays = piece.isAscended ? 3 : 2;
-        const ascMult = piece.isAscended ? 1.2 : 1.0;
+        const maxRays = piece.isAscended ? 4 : 3;
+        const ascMult = piece.isAscended ? 1.22 : 1.0;
+        const qMult =
+          ((this.decreeState && this.decreeState.queenDmgMult) || 1.0) *
+          ((this.decreeState && this.decreeState.casterDmgMult) || 1.0);
         const chosen = rayCandidates.slice(0, maxRays);
 
         for (const item of chosen) {
@@ -1768,11 +2146,11 @@ class RoyalGambitGame {
             life: 0.24,
             maxLife: 0.24
           });
-          this.damageEnemy(e, def.damage * totalMult * ascMult, true, item.dist);
+          this.damageEnemy(e, def.damage * totalMult * ascMult * qMult, true, item.dist);
         }
 
         piece.recoilTimer = 0.18;
-        window.RoyalAudio.playAttack('queen');
+        window.RoyalAudio.playAttack('queen', piece.col);
         return true;
       }
     }
@@ -1848,8 +2226,16 @@ class RoyalGambitGame {
         e.rangedTimer -= dt;
         if (e.rangedTimer <= 0) {
           e.rangedTimer = 2.8;
-          if (this.pieces.length > 0) {
-            const sortedTargets = [...this.pieces].sort((a, b) => {
+          // True Chess Diagonal LOS Check (fallback to same rank if diagonal lane empty)
+          const eCol = e.colPos - 0.5;
+          const diagTargets = this.pieces.filter(p => {
+            const dCol = Math.abs(p.col - eCol);
+            const dRow = Math.abs(p.row - e.row);
+            return dRow >= 0.4 && Math.abs(dCol - dRow) <= 0.8 && dRow <= 4.5;
+          });
+          const candidatePool = diagTargets.length > 0 ? diagTargets : this.pieces.filter(p => p.row === Math.round(e.row));
+          if (candidatePool.length > 0) {
+            const sortedTargets = [...candidatePool].sort((a, b) => {
               const prio = { queen: 3, king: 2, bishop: 2 };
               return (prio[b.type] || 1) - (prio[a.type] || 1);
             });
@@ -1874,7 +2260,32 @@ class RoyalGambitGame {
         }
       }
 
-      if (e.isBoss && !e.hasThrownImp && e.hp <= e.maxHp * 0.55) {
+      // Signature Boss AI: Blight Sovereign Queen diagonally teleports between ranks every 7.5s!
+      if (e.type === 'plague_queen' && e.colPos < this.cols - 0.8 && e.colPos > 1.2) {
+        e.teleportTimer = (e.teleportTimer ?? 6.5) - dt;
+        if (e.teleportTimer <= 0) {
+          e.teleportTimer = 7.5;
+          const shift = Math.random() < 0.5 ? -1 : 1;
+          const nextRow = (Math.round(e.row) + shift + this.rows) % this.rows;
+          const oldX = this.renderer.boardLeft + e.colPos * this.renderer.tileSize;
+          const oldY = this.renderer.boardTop + (e.row + 0.5) * this.renderer.tileSize;
+          this.spawnParticles(oldX, oldY, '#e879f9', 16, true);
+          e.row = nextRow;
+          e.colPos = Math.max(1.2, e.colPos - 0.35);
+          const newX = this.renderer.boardLeft + e.colPos * this.renderer.tileSize;
+          const newY = this.renderer.boardTop + (e.row + 0.5) * this.renderer.tileSize;
+          this.spawnShockwave(newX, newY, 8, 56, '#e879f9');
+          this.addFloatingText(
+            this.lang === 'en' ? '♛ PHASE BLINK!' : '♛ انتقال طيفي!',
+            newX,
+            newY - 24,
+            '#f0abfc',
+            true
+          );
+        }
+      }
+
+      if (e.type === 'gargantua' && !e.hasThrownImp && e.hp <= e.maxHp * 0.55) {
         e.hasThrownImp = true;
         const impDef = window.CHESS_DATA.ENEMIES.imp;
         this.enemies.push({
@@ -1973,25 +2384,43 @@ class RoyalGambitGame {
       remaining *= 0.55;
     }
 
+    const colIdx = Math.max(0, Math.min(this.cols - 1, Math.round(enemy.colPos)));
+    const hadShield = enemy.shieldHp > 0;
+    const prevHp = enemy.hp;
+
     if (enemy.shieldHp > 0) {
       if (bypassHalfShield) {
         const shieldDmg = remaining * 0.5;
         enemy.shieldHp = Math.max(0, enemy.shieldHp - shieldDmg);
         enemy.hp -= remaining * 0.5;
-        window.RoyalAudio.playHit(true);
+        window.RoyalAudio.playHit(true, colIdx);
       } else {
         const absorbed = Math.min(enemy.shieldHp, remaining);
         enemy.shieldHp -= absorbed;
         remaining -= absorbed;
         enemy.hp -= remaining;
-        window.RoyalAudio.playHit(true);
+        window.RoyalAudio.playHit(true, colIdx);
+      }
+      if (hadShield && enemy.shieldHp <= 0) {
+        window.RoyalAudio.playShieldBreak(colIdx);
+        const sx = this.renderer.boardLeft + enemy.colPos * this.renderer.tileSize;
+        const sy = this.renderer.boardTop + (enemy.row + 0.5) * this.renderer.tileSize;
+        this.spawnParticles(sx, sy, '#38bdf8', 12, true);
       }
     } else {
       enemy.hp -= remaining;
-      window.RoyalAudio.playHit(false);
+      window.RoyalAudio.playHit(false, colIdx);
     }
 
-    if (enemy.hp <= 0) {
+    const dealt = Math.round(amount);
+    if (dealt >= 25 && (!enemy._lastPopTime || performance.now() - enemy._lastPopTime > 180)) {
+      enemy._lastPopTime = performance.now();
+      const px = this.renderer.boardLeft + enemy.colPos * this.renderer.tileSize + (Math.random() - 0.5) * 14;
+      const py = this.renderer.boardTop + (enemy.row + 0.35) * this.renderer.tileSize;
+      this.addFloatingText(`-${dealt}`, px, py, bypassHalfShield ? '#fde047' : '#f8fafc', dealt >= 95);
+    }
+
+    if (enemy.hp <= 0 && prevHp > 0) {
       this.killEnemy(enemy);
     }
   }
@@ -2004,6 +2433,7 @@ class RoyalGambitGame {
     const def = window.CHESS_DATA.ENEMIES[enemy.type];
     const ex = this.renderer.boardLeft + enemy.colPos * this.renderer.tileSize;
     const ey = this.renderer.boardTop + (enemy.row + 0.5) * this.renderer.tileSize;
+    const colIdx = Math.max(0, Math.min(this.cols - 1, Math.round(enemy.colPos)));
 
     const lanePawn = this.pieces.find(p => p.type === 'pawn' && p.row === Math.round(enemy.row));
     if (lanePawn) {
@@ -2013,7 +2443,22 @@ class RoyalGambitGame {
     this.enemiesKilled = (this.enemiesKilled || 0) + 1;
     this.score += def.score || 50;
     this.ultimateCharge = Math.min(100, this.ultimateCharge + (enemy.isBoss ? 30 : 7));
-    this.spawnParticles(ex, ey, def.color || '#84cc16', enemy.isBoss ? 30 : 14);
+
+    if (this.decreeState && this.decreeState.killManaBonus > 0) {
+      this.mana += this.decreeState.killManaBonus;
+      this.totalManaEarned += this.decreeState.killManaBonus;
+    }
+
+    if (enemy.isBoss) {
+      this.hitStopTimer = 0.04;
+      this.screenShake = Math.max(this.screenShake, 0.42);
+    } else if (def.score >= 150) {
+      this.hitStopTimer = 0.024;
+    }
+
+    window.RoyalAudio.playEnemyShatter(enemy.isBoss, colIdx);
+    this.spawnParticles(ex, ey, def.color || '#84cc16', enemy.isBoss ? 24 : 10, true);
+    this.spawnParticles(ex, ey, '#facc15', enemy.isBoss ? 14 : 6, false);
 
     const dropChance = def.dropChance !== undefined ? def.dropChance : 0.30;
     if (enemy.isBoss || Math.random() < dropChance) {
@@ -2158,19 +2603,22 @@ class RoyalGambitGame {
     });
   }
 
-  spawnParticles(x, y, color, count = 12) {
+  spawnParticles(x, y, color, count = 12, isShard = false) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 35 + Math.random() * 115;
+      const speed = isShard ? 55 + Math.random() * 145 : 35 + Math.random() * 115;
       this.particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size: 2.2 + Math.random() * 3.2,
+        size: isShard ? 3.0 + Math.random() * 4.0 : 2.2 + Math.random() * 3.2,
         color,
-        life: 0.35 + Math.random() * 0.3,
-        maxLife: 0.65
+        isShard,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 14,
+        life: (isShard ? 0.42 : 0.35) + Math.random() * 0.3,
+        maxLife: 0.72
       });
     }
   }
@@ -2282,12 +2730,29 @@ class RoyalGambitGame {
     this.victory = true;
     this.gameOver = true;
     this.eloRating += 45;
-    localStorage.setItem('royal_gambit_elo', String(this.eloRating));
-    window.RoyalAudio.playVictory();
-    window.RoyalAudio.setIntenseMode(false);
 
     const remainingSentinels = this.chariots.filter(c => !c.used || c.active).length;
     const earnedStars = remainingSentinels === 5 ? 3 : remainingSentinels >= 3 ? 2 : 1;
+
+    // Persist progression & stars
+    if (this.gameMode === 'puzzle' && this.currentAct.puzzleDef) {
+      this.profile.solvedPuzzles[this.currentAct.puzzleDef.id] = true;
+    } else if (this.gameMode === 'daily') {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      if (this.profile.dailyDateKey !== todayKey || this.score > (this.profile.dailyBestScore || 0)) {
+        this.profile.dailyDateKey = todayKey;
+        this.profile.dailyBestScore = this.score;
+      }
+    } else {
+      const actKey = String(this.currentAct.id);
+      this.profile.actStars[actKey] = Math.max(this.profile.actStars[actKey] || 0, earnedStars);
+      this.profile.actBestScores[actKey] = Math.max(this.profile.actBestScores[actKey] || 0, this.score);
+      this.profile.lastAct = Math.min(3, this.actIndex + 1);
+    }
+    this.saveProfile();
+
+    window.RoyalAudio.playVictory();
+    window.RoyalAudio.setIntenseMode(false);
 
     const modal = document.getElementById('resultModal');
     const glyphEl = document.getElementById('resultCrestGlyph');
@@ -2358,7 +2823,10 @@ class RoyalGambitGame {
     this.gameOver = true;
     this.victory = false;
     this.eloRating = Math.max(1200, this.eloRating - 15);
-    localStorage.setItem('royal_gambit_elo', String(this.eloRating));
+    if (this.currentAct.isEndless && this.waveIndex > (this.profile.endlessBestWave || 0)) {
+      this.profile.endlessBestWave = this.waveIndex;
+    }
+    this.saveProfile();
     window.RoyalAudio.playDefeat();
     window.RoyalAudio.setIntenseMode(false);
 
@@ -2381,7 +2849,8 @@ class RoyalGambitGame {
       assassin: 'الفارس الشبح القاتل',
       necro: 'كاهن الفيل الملعون',
       imp: 'عفريت الوباء السريع',
-      gargantua: 'عملاق القلعة المحطمة'
+      gargantua: 'عملاق القلعة المحطمة',
+      plague_queen: 'الوزيرة الملعونة الطيفية'
     };
 
     const breachCounterTips = {
@@ -2398,7 +2867,9 @@ class RoyalGambitGame {
       imp:
         'تسلل عفريت الوباء السريع إلى الخلفية! هالة الملك القائد <bdi dir="ltr">(Arcane King)</bdi> أو أشعة القلعة المتقاطعة تمحو الأسراب السريعة بثوانٍ.',
       gargantua:
-        'عملاق القلعة المحطمة حطّم المسار! لمواجهته: ادمج <bdi dir="ltr">5</bdi> جنود لوزير متوّج <bdi dir="ltr">[M]</bdi>، أو شكّل بطارية ملكية <bdi dir="ltr">(+30% DMG)</bdi>، وأطلق كش مات الشاملة <bdi dir="ltr">[Space]</bdi>!'
+        'عملاق القلعة المحطمة حطّم المسار! لمواجهته: ادمج <bdi dir="ltr">5</bdi> جنود لوزير متوّج <bdi dir="ltr">[M]</bdi>، أو شكّل بطارية ملكية <bdi dir="ltr">(+30% DMG)</bdi>، وأطلق كش مات الشاملة <bdi dir="ltr">[Space]</bdi>!',
+      plague_queen:
+        'الوزيرة الملعونة تغير مسارها بالانتقال الطيفي! استخدم فارس العاصفة <bdi dir="ltr">(Tempest Knight)</bdi> لتغطية المسارات المتجاورة وأشعة الوزير الصائدة.'
     };
 
     const bInfo = this.breachInfo || { enemyType: 'thrall', enemyName: 'Shambling Pawn-Thrall', row: 2 };
@@ -2486,23 +2957,38 @@ class RoyalGambitGame {
         window.RoyalSprites && window.RoyalSprites.pieceDataUrls[def.id]
           ? window.RoyalSprites.pieceDataUrls[def.id]
           : '';
+      const cost = this.getPieceCost(def.id);
 
       btn.innerHTML = `
         <div class="deck-card-cooldown" id="cd-${def.id}"></div>
         <div class="deck-card-top">
           <bdi dir="ltr" class="deck-hotkey">[${def.hotkey}]</bdi>
-          <bdi dir="ltr" class="deck-cost"><span class="mana-gem">☀</span>${def.cost}</bdi>
+          <bdi dir="ltr" class="deck-cost" id="cost-${def.id}"><span class="mana-gem">☀</span>${cost}</bdi>
         </div>
         <div class="deck-piece-portrait">
           <img src="${spriteUrl}" alt="${def.name}" class="deck-sprite-img" />
           <bdi dir="ltr" class="deck-cap-badge" id="cap-${def.id}"></bdi>
         </div>
-        <div class="deck-card-info" dir="rtl">
-          <strong class="deck-piece-name" lang="ar">${def.arabicTitle || def.name}</strong>
-          <span class="deck-piece-role" lang="en" dir="ltr">${def.name}</span>
+        <div class="deck-card-info" dir="${this.lang === 'en' ? 'ltr' : 'rtl'}">
+          <strong class="deck-piece-name">${this.lang === 'en' ? def.name : (def.arabicTitle || def.name)}</strong>
+          <span class="deck-piece-role" dir="ltr">${this.lang === 'en' ? def.chessTitle : def.name}</span>
         </div>
       `;
+      btn.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || this.paused || this.gameOver || this.onTitleScreen) return;
+        const pos = this.renderer.screenToBoard(e.clientX, e.clientY);
+        this.dragState = {
+          kind: 'deck',
+          pieceType: def.id,
+          startX: e.clientX,
+          startY: e.clientY,
+          x: pos.x,
+          y: pos.y,
+          active: false
+        };
+      });
       btn.addEventListener('click', () => {
+        if (this._suppressNextClick) return;
         window.RoyalAudio.init();
         window.RoyalAudio.startMusic();
         this.selectDeckPiece(def.id);
@@ -2699,7 +3185,11 @@ class RoyalGambitGame {
 
     const renderActsHtml = () =>
       window.CHESS_DATA.ACTS.map((act, idx) => {
-        const isCurrent = idx === this.actIndex;
+        const isCurrent = idx === this.actIndex && this.gameMode === 'campaign';
+        const earned = Number((this.profile && this.profile.actStars && this.profile.actStars[String(act.id)]) || 0);
+        const starsDisplay = earned > 0
+          ? `<span class="earned-stars-pill" dir="ltr">${'★'.repeat(earned)}${'☆'.repeat(3 - earned)}</span>`
+          : `<span dir="ltr">${actStars[idx] || '★★★'}</span>`;
         const wavesTxt = act.isEndless ? '∞ موجات لا نهائية' : `${act.totalWaves} موجات`;
 
         // Collect unique enemy types in this Act for visual roster preview
@@ -2724,7 +3214,7 @@ class RoyalGambitGame {
       <div class="act-card ${isCurrent ? 'active-act' : ''}" data-act-idx="${idx}">
         <div class="act-card-header">
           <span class="act-code"><bdi dir="ltr">${act.code}</bdi> ${isCurrent ? '• قيد اللعب حالياً' : ''}</span>
-          <span class="act-diff" dir="ltr">${actStars[idx] || '★★★'} • ${act.difficulty}</span>
+          <span class="act-diff" dir="ltr">${starsDisplay} • ${act.difficulty}</span>
         </div>
         <div>
           <h4>${actArabicNames[idx] || act.name}</h4>
@@ -2794,13 +3284,246 @@ class RoyalGambitGame {
 
   hideModals() {
     const modalIds = this.gameOver
-      ? ['commandMenuModal', 'codexModal', 'actsModal']
-      : ['commandMenuModal', 'codexModal', 'actsModal', 'resultModal'];
+      ? ['commandMenuModal', 'codexModal', 'actsModal', 'decreeModal']
+      : ['commandMenuModal', 'codexModal', 'actsModal', 'decreeModal', 'resultModal'];
     modalIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     });
-    if (!this.gameOver) this.paused = false;
+    if (!this.gameOver && !this.onTitleScreen) this.paused = false;
+  }
+
+  applyVolumeSettings() {
+    if (!window.RoyalAudio) return;
+    window.RoyalAudio.setSfxVolume(this.profile.sfxVol ?? 0.8);
+    window.RoyalAudio.setMusicVolume(this.profile.musicVol ?? 0.52);
+  }
+
+  setLanguage(lang) {
+    this.lang = lang === 'en' ? 'en' : 'ar';
+    this.saveProfile();
+    this.applyLanguage(this.lang);
+    this.buildDeckBar();
+    this.renderTitleScreen();
+    this.populateActsDrawer();
+    this.updateTipTicker();
+    this._lastHudSig = '';
+    this.updateHUD();
+  }
+
+  applyLanguage(lang) {
+    const t = window.CHESS_DATA.I18N[lang] || window.CHESS_DATA.I18N.ar;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = t.dir;
+
+    const swap = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val) el.textContent = val;
+    };
+    swap('manaTitleLabel', t.manaTitle);
+    swap('nextWaveLabelText', t.nextWaveBtn);
+    swap('openMenuBtnLabel', t.menuBtn);
+    swap('openActsBtnLabel', t.actsBtn);
+    swap('openCodexBtnLabel', t.codexBtn);
+    swap('shovelLabelTxt', t.sacrificeLabel);
+    swap('langToggleText', lang === 'ar' ? 'EN' : 'عربي');
+    swap('titleLangText', lang === 'ar' ? 'English' : 'العربية');
+    swap('titleLaunchCampaignTxt', t.titleStartCampaign);
+    swap('titlePuzzlesTxt', t.titlePuzzles);
+    swap('titleDailyTxt', t.titleDaily);
+    swap('titleCommanderHeader', t.titleCommanderLabel);
+    swap('decreeEyebrowTxt', t.decreeEyebrow);
+    swap('decreeModalTitle', t.decreeTitle);
+  }
+
+  updateTipTicker() {
+    const tips = this.lang === 'en' ? window.CHESS_DATA.TIPS_EN : window.CHESS_DATA.TIPS;
+    if (!tips || tips.length === 0) return;
+    const tipText = tips[this.tipIndex % tips.length];
+    const hudTip = document.getElementById('liveTipBannerText');
+    if (hudTip) hudTip.textContent = tipText;
+    const menuTip = document.getElementById('menuTipBannerText');
+    if (menuTip) menuTip.textContent = tipText;
+  }
+
+  renderTitleScreen() {
+    const grid = document.getElementById('titleCommanderGrid');
+    const summaryEl = document.getElementById('titleCampaignProgress');
+    const puzzleRow = document.getElementById('titlePuzzleList');
+    const cmders = Object.values(window.CHESS_DATA.COMMANDERS || {});
+
+    if (grid) {
+      grid.innerHTML = cmders
+        .map(c => {
+          const active = c.id === this.commanderId;
+          const name = this.lang === 'en' ? c.nameEn : c.nameAr;
+          const sub = this.lang === 'en' ? c.subtitleEn : c.subtitleAr;
+          const desc = this.lang === 'en' ? c.descEn : c.descAr;
+          return `
+            <button type="button" class="commander-card ${active ? 'selected' : ''}" data-commander-id="${c.id}" style="--cmd-accent: ${c.accent}">
+              <div class="cmd-head">
+                <span class="cmd-glyph">${c.symbol}</span>
+                <div>
+                  <strong>${name}</strong>
+                  <small>${sub}</small>
+                </div>
+              </div>
+              <p>${desc}</p>
+            </button>
+          `;
+        })
+        .join('');
+
+      grid.querySelectorAll('[data-commander-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.commanderId = btn.getAttribute('data-commander-id');
+          this.saveProfile();
+          window.RoyalAudio.playUiClick();
+          this.renderTitleScreen();
+          this.buildDeckBar();
+        });
+      });
+    }
+
+    if (puzzleRow) {
+      const puzzles = window.CHESS_DATA.PUZZLES || [];
+      puzzleRow.innerHTML = puzzles
+        .map((pz, idx) => {
+          const solved = Boolean(this.profile.solvedPuzzles && this.profile.solvedPuzzles[pz.id]);
+          const title = this.lang === 'en' ? pz.nameEn : pz.nameAr;
+          return `
+            <button type="button" class="title-puzzle-chip ${solved ? 'solved' : ''}" data-puzzle-idx="${idx}">
+              <span>${solved ? '★' : '♟'} ${title}</span>
+              <small dir="ltr">${pz.code}</small>
+            </button>
+          `;
+        })
+        .join('');
+
+      puzzleRow.querySelectorAll('[data-puzzle-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          window.RoyalAudio.init();
+          window.RoyalAudio.playUiClick();
+          window.RoyalAudio.startMusic();
+          const idx = Number(btn.getAttribute('data-puzzle-idx'));
+          this.startAct(0, { mode: 'puzzle', puzzleIndex: idx });
+        });
+      });
+    }
+
+    if (summaryEl) {
+      const stars = Object.values(this.profile.actStars || {}).reduce((a, b) => a + b, 0);
+      const solvedCount = Object.keys(this.profile.solvedPuzzles || {}).length;
+      summaryEl.innerHTML =
+        this.lang === 'en'
+          ? `ELO <strong dir="ltr">${this.eloRating}</strong> • Stars <strong dir="ltr">${stars}/12 ★</strong> • Puzzles <strong dir="ltr">${solvedCount}/3</strong> • Endless Best <strong dir="ltr">W${this.profile.endlessBestWave || 0}</strong>`
+          : `التصنيف <strong dir="ltr">${this.eloRating}</strong> • النجوم <strong dir="ltr">${stars}/12 ★</strong> • الألغاز <strong dir="ltr">${solvedCount}/3</strong> • اللانهائي <strong dir="ltr">W${this.profile.endlessBestWave || 0}</strong>`;
+    }
+  }
+
+  openDecreeDraft() {
+    const pool = (window.CHESS_DATA.DECREES || []).filter(d => !this.activeDecrees.includes(d.id));
+    if (pool.length === 0) {
+      this.waveCooldownTimer = 1.6;
+      return;
+    }
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 3);
+    const modal = document.getElementById('decreeModal');
+    const grid = document.getElementById('decreeCardsGrid');
+    if (!modal || !grid) return;
+
+    this.paused = true;
+    grid.innerHTML = shuffled
+      .map(d => {
+        const title = this.lang === 'en' ? d.nameEn : d.nameAr;
+        const desc = this.lang === 'en' ? d.descEn : d.descAr;
+        return `
+          <button type="button" class="decree-draft-card" data-decree-id="${d.id}">
+            <span class="decree-tier-badge" dir="ltr">${d.tier}</span>
+            <div class="decree-icon-orb">${d.icon}</div>
+            <h4>${title}</h4>
+            <p>${desc}</p>
+            <span class="decree-pick-cta">${this.lang === 'en' ? 'Accept Decree →' : 'اختيار المرسوم ←'}</span>
+          </button>
+        `;
+      })
+      .join('');
+
+    grid.querySelectorAll('[data-decree-id]').forEach(cardBtn => {
+      cardBtn.addEventListener('click', () => {
+        const id = cardBtn.getAttribute('data-decree-id');
+        const picked = (window.CHESS_DATA.DECREES || []).find(d => d.id === id);
+        if (picked) {
+          this.activeDecrees.push(picked.id);
+          picked.apply(this.decreeState, this);
+          window.RoyalAudio.playDecreePick();
+          this.addFloatingText(
+            `✦ ${this.lang === 'en' ? picked.nameEn : picked.nameAr}`,
+            this.renderer.width * 0.5,
+            this.renderer.boardTop + 44,
+            '#fde047',
+            true
+          );
+        }
+        modal.classList.add('hidden');
+        this.paused = false;
+        this.waveCooldownTimer = 1.6;
+        this._lastHudSig = '';
+        this.updateHUD();
+      });
+    });
+
+    modal.classList.remove('hidden');
+  }
+
+  updateMobilePieceBar() {
+    const bar = document.getElementById('mobilePieceActions');
+    if (!bar) return;
+    if (!this.selectedBoardPiece || this.paused || this.gameOver) {
+      bar.classList.add('hidden');
+      return;
+    }
+    const p = this.selectedBoardPiece;
+    const def = window.CHESS_DATA.PIECES[p.type];
+    const promoteCost = (this.decreeState && this.decreeState.promoteCost) || 125;
+    const buttons = [];
+
+    if (p.inReadyPawnLine && this.countPiecesOfType('queen') < 2) {
+      buttons.push(`<button type="button" class="mob-act-btn gold" data-mob-act="merge">♛ Merge [M]</button>`);
+    }
+    if (p.type === 'pawn' && p.xp >= 100) {
+      const can = this.mana >= promoteCost;
+      buttons.push(`<button type="button" class="mob-act-btn ${can ? 'gold' : ''}" data-mob-act="promote">♛ ${this.lang === 'en' ? 'Promote' : 'ترقية'} (${promoteCost}☀)</button>`);
+    }
+    if (p.type === 'king') {
+      const castleMove = this.getLegalMovesForPiece(p).find(m => m.isCastle);
+      if (castleMove) {
+        buttons.push(`<button type="button" class="mob-act-btn cyan" data-mob-act="castle">♜ ${this.lang === 'en' ? 'Castle' : 'تبييت'}</button>`);
+      }
+    }
+    buttons.push(`<button type="button" class="mob-act-btn danger" data-mob-act="sacrifice">✕ +${Math.floor(this.getPieceCost(def.id) * 0.6)}☀</button>`);
+
+    bar.innerHTML = buttons.join('');
+    bar.classList.remove('hidden');
+    bar.querySelectorAll('[data-mob-act]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const act = btn.getAttribute('data-mob-act');
+        if (act === 'merge') this.tryMergePawnLine(p);
+        else if (act === 'promote') this.tryPromotePawn(p);
+        else if (act === 'castle') {
+          const mv = this.getLegalMovesForPiece(p).find(m => m.isCastle);
+          if (mv) {
+            this.executeChessMove(p, mv);
+            this.selectedBoardPiece = null;
+          }
+        } else if (act === 'sacrifice') {
+          this.sacrificePiece(p);
+          this.selectedBoardPiece = null;
+        }
+        this.updateHUD();
+      });
+    });
   }
 
   // Render a 5x5 Mini Chessboard Attack Matrix inside the Inspector Dock
@@ -2833,10 +3556,12 @@ class RoyalGambitGame {
     }
 
     const readyLinesCount = this.readyPawnLines ? this.readyPawnLines.length : 0;
+    const promoteCost = (this.decreeState && this.decreeState.promoteCost) || 125;
 
     if (boardPiece) {
       const coord = this.renderer.algebraicLabel(boardPiece.col, boardPiece.row);
-      nameEl.innerHTML = `${def.arabicTitle || def.name} <bdi dir="ltr">[${coord.toUpperCase()}]</bdi>`;
+      const displayName = this.lang === 'en' ? def.name : (def.arabicTitle || def.name);
+      nameEl.innerHTML = `${displayName} <bdi dir="ltr">[${coord.toUpperCase()}]</bdi>`;
 
       let extraInfo = '';
       if (boardPiece.type === 'pawn') {
@@ -2847,40 +3572,39 @@ class RoyalGambitGame {
       }
       const shieldTxt = boardPiece.shieldHp > 0 ? ` (+${Math.ceil(boardPiece.shieldHp)}❖)` : '';
       statsEl.textContent = `HP ${Math.ceil(boardPiece.hp)}/${boardPiece.maxHp}${shieldTxt}${extraInfo}`;
-      ruleEl.textContent = def.chessRule;
+      ruleEl.textContent = this.lang === 'en' ? def.chessRule : (def.chessRuleAr || def.chessRule);
 
-      // Render context-sensitive one-click action buttons when a board piece is selected
-      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}-${readyLinesCount}`;
+      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}-${readyLinesCount}-${promoteCost}-${this.lang}`;
       if (this.lastInspectedKey !== key) {
         this.lastInspectedKey = key;
         actionsEl.innerHTML = '';
 
-        // 0. One-click 5-Pawn Line Merge into Sovereign Queen! (دمج سطر جنود لوزير)
         if (readyLinesCount > 0) {
           const mergeBtn = document.createElement('button');
           mergeBtn.type = 'button';
           mergeBtn.className = 'quick-action-btn';
-          mergeBtn.innerHTML = '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
+          mergeBtn.innerHTML =
+            this.lang === 'en'
+              ? '♛ Merge 5-Pawn Line → Queen <bdi dir="ltr">[M]</bdi>'
+              : '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
           mergeBtn.addEventListener('click', () => this.tryMergePawnLine(boardPiece));
           actionsEl.appendChild(mergeBtn);
         }
 
-        // 1. One-click Pawn Promotion button!
         if (boardPiece.type === 'pawn') {
           const crownBtn = document.createElement('button');
           crownBtn.type = 'button';
           crownBtn.className = 'quick-action-btn';
-          const canCrown = boardPiece.xp >= 100 && this.mana >= 125;
+          const canCrown = boardPiece.xp >= 100 && this.mana >= promoteCost;
           crownBtn.disabled = !canCrown;
           crownBtn.innerHTML =
             boardPiece.xp >= 100
-              ? '♛ ترقية <bdi dir="ltr">(125☀)</bdi>'
+              ? `♛ ${this.lang === 'en' ? 'Promote [U]' : 'ترقية [U]'} <bdi dir="ltr">(${promoteCost}☀)</bdi>`
               : `♛ <bdi dir="ltr">XP ${Math.floor(boardPiece.xp)}/100</bdi>`;
           crownBtn.addEventListener('click', () => this.tryPromotePawn(boardPiece));
           actionsEl.appendChild(crownBtn);
         }
 
-        // 2. One-click Castling button if King has an aligned Rook!
         if (boardPiece.type === 'king') {
           const legal = this.getLegalMovesForPiece(boardPiece);
           const castleMove = legal.find(m => m.isCastle);
@@ -2888,7 +3612,7 @@ class RoyalGambitGame {
             const cBtn = document.createElement('button');
             cBtn.type = 'button';
             cBtn.className = 'quick-action-btn';
-            cBtn.innerHTML = '♜ تبييت • <bdi dir="ltr">Castle!</bdi>';
+            cBtn.innerHTML = this.lang === 'en' ? '♜ Castle!' : '♜ تبييت • <bdi dir="ltr">Castle!</bdi>';
             cBtn.addEventListener('click', () => {
               this.executeChessMove(boardPiece, castleMove);
               this.selectedBoardPiece = null;
@@ -2899,11 +3623,15 @@ class RoyalGambitGame {
         }
       }
     } else {
-      nameEl.innerHTML = `${def.arabicTitle || ''} • <bdi dir="ltr">${def.name}</bdi>`;
+      const effCost = this.getPieceCost(typeId);
+      nameEl.innerHTML =
+        this.lang === 'en'
+          ? `${def.name} • <bdi dir="ltr">${def.chessTitle}</bdi>`
+          : `${def.arabicTitle || ''} • <bdi dir="ltr">${def.name}</bdi>`;
       const shieldInfo = def.startingShield ? ` (+${def.startingShield}❖)` : '';
-      statsEl.textContent = `HP ${def.maxHp}${shieldInfo} • ${def.cost}☀`;
-      ruleEl.textContent = def.chessRule;
-      const deckKey = `deck-${typeId}-${readyLinesCount}`;
+      statsEl.textContent = `HP ${def.maxHp}${shieldInfo} • ${effCost}☀`;
+      ruleEl.textContent = this.lang === 'en' ? def.chessRule : (def.chessRuleAr || def.chessRule);
+      const deckKey = `deck-${typeId}-${readyLinesCount}-${this.lang}`;
       if (this.lastInspectedKey !== deckKey) {
         this.lastInspectedKey = deckKey;
         actionsEl.innerHTML = '';
@@ -2911,7 +3639,10 @@ class RoyalGambitGame {
           const mergeBtn = document.createElement('button');
           mergeBtn.type = 'button';
           mergeBtn.className = 'quick-action-btn';
-          mergeBtn.innerHTML = '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
+          mergeBtn.innerHTML =
+            this.lang === 'en'
+              ? '♛ Merge 5-Pawn Line → Queen <bdi dir="ltr">[M]</bdi>'
+              : '♛ دمج سطر الجنود ← وزير <bdi dir="ltr">[M]</bdi>';
           mergeBtn.addEventListener('click', () => this.tryMergePawnLine(null));
           actionsEl.appendChild(mergeBtn);
         }
@@ -2920,6 +3651,55 @@ class RoyalGambitGame {
   }
 
   updateHUD() {
+    // Cooldown curtain bars update smoothly without dirtying text DOM every frame
+    document.querySelectorAll('.deck-card').forEach(card => {
+      const pid = card.dataset.pieceId;
+      const def = window.CHESS_DATA.PIECES[pid];
+      const cd = this.cardCooldowns[pid] || 0;
+      const cdEl = document.getElementById(`cd-${pid}`);
+      if (cdEl && def) {
+        const pct = cd > 0 ? Math.min(100, (cd / def.cooldown) * 100) : 0;
+        cdEl.style.height = `${pct}%`;
+      }
+    });
+
+    const cdSig = Object.keys(this.cardCooldowns)
+      .map(k => Math.ceil((this.cardCooldowns[k] || 0) * 5))
+      .join(',');
+    const selKey = this.selectedBoardPiece
+      ? `${this.selectedBoardPiece.id}:${Math.ceil(this.selectedBoardPiece.hp)}:${Math.floor(this.selectedBoardPiece.xp)}:${Math.ceil(this.selectedBoardPiece.moveCd * 5)}`
+      : `d:${this.selectedDeckPieceId}`;
+    const sig = [
+      Math.floor(this.mana),
+      this.score,
+      this.eloRating,
+      this.actIndex,
+      this.waveIndex,
+      this.waveSpawnQueue.length,
+      this.enemiesKilled,
+      this.pieces.length,
+      Math.floor(this.ultimateCharge),
+      this.shovelMode ? 1 : 0,
+      this.paused ? 1 : 0,
+      this.gameSpeed,
+      this.autoCollectMana ? 1 : 0,
+      this.showGridOverlay ? 1 : 0,
+      this.lang,
+      this.commanderId,
+      this.batteryLinks.length,
+      this.pawnChainLinks.length,
+      this.readyPawnLines.length,
+      this.activeDecrees.length,
+      selKey,
+      cdSig,
+      Boolean(this.mergeCinematic) ? 1 : 0
+    ].join('|');
+
+    if (sig === this._lastHudSig) return;
+    this._lastHudSig = sig;
+
+    this.updateMobilePieceBar();
+
     const setTxt = (id, val) => {
       const el = document.getElementById(id);
       if (el) el.textContent = val;
@@ -2930,9 +3710,13 @@ class RoyalGambitGame {
     setTxt('eloCounterVal', this.eloRating);
     setTxt('actTitleBadge', `${this.currentAct.code}: ${this.currentAct.name}`);
 
-    // Remaining Winged Golden Rook Sentinels
     const remainingSentinels = this.chariots.filter(c => !c.used || c.active).length;
-    setTxt('sentinelCountBadge', `♜ ${remainingSentinels}/5 القلاع المجنحة`);
+    setTxt(
+      'sentinelCountBadge',
+      this.lang === 'en'
+        ? `♜ ${remainingSentinels}/5 Sentinels`
+        : `♜ ${remainingSentinels}/5 القلاع المجنحة`
+    );
 
     const totalW = this.currentAct.isEndless ? '∞' : this.currentAct.totalWaves;
     setTxt('waveCounterText', `WAVE ${Math.max(1, this.waveIndex)} / ${totalW}`);
@@ -2945,7 +3729,6 @@ class RoyalGambitGame {
       waveBar.style.width = `${pct}%`;
     }
 
-    // Early Wave Call button availability
     const callWaveBtn = document.getElementById('callWaveBtn');
     if (callWaveBtn) {
       const canCall =
@@ -2954,7 +3737,6 @@ class RoyalGambitGame {
       callWaveBtn.disabled = !canCall;
     }
 
-    // Floating On-Screen Cinematic Merge CTA Button
     const mergeCtaBtn = document.getElementById('screenMergeCtaBtn');
     if (mergeCtaBtn) {
       const showMergeCta =
@@ -2962,32 +3744,44 @@ class RoyalGambitGame {
       mergeCtaBtn.classList.toggle('hidden', !showMergeCta);
     }
 
-    // Active Synergies Row
     const synRow = document.getElementById('activeSynergiesRow');
     if (synRow) {
       const pills = [];
       if (this.readyPawnLines && this.readyPawnLines.length > 0) {
         pills.push(
-          `<span class="synergy-pill">♛ سطر جنود مكتمل <bdi dir="ltr">(${this.readyPawnLines.length})</bdi> — اضغط <bdi dir="ltr">[M]</bdi> للدمج إلى وزير!</span>`
+          this.lang === 'en'
+            ? `<span class="synergy-pill">♛ 5-Pawn Line Ready <bdi dir="ltr">(${this.readyPawnLines.length})</bdi> — Press <bdi dir="ltr">[M]</bdi></span>`
+            : `<span class="synergy-pill">♛ سطر جنود مكتمل <bdi dir="ltr">(${this.readyPawnLines.length})</bdi> — اضغط <bdi dir="ltr">[M]</bdi> للدمج إلى وزير!</span>`
         );
       }
       if (this.batteryLinks.length > 0) {
+        const pct = Math.round((0.3 + ((this.decreeState && this.decreeState.batteryBonus) || 0)) * 100);
         pills.push(
-          `<span class="synergy-pill">⚡ بطارية ملكية <bdi dir="ltr">(${this.batteryLinks.length}) +30%</bdi></span>`
+          this.lang === 'en'
+            ? `<span class="synergy-pill">⚡ Royal Battery <bdi dir="ltr">(${this.batteryLinks.length}) +${pct}%</bdi></span>`
+            : `<span class="synergy-pill">⚡ بطارية ملكية <bdi dir="ltr">(${this.batteryLinks.length}) +${pct}%</bdi></span>`
         );
       }
       if (this.pawnChainLinks.length > 0) {
         pills.push(
-          `<span class="synergy-pill">❖ سلسلة جنود <bdi dir="ltr">(${this.pawnChainLinks.length})</bdi></span>`
+          this.lang === 'en'
+            ? `<span class="synergy-pill">❖ Pawn Chain <bdi dir="ltr">(${this.pawnChainLinks.length})</bdi></span>`
+            : `<span class="synergy-pill">❖ سلسلة جنود <bdi dir="ltr">(${this.pawnChainLinks.length})</bdi></span>`
         );
       }
       if (this.pieces.some(p => p.type === 'king')) {
-        pills.push(`<span class="synergy-pill">♚ هالة الملك <bdi dir="ltr">+30%</bdi></span>`);
+        pills.push(
+          this.lang === 'en'
+            ? `<span class="synergy-pill">♚ King Aura <bdi dir="ltr">+30%</bdi></span>`
+            : `<span class="synergy-pill">♚ هالة الملك <bdi dir="ltr">+30%</bdi></span>`
+        );
+      }
+      if (this.activeDecrees.length > 0) {
+        pills.push(`<span class="synergy-pill">✦ ${this.lang === 'en' ? 'Decrees' : 'مراسيم'} <bdi dir="ltr">${this.activeDecrees.length}</bdi></span>`);
       }
       synRow.innerHTML = pills.join('');
     }
 
-    // Ultimate Button
     const ultBtn = document.getElementById('ultimateBtn');
     const ultFill = document.getElementById('ultimateFillBar');
     const ultPct = Math.floor(this.ultimateCharge);
@@ -2998,14 +3792,14 @@ class RoyalGambitGame {
     }
     setTxt('ultimateText', ultPct >= 100 ? 'READY [SPACE]' : `${ultPct}% [SPACE]`);
 
-    // Deck Cards
     document.querySelectorAll('.deck-card').forEach(card => {
       const pid = card.dataset.pieceId;
       const def = window.CHESS_DATA.PIECES[pid];
+      const cost = this.getPieceCost(pid);
       const cd = this.cardCooldowns[pid] || 0;
       const count = this.countPiecesOfType(pid);
       const atCap = Boolean(def.maxCount && count >= def.maxCount);
-      const canAfford = this.mana >= def.cost && !atCap;
+      const canAfford = this.mana >= cost && !atCap;
 
       card.classList.toggle(
         'selected',
@@ -3020,41 +3814,46 @@ class RoyalGambitGame {
           badgeTxt = `MAX ${count}/${def.maxCount}`;
         } else if (cd > 0) {
           badgeTxt = `${cd.toFixed(1)}s`;
-        } else if (this.mana < def.cost) {
-          badgeTxt = 'نقص ☀';
+        } else if (this.mana < cost) {
+          badgeTxt = this.lang === 'en' ? 'LOW ☀' : 'نقص ☀';
         } else if (def.maxCount) {
           badgeTxt = `${count}/${def.maxCount}`;
         }
         capEl.textContent = badgeTxt;
         capEl.classList.toggle('has-badge', Boolean(badgeTxt));
-        capEl.classList.toggle('cap-full', atCap || cd > 0 || this.mana < def.cost);
-      }
-
-      const cdEl = document.getElementById(`cd-${pid}`);
-      if (cdEl) {
-        const pct = cd > 0 ? Math.min(100, (cd / def.cooldown) * 100) : 0;
-        cdEl.style.height = `${pct}%`;
+        capEl.classList.toggle('cap-full', atCap || cd > 0 || this.mana < cost);
       }
     });
 
-    // Tactical Status Pill (RTL-safe with <bdi dir="ltr"> for numbers/costs)
     const statusPill = document.getElementById('tacticalStatusPill');
     if (statusPill) {
       if (this.shovelMode) {
         statusPill.innerHTML =
-          '⚔ <strong>وضع التضحية:</strong> انقر على أي قطعة لاسترجاع <bdi dir="ltr">60%☀</bdi> وتفجير الأعداء حولها!';
+          this.lang === 'en'
+            ? '⚔ <strong>Sacrifice Mode:</strong> Click any piece to refund <bdi dir="ltr">60%☀</bdi> and detonate nearby foes!'
+            : '⚔ <strong>وضع التضحية:</strong> انقر على أي قطعة لاسترجاع <bdi dir="ltr">60%☀</bdi> وتفجير الأعداء حولها!';
         statusPill.className = 'tactical-status-pill mode-shovel';
       } else if (this.selectedBoardPiece) {
         const pDef = window.CHESS_DATA.PIECES[this.selectedBoardPiece.type];
+        const pName = this.lang === 'en' ? pDef.name : (pDef.arabicTitle || pDef.name);
         const cd = this.selectedBoardPiece.moveCd;
         statusPill.innerHTML =
           cd > 0
-            ? `◈ حركة <strong>${pDef.arabicTitle || pDef.name}</strong> قيد الشحن <bdi dir="ltr">(${cd.toFixed(1)}s)</bdi>`
-            : `♟ <strong>حركة شطرنج جاهزة:</strong> انقر على أي مربع متوهج لتحريك <strong>${pDef.arabicTitle || pDef.name}</strong>!`;
+            ? this.lang === 'en'
+              ? `◈ <strong>${pName}</strong> move recharging <bdi dir="ltr">(${cd.toFixed(1)}s)</bdi>`
+              : `◈ حركة <strong>${pName}</strong> قيد الشحن <bdi dir="ltr">(${cd.toFixed(1)}s)</bdi>`
+            : this.lang === 'en'
+              ? `♟ <strong>Chess Move Ready:</strong> Click or drag <strong>${pName}</strong> to any glowing square!`
+              : `♟ <strong>حركة شطرنج جاهزة:</strong> انقر أو اسحب <strong>${pName}</strong> لأي مربع متوهج!`;
         statusPill.className = 'tactical-status-pill mode-move';
       } else if (this.selectedDeckPieceId) {
         const dDef = window.CHESS_DATA.PIECES[this.selectedDeckPieceId];
-        statusPill.innerHTML = `⚔ <strong>نشر ${dDef.arabicTitle || dDef.name} <bdi dir="ltr">(${dDef.cost}☀)</bdi>:</strong> انقر على مربع فارغ للوضع، أو على قطعة موضوعة لتحريكها!`;
+        const dName = this.lang === 'en' ? dDef.name : (dDef.arabicTitle || dDef.name);
+        const effCost = this.getPieceCost(this.selectedDeckPieceId);
+        statusPill.innerHTML =
+          this.lang === 'en'
+            ? `⚔ <strong>Deploy ${dName} <bdi dir="ltr">(${effCost}☀)</bdi>:</strong> Click/Drag to empty tile, or click ally to move!`
+            : `⚔ <strong>نشر ${dName} <bdi dir="ltr">(${effCost}☀)</bdi>:</strong> انقر أو اسحب لمربع فارغ، أو انقر قطعة لتحريكها!`;
         statusPill.className = 'tactical-status-pill mode-deploy';
       }
     }
@@ -3072,9 +3871,10 @@ class RoyalGambitGame {
     }
     const autoTxtEl = document.getElementById('autoManaText');
     if (autoTxtEl) {
-      autoTxtEl.innerHTML = this.autoCollectMana
-        ? 'تلقائي: <bdi dir="ltr">ON</bdi>'
-        : 'تلقائي: <bdi dir="ltr">OFF</bdi>';
+      autoTxtEl.innerHTML =
+        this.lang === 'en'
+          ? `Auto: <bdi dir="ltr">${this.autoCollectMana ? 'ON' : 'OFF'}</bdi>`
+          : `تلقائي: <bdi dir="ltr">${this.autoCollectMana ? 'ON' : 'OFF'}</bdi>`;
     }
 
     const pauseSvg = document.getElementById('pauseBtnSvg');

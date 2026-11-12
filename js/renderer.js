@@ -154,6 +154,7 @@ class RoyalBoardRenderer {
     this.drawAmbientEmbers(ctx, timeSeconds);
     this.drawManaOrbs(ctx, timeSeconds);
     this.drawFloatingTexts(ctx, timeSeconds);
+    this.drawDragPreview(ctx);
     this.drawMergeCinematic(ctx, timeSeconds);
 
     ctx.restore();
@@ -263,15 +264,48 @@ class RoyalBoardRenderer {
   }
 
   drawAmbientEmbers(ctx, t) {
+    const actId = (this.game.currentAct && this.game.currentAct.id) || 1;
     ctx.save();
+
+    // Act II: Twilight Aurora Beams | Act III: Storm Lightning Flash
+    if (actId === 2) {
+      const aurGrad = ctx.createLinearGradient(0, 0, this.width, this.height * 0.45);
+      aurGrad.addColorStop(0, 'rgba(45, 212, 191, 0.045)');
+      aurGrad.addColorStop(0.5, 'rgba(168, 85, 247, 0.045)');
+      aurGrad.addColorStop(1, 'rgba(45, 212, 191, 0)');
+      ctx.fillStyle = aurGrad;
+      ctx.fillRect(0, 0, this.width, this.height * 0.5);
+    } else if (actId === 3) {
+      const flashGate = Math.sin(t * 0.9) * Math.sin(t * 7.3);
+      if (flashGate > 0.96) {
+        ctx.fillStyle = `rgba(186, 230, 253, ${(flashGate - 0.96) * 2.4})`;
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+      ctx.lineWidth = 1.1;
+      for (let i = 0; i < 26; i++) {
+        const rx = ((i * 197 + t * 240) % (this.width + 120)) - 60;
+        const ry = ((i * 131 + t * 520) % (this.height + 80)) - 40;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 9, ry + 26);
+        ctx.stroke();
+      }
+    }
+
     for (const m of this.ambientMotes) {
       const y = (m.yFrac * this.height - ((t * m.speedY) % this.height) + this.height) % this.height;
       const x =
         (m.xFrac * this.width + Math.sin(t * 0.9 + m.phase) * m.driftX + this.width) % this.width;
       const alpha = 0.25 + 0.25 * Math.sin(t * 2.4 + m.phase);
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = m.isGold ? '#fef08a' : '#38bdf8';
-      ctx.shadowColor = m.isGold ? '#facc15' : '#38bdf8';
+      let col = m.isGold ? '#fef08a' : '#38bdf8';
+      if (actId === 2) col = m.isGold ? '#e9d5ff' : '#2dd4bf';
+      else if (actId === 3) col = m.isGold ? '#fde68a' : '#94a3b8';
+      else if (actId === 4) col = m.isGold ? '#fb923c' : '#f43f5e';
+      else if (actId === 5) col = m.isGold ? '#38bdf8' : '#c084fc';
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(x, y, m.size, 0, Math.PI * 2);
@@ -393,11 +427,15 @@ class RoyalBoardRenderer {
         }
         ctx.restore();
 
-        // Spawn danger corner brackets (#E34B61 — ChatGPT Readability Spec) on rightmost column (col 9 / J)
+        // Spawn danger corner brackets (#E34B61) + Live Incoming Wave Telegraph on Column J (col 9)
         if (c === this.cols - 1) {
-          const pulse = 0.45 + 0.25 * Math.sin(t * 2.8 + r);
-          ctx.strokeStyle = `rgba(227, 75, 97, ${pulse})`;
-          ctx.lineWidth = 2;
+          const teleCount =
+            typeof this.game.getIncomingLaneCount === 'function'
+              ? this.game.getIncomingLaneCount(r)
+              : 0;
+          const pulse = teleCount > 0 ? 0.68 + 0.3 * Math.sin(t * 6.5 + r) : 0.4 + 0.2 * Math.sin(t * 2.8 + r);
+          ctx.strokeStyle = teleCount > 0 ? `rgba(244, 63, 94, ${pulse})` : `rgba(227, 75, 97, ${pulse})`;
+          ctx.lineWidth = teleCount > 0 ? 2.6 : 2;
           const b = 6;
           const l = 12;
           ctx.beginPath();
@@ -414,6 +452,18 @@ class RoyalBoardRenderer {
           ctx.lineTo(x + this.tileSize - b, y + this.tileSize - b);
           ctx.lineTo(x + this.tileSize - b, y + this.tileSize - b - l);
           ctx.stroke();
+
+          if (teleCount > 0) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(225, 29, 72, 0.86)';
+            this.roundRect(ctx, x + this.tileSize - 24, y + 6, 18, 15, 4);
+            ctx.fill();
+            ctx.font = '800 9px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#fff1f2';
+            ctx.textAlign = 'center';
+            ctx.fillText(`!${Math.min(9, teleCount)}`, x + this.tileSize - 15, y + 16.5);
+            ctx.restore();
+          }
         }
 
         // Algebraic Coordinate watermark (a1..j5)
@@ -1090,18 +1140,19 @@ class RoyalBoardRenderer {
       ctx.restore();
     }
 
-    // 2. Render High-Res 3D Monster Sprite with Attack Lunge
-    const sprite = window.RoyalSprites && window.RoyalSprites.enemySprites[enemy.type];
+    // 2. Render Pre-baked High-Res 3D Monster Sprite (zero per-frame ctx.filter!)
+    const atlas = window.RoyalSprites;
+    let sprite = atlas && atlas.enemySprites[enemy.type];
+    if (enemy.hitFlash > 0 && atlas && atlas.enemyFlashSprites && atlas.enemyFlashSprites[enemy.type]) {
+      sprite = atlas.enemyFlashSprites[enemy.type];
+    } else if (enemy.slowTimer > 0 && atlas && atlas.enemyChillSprites && atlas.enemyChillSprites[enemy.type]) {
+      sprite = atlas.enemyChillSprites[enemy.type];
+    }
     const spriteSize = this.tileSize * scale;
 
     ctx.save();
     ctx.rotate(attackTilt);
-    if (enemy.hitFlash > 0) {
-      ctx.filter = 'brightness(1.85)';
-    } else if (enemy.slowTimer > 0) {
-      ctx.filter = 'hue-rotate(150deg) saturate(1.5)';
-    }
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+    if (sprite && ((sprite.complete && sprite.naturalWidth > 0) || sprite.width > 0)) {
       ctx.drawImage(sprite, -spriteSize / 2, -spriteSize / 2 - walkBob, spriteSize, spriteSize);
     }
     ctx.restore();
@@ -1215,9 +1266,20 @@ class RoyalBoardRenderer {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+      if (p.isShard) {
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot || 0) + (p.maxLife - p.life) * (p.spin || 6));
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size * 1.4);
+        ctx.lineTo(p.size, p.size * 0.5);
+        ctx.lineTo(-p.size * 0.85, p.size);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
   }
@@ -1269,6 +1331,21 @@ class RoyalBoardRenderer {
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.restore();
     }
+  }
+
+  drawDragPreview(ctx) {
+    const drag = this.game.dragState;
+    if (!drag || !drag.active || !drag.pieceType) return;
+    const sprite = window.RoyalSprites && window.RoyalSprites.pieceSprites[drag.pieceType];
+    if (!sprite || !sprite.complete) return;
+
+    const size = this.tileSize * 0.88;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.shadowColor = drag.kind === 'board' ? '#38bdf8' : '#facc15';
+    ctx.shadowBlur = 18;
+    ctx.drawImage(sprite, drag.x - size / 2, drag.y - size / 2, size, size);
+    ctx.restore();
   }
 
   // Full-Screen Cinematic 5-Pawn Merge Sequence into an Ascended Sovereign Queen

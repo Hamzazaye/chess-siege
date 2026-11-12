@@ -15,6 +15,8 @@ class RoyalSpriteAtlas {
     this.pieceSprites = {};
     this.pieceDataUrls = {};
     this.enemySprites = {};
+    this.enemyFlashSprites = {};
+    this.enemyChillSprites = {};
     this.enemyDataUrls = {};
     this.sentinelSprite = null;
     this.sentinelDataUrl = '';
@@ -75,11 +77,40 @@ class RoyalSpriteAtlas {
       const dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgStr.trim());
       this.enemyDataUrls[key] = dataUrl;
       const img = new Image();
+      img.onload = () => {
+        this.bakeEnemyTints(key, img);
+      };
       img.src = dataUrl;
       this.enemySprites[key] = img;
     });
 
     this.ready = true;
+  }
+
+  // Pre-bake offscreen hit-flash & chilled sprite canvases so renderer never runs slow ctx.filter per frame
+  bakeEnemyTints(key, img) {
+    if (!img || !img.naturalWidth || !img.naturalHeight) return;
+    const size = 160;
+
+    const flashCanvas = document.createElement('canvas');
+    flashCanvas.width = size;
+    flashCanvas.height = size;
+    const fCtx = flashCanvas.getContext('2d');
+    fCtx.drawImage(img, 0, 0, size, size);
+    fCtx.globalCompositeOperation = 'source-atop';
+    fCtx.fillStyle = 'rgba(255, 250, 235, 0.72)';
+    fCtx.fillRect(0, 0, size, size);
+    this.enemyFlashSprites[key] = flashCanvas;
+
+    const chillCanvas = document.createElement('canvas');
+    chillCanvas.width = size;
+    chillCanvas.height = size;
+    const cCtx = chillCanvas.getContext('2d');
+    cCtx.drawImage(img, 0, 0, size, size);
+    cCtx.globalCompositeOperation = 'source-atop';
+    cCtx.fillStyle = 'rgba(56, 189, 248, 0.42)';
+    cCtx.fillRect(0, 0, size, size);
+    this.enemyChillSprites[key] = chillCanvas;
   }
 
   generateBoardTileTextures() {
@@ -704,6 +735,34 @@ class RoyalSpriteAtlas {
             <line x1="34" y1="178" x2="34" y2="28" stroke="#383342" stroke-width="9" stroke-linecap="round"/>
             <rect x="6" y="16" width="54" height="74" rx="5" fill="url(#obsidianArmor)" stroke="#FF742B" stroke-width="3.2"/>
             <polygon points="33,34 45,53 33,72 21,53" fill="url(#hellfireCore)"/>
+          </g>
+        </svg>
+      `,
+
+      // 8. THE BLIGHT SOVEREIGN QUEEN (BOSS — Rank-Teleporting Astral Crimson/Emerald Lich-Queen)
+      plague_queen: `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+          ${defs}
+          <g filter="url(#monsterShadow)">
+            <ellipse cx="110" cy="192" rx="70" ry="18" fill="#0D111B" stroke="#E34B61" stroke-width="3.4"/>
+            <circle cx="110" cy="84" r="64" fill="url(#emeraldAura)" opacity="0.65"/>
+            <!-- Flowing Corrupted Obsidian Sovereign Robes -->
+            <path d="M58,184 C68,128 80,96 86,78 L134,78 C140,96 152,128 162,184 Z" fill="url(#obsidianArmor)" stroke="#E34B61" stroke-width="3.5"/>
+            <path d="M90,82 L130,82 L138,180 L82,180 Z" fill="#15131C" stroke="#39D98A" stroke-width="2.2"/>
+            <!-- Fractured Multi-Spire Blight-Queen Coronet -->
+            <path d="M62,78 L42,32 L74,56 L92,22 L110,50 L128,22 L146,56 L178,32 L158,78 Z" fill="url(#obsidianArmor)" stroke="#E34B61" stroke-width="3"/>
+            <circle cx="42" cy="28" r="5" fill="#39D98A"/>
+            <circle cx="92" cy="18" r="6" fill="#E34B61"/>
+            <circle cx="110" cy="12" r="8" fill="#FFF0B2" stroke="#E34B61" stroke-width="2"/>
+            <circle cx="128" cy="18" r="6" fill="#E34B61"/>
+            <circle cx="178" cy="28" r="5" fill="#39D98A"/>
+            <!-- Exposed Crowned Skull Visage -->
+            <circle cx="110" cy="64" r="19" fill="url(#boneSkull)" stroke="#15131C" stroke-width="2.4"/>
+            <polygon points="99,60 108,63 102,68" fill="#E34B61"/>
+            <polygon points="121,60 112,63 118,68" fill="#E34B61"/>
+            <!-- 8-Way Starburst Corruption Core on Chest -->
+            <polygon points="110,96 118,120 142,128 118,136 110,160 102,136 78,128 102,120" fill="url(#crimsonCorruption)" stroke="#FFD1D9" stroke-width="2"/>
+            <circle cx="110" cy="128" r="8" fill="#39D98A" stroke="#FFFFFF" stroke-width="1.6"/>
           </g>
         </svg>
       `

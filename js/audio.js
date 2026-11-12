@@ -1,19 +1,31 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT
- * Procedural Web Audio API Synthesizer & Adaptive Dark-Royal Soundtrack Engine
- * Zero external asset dependencies — 100% crisp, synthesized AAA tactical audio.
+ * CROWN & BLIGHT: THE ROYAL GAMBIT (AAA Spatial & Cathedral Web Audio Engine)
+ * Zero external audio assets required:
+ * - DynamicsCompressor + Procedural Cathedral Convolver Reverb
+ * - Separate Master / SFX / Music Gain Buses with live sliders
+ * - Column-based Stereo Panning across the 10x5 Chessboard
+ * - 16-Step Dynamic Baroque Harpsichord, Cello & Timpani Soundtrack
  */
 
 class RoyalAudioEngine {
   constructor() {
     this.ctx = null;
-    this.muted = false;
+    this.masterGain = null;
+    this.sfxGain = null;
+    this.musicGain = null;
+    this.reverbNode = null;
+    this.reverbSend = null;
+    this.compressor = null;
+
+    this.muted = localStorage.getItem('royal_gambit_muted') === '1';
     this.musicEnabled = true;
-    this.sfxVolume = 0.65;
-    this.musicVolume = 0.24;
+    this.sfxVolume = Number(localStorage.getItem('royal_gambit_sfx_vol') ?? 0.72);
+    this.musicVolume = Number(localStorage.getItem('royal_gambit_music_vol') ?? 0.30);
+
     this.musicTimer = null;
     this.musicStep = 0;
     this.isIntenseWave = false;
+    this.actToneShift = 0; // Semitone transposition per Act for musical variety
   }
 
   init() {
@@ -21,6 +33,38 @@ class RoyalAudioEngine {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
+        this.compressor = this.ctx.createDynamicsCompressor();
+        this.compressor.threshold.value = -16;
+        this.compressor.knee.value = 18;
+        this.compressor.ratio.value = 6;
+        this.compressor.attack.value = 0.005;
+        this.compressor.release.value = 0.2;
+
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = this.muted ? 0 : 0.92;
+
+        this.sfxGain = this.ctx.createGain();
+        this.sfxGain.gain.value = this.sfxVolume;
+
+        this.musicGain = this.ctx.createGain();
+        this.musicGain.gain.value = this.musicVolume;
+
+        // Synthesize warm 1.35s Cathedral impulse response
+        this.reverbNode = this.ctx.createConvolver();
+        this.reverbNode.buffer = this.buildCathedralImpulse(1.35, 2.4);
+        this.reverbSend = this.ctx.createGain();
+        this.reverbSend.gain.value = 0.26;
+
+        this.sfxGain.connect(this.compressor);
+        this.sfxGain.connect(this.reverbSend);
+        this.musicGain.connect(this.compressor);
+        this.musicGain.connect(this.reverbSend);
+
+        this.reverbSend.connect(this.reverbNode);
+        this.reverbNode.connect(this.compressor);
+
+        this.compressor.connect(this.masterGain);
+        this.masterGain.connect(this.ctx.destination);
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -28,8 +72,46 @@ class RoyalAudioEngine {
     }
   }
 
+  buildCathedralImpulse(duration = 1.35, decay = 2.4) {
+    const rate = this.ctx.sampleRate;
+    const length = Math.floor(rate * duration);
+    const impulse = this.ctx.createBuffer(2, length, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+      }
+    }
+    return impulse;
+  }
+
+  setSfxVolume(val) {
+    this.sfxVolume = Math.max(0, Math.min(1, Number(val)));
+    localStorage.setItem('royal_gambit_sfx_vol', String(this.sfxVolume));
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setTargetAtTime(this.sfxVolume, this.ctx.currentTime, 0.03);
+    }
+  }
+
+  setMusicVolume(val) {
+    this.musicVolume = Math.max(0, Math.min(1, Number(val)));
+    localStorage.setItem('royal_gambit_music_vol', String(this.musicVolume));
+    if (this.musicGain && this.ctx) {
+      this.musicGain.gain.setTargetAtTime(this.musicVolume, this.ctx.currentTime, 0.03);
+    }
+  }
+
+  setActMood(actIdx) {
+    const shifts = [0, -2, 2, -5, 3];
+    this.actToneShift = shifts[actIdx % shifts.length] || 0;
+  }
+
   toggleMute() {
     this.muted = !this.muted;
+    localStorage.setItem('royal_gambit_muted', this.muted ? '1' : '0');
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setTargetAtTime(this.muted ? 0 : 0.92, this.ctx.currentTime, 0.04);
+    }
     if (this.muted) {
       this.stopMusic();
     } else if (this.musicEnabled) {
@@ -52,7 +134,19 @@ class RoyalAudioEngine {
     this.isIntenseWave = Boolean(intense);
   }
 
-  // Helper for synthesized tone with envelope
+  routeToBus(node, pan = 0, bus = 'sfx') {
+    const targetBus = bus === 'music' ? this.musicGain : this.sfxGain;
+    if (!targetBus) return;
+    if (typeof this.ctx.createStereoPanner === 'function' && Math.abs(pan) > 0.02) {
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = Math.max(-0.85, Math.min(0.85, pan));
+      node.connect(panner);
+      panner.connect(targetBus);
+    } else {
+      node.connect(targetBus);
+    }
+  }
+
   playTone({
     freq = 440,
     endFreq = null,
@@ -61,11 +155,12 @@ class RoyalAudioEngine {
     gain = 0.25,
     delay = 0,
     attack = 0.01,
-    detune = 0
+    detune = 0,
+    pan = 0
   }) {
-    if (this.muted) return;
+    if (this.muted || this.sfxVolume <= 0.01) return;
     this.init();
-    if (!this.ctx) return;
+    if (!this.ctx || !this.sfxGain) return;
 
     const now = this.ctx.currentTime + delay;
     const osc = this.ctx.createOscillator();
@@ -78,30 +173,36 @@ class RoyalAudioEngine {
       osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
     }
 
-    const peak = Math.min(1, gain * this.sfxVolume);
+    const peak = Math.min(0.95, gain);
     g.gain.setValueAtTime(0.0001, now);
     g.gain.linearRampToValueAtTime(peak, now + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     osc.connect(g);
-    g.connect(this.ctx.destination);
+    this.routeToBus(g, pan, 'sfx');
 
     osc.start(now);
-    osc.stop(now + duration + 0.02);
+    osc.stop(now + duration + 0.03);
   }
 
-  // Helper for filtered noise bursts (impacts, stone slides, explosions)
-  playNoise({ duration = 0.15, filterFreq = 900, filterType = 'bandpass', gain = 0.25, delay = 0 }) {
-    if (this.muted) return;
+  playNoise({
+    duration = 0.15,
+    filterFreq = 900,
+    filterType = 'bandpass',
+    gain = 0.25,
+    delay = 0,
+    pan = 0
+  }) {
+    if (this.muted || this.sfxVolume <= 0.01) return;
     this.init();
-    if (!this.ctx) return;
+    if (!this.ctx || !this.sfxGain) return;
 
     const now = this.ctx.currentTime + delay;
     const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * duration));
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.45));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.42));
     }
 
     const noise = this.ctx.createBufferSource();
@@ -112,20 +213,28 @@ class RoyalAudioEngine {
     filter.frequency.setValueAtTime(filterFreq, now);
 
     const g = this.ctx.createGain();
-    g.gain.setValueAtTime(gain * this.sfxVolume, now);
+    g.gain.setValueAtTime(gain, now);
     g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     noise.connect(filter);
     filter.connect(g);
-    g.connect(this.ctx.destination);
+    this.routeToBus(g, pan, 'sfx');
 
     noise.start(now);
-    noise.stop(now + duration + 0.02);
+    noise.stop(now + duration + 0.03);
   }
 
-  // Heavy Marble Chess Piece Placement Clack + Sanctified Resonance
-  playPlacePiece(pieceType = 'pawn') {
-    this.playNoise({ duration: 0.08, filterFreq: 1400, filterType: 'bandpass', gain: 0.35 });
+  panFromCol(col = 5) {
+    return ((col - 4.5) / 5) * 0.68;
+  }
+
+  playUiClick() {
+    this.playTone({ freq: 540, endFreq: 720, type: 'sine', duration: 0.06, gain: 0.12 });
+  }
+
+  playPlacePiece(pieceType = 'pawn', col = 4) {
+    const pan = this.panFromCol(col);
+    this.playNoise({ duration: 0.08, filterFreq: 1350, filterType: 'bandpass', gain: 0.34, pan });
     const pitchMap = {
       chalice: [523.25, 659.25, 783.99],
       pawn: [329.63, 440.0],
@@ -141,185 +250,219 @@ class RoyalAudioEngine {
         freq: f,
         type: 'triangle',
         duration: 0.22,
-        gain: 0.2,
-        delay: idx * 0.045
+        gain: 0.19,
+        delay: idx * 0.04,
+        pan
       });
     });
   }
 
-  // Tactical Chess Move Slide / Leap
-  playChessMove(isKnight = false) {
+  playChessMove(isKnight = false, col = 4) {
+    const pan = this.panFromCol(col);
     if (isKnight) {
-      // Thunderous Knight L-Leap
-      this.playTone({ freq: 220, endFreq: 660, type: 'sawtooth', duration: 0.14, gain: 0.22 });
-      this.playTone({ freq: 587.33, endFreq: 196, type: 'triangle', duration: 0.24, gain: 0.28, delay: 0.1 });
-      this.playNoise({ duration: 0.22, filterFreq: 650, filterType: 'lowpass', gain: 0.38, delay: 0.1 });
+      this.playTone({ freq: 220, endFreq: 660, type: 'sawtooth', duration: 0.14, gain: 0.22, pan });
+      this.playTone({ freq: 587.33, endFreq: 196, type: 'triangle', duration: 0.24, gain: 0.26, delay: 0.09, pan });
+      this.playNoise({ duration: 0.22, filterFreq: 650, filterType: 'lowpass', gain: 0.36, delay: 0.09, pan });
     } else {
-      // Marble slide across board
-      this.playNoise({ duration: 0.14, filterFreq: 1100, filterType: 'bandpass', gain: 0.25 });
-      this.playTone({ freq: 293.66, endFreq: 440, type: 'sine', duration: 0.16, gain: 0.2, delay: 0.03 });
+      this.playNoise({ duration: 0.14, filterFreq: 1100, filterType: 'bandpass', gain: 0.25, pan });
+      this.playTone({ freq: 293.66, endFreq: 440, type: 'sine', duration: 0.16, gain: 0.18, delay: 0.03, pan });
     }
   }
 
-  // Collect Sovereign Mana (Sun)
   playManaCollect() {
-    this.playTone({ freq: 587.33, type: 'sine', duration: 0.14, gain: 0.22, delay: 0 });
-    this.playTone({ freq: 880.0, type: 'triangle', duration: 0.22, gain: 0.24, delay: 0.05 });
-    this.playTone({ freq: 1174.66, type: 'sine', duration: 0.28, gain: 0.18, delay: 0.1 });
+    this.playTone({ freq: 587.33, type: 'sine', duration: 0.13, gain: 0.2, delay: 0 });
+    this.playTone({ freq: 880.0, type: 'triangle', duration: 0.2, gain: 0.22, delay: 0.05 });
+    this.playTone({ freq: 1174.66, type: 'sine', duration: 0.26, gain: 0.16, delay: 0.09 });
   }
 
-  // Attack SFX per Chess Piece
-  playAttack(pieceType) {
+  playAttack(pieceType, col = 4) {
+    const pan = this.panFromCol(col);
     switch (pieceType) {
       case 'pawn':
-        this.playTone({ freq: 520, endFreq: 210, type: 'triangle', duration: 0.09, gain: 0.14 });
+        this.playNoise({ duration: 0.08, filterFreq: 520, filterType: 'lowpass', gain: 0.2, pan });
+        this.playTone({ freq: 380, endFreq: 165, type: 'triangle', duration: 0.1, gain: 0.16, pan });
         break;
       case 'rook':
-        this.playNoise({ duration: 0.14, filterFreq: 420, filterType: 'lowpass', gain: 0.26 });
-        this.playTone({ freq: 165, endFreq: 75, type: 'sawtooth', duration: 0.18, gain: 0.2 });
+        this.playNoise({ duration: 0.15, filterFreq: 420, filterType: 'lowpass', gain: 0.26, pan });
+        this.playTone({ freq: 165, endFreq: 75, type: 'sawtooth', duration: 0.19, gain: 0.21, pan });
         break;
       case 'knight':
-        this.playTone({ freq: 920, endFreq: 280, type: 'sawtooth', duration: 0.12, gain: 0.16 });
-        this.playNoise({ duration: 0.09, filterFreq: 2400, filterType: 'highpass', gain: 0.15 });
+        this.playTone({ freq: 920, endFreq: 280, type: 'sawtooth', duration: 0.13, gain: 0.16, pan });
+        this.playNoise({ duration: 0.09, filterFreq: 2400, filterType: 'highpass', gain: 0.15, pan });
         break;
       case 'bishop':
-        this.playTone({ freq: 659.25, endFreq: 987.77, type: 'sine', duration: 0.16, gain: 0.15 });
-        this.playTone({ freq: 1318.5, endFreq: 880, type: 'triangle', duration: 0.16, gain: 0.1, delay: 0.03 });
+        this.playTone({ freq: 659.25, endFreq: 987.77, type: 'sine', duration: 0.16, gain: 0.15, pan });
+        this.playTone({ freq: 1318.5, endFreq: 880, type: 'triangle', duration: 0.16, gain: 0.1, delay: 0.03, pan });
         break;
       case 'queen':
-        this.playTone({ freq: 440, endFreq: 880, type: 'sawtooth', duration: 0.16, gain: 0.16 });
-        this.playTone({ freq: 659.25, endFreq: 1318.5, type: 'triangle', duration: 0.2, gain: 0.16, delay: 0.03 });
+        this.playTone({ freq: 440, endFreq: 880, type: 'sawtooth', duration: 0.16, gain: 0.15, pan });
+        this.playTone({ freq: 659.25, endFreq: 1318.5, type: 'triangle', duration: 0.22, gain: 0.17, delay: 0.025, pan });
         break;
       case 'king':
-        this.playTone({ freq: 261.63, endFreq: 523.25, type: 'triangle', duration: 0.2, gain: 0.18 });
+        this.playTone({ freq: 261.63, endFreq: 523.25, type: 'triangle', duration: 0.2, gain: 0.18, pan });
         break;
       default:
-        this.playTone({ freq: 440, endFreq: 220, type: 'sine', duration: 0.08, gain: 0.12 });
+        this.playTone({ freq: 440, endFreq: 220, type: 'sine', duration: 0.08, gain: 0.12, pan });
     }
   }
 
-  // Hit & Shield Clank
-  playHit(armored = false) {
+  playHit(armored = false, col = 6) {
+    const pan = this.panFromCol(col);
     if (armored) {
-      this.playTone({ freq: 880, endFreq: 420, type: 'square', duration: 0.07, gain: 0.14 });
+      this.playTone({ freq: 860, endFreq: 390, type: 'square', duration: 0.06, gain: 0.11, pan });
     } else {
-      this.playNoise({ duration: 0.06, filterFreq: 700, filterType: 'bandpass', gain: 0.14 });
+      this.playNoise({ duration: 0.055, filterFreq: 720, filterType: 'bandpass', gain: 0.12, pan });
     }
   }
 
-  // Pawn Promotion Coronation Fanfare!
+  playShieldBreak(col = 6) {
+    const pan = this.panFromCol(col);
+    this.playNoise({ duration: 0.14, filterFreq: 2200, filterType: 'highpass', gain: 0.28, pan });
+    this.playTone({ freq: 1240, endFreq: 320, type: 'triangle', duration: 0.18, gain: 0.2, pan });
+  }
+
+  playEnemyShatter(isBoss = false, col = 6) {
+    const pan = this.panFromCol(col);
+    this.playNoise({
+      duration: isBoss ? 0.45 : 0.16,
+      filterFreq: isBoss ? 450 : 1200,
+      filterType: 'lowpass',
+      gain: isBoss ? 0.42 : 0.2,
+      pan
+    });
+    if (isBoss) {
+      this.playTone({ freq: 130.81, endFreq: 48, type: 'sawtooth', duration: 0.55, gain: 0.34, pan });
+    }
+  }
+
+  playDecreePick() {
+    const notes = [392.0, 493.88, 587.33, 783.99];
+    notes.forEach((freq, i) => {
+      this.playTone({ freq, type: 'triangle', duration: 0.34, gain: 0.22, delay: i * 0.055 });
+    });
+  }
+
   playPromotion() {
     const chord = [523.25, 659.25, 783.99, 1046.5];
     chord.forEach((freq, i) => {
-      this.playTone({
-        freq,
-        type: 'triangle',
-        duration: 0.42,
-        gain: 0.28,
-        delay: i * 0.07
-      });
-      this.playTone({
-        freq: freq * 1.5,
-        type: 'sine',
-        duration: 0.35,
-        gain: 0.14,
-        delay: i * 0.07 + 0.03
-      });
+      this.playTone({ freq, type: 'triangle', duration: 0.42, gain: 0.26, delay: i * 0.07 });
+      this.playTone({ freq: freq * 1.5, type: 'sine', duration: 0.35, gain: 0.14, delay: i * 0.07 + 0.03 });
     });
   }
 
-  // Castling Bastion Horn
   playCastling() {
     const notes = [196.0, 293.66, 392.0, 587.33];
     notes.forEach((freq, i) => {
-      this.playTone({
-        freq,
-        type: 'sawtooth',
-        duration: 0.35,
-        gain: 0.22,
-        delay: i * 0.06
-      });
+      this.playTone({ freq, type: 'sawtooth', duration: 0.35, gain: 0.2, delay: i * 0.06 });
     });
-    this.playNoise({ duration: 0.25, filterFreq: 500, filterType: 'lowpass', gain: 0.3 });
+    this.playNoise({ duration: 0.25, filterFreq: 500, filterType: 'lowpass', gain: 0.28 });
   }
 
-  // Checkmate Overload Ultimate
   playUltimate() {
-    this.playNoise({ duration: 0.45, filterFreq: 380, filterType: 'lowpass', gain: 0.45 });
+    this.playNoise({ duration: 0.45, filterFreq: 380, filterType: 'lowpass', gain: 0.44 });
     const fanfare = [261.63, 329.63, 392.0, 523.25, 659.25, 783.99, 1046.5];
     fanfare.forEach((freq, idx) => {
-      this.playTone({
-        freq,
-        type: 'sawtooth',
-        duration: 0.45,
-        gain: 0.22,
-        delay: idx * 0.045
-      });
+      this.playTone({ freq, type: 'sawtooth', duration: 0.45, gain: 0.21, delay: idx * 0.045 });
     });
   }
 
-  // Royal Chariot (Lawnmower) Activation
   playChariotCharge() {
-    this.playNoise({ duration: 0.4, filterFreq: 480, filterType: 'lowpass', gain: 0.4 });
-    this.playTone({ freq: 146.83, endFreq: 440, type: 'sawtooth', duration: 0.45, gain: 0.28 });
+    this.playNoise({ duration: 0.4, filterFreq: 480, filterType: 'lowpass', gain: 0.38 });
+    this.playTone({ freq: 146.83, endFreq: 440, type: 'sawtooth', duration: 0.45, gain: 0.27 });
   }
 
-  // Huge Wave Warhorn
   playWaveHorn() {
-    this.playTone({ freq: 146.83, endFreq: 138.59, type: 'sawtooth', duration: 0.85, gain: 0.32, attack: 0.08 });
-    this.playTone({ freq: 220.0, endFreq: 207.65, type: 'triangle', duration: 0.85, gain: 0.26, delay: 0.05, attack: 0.08 });
+    this.playTone({ freq: 146.83, endFreq: 138.59, type: 'sawtooth', duration: 0.85, gain: 0.3, attack: 0.08 });
+    this.playTone({ freq: 220.0, endFreq: 207.65, type: 'triangle', duration: 0.85, gain: 0.24, delay: 0.05, attack: 0.08 });
   }
 
-  // Victory / Defeat stingers
   playVictory() {
     const notes = [392.0, 493.88, 587.33, 783.99, 987.77, 1174.66];
     notes.forEach((f, i) => {
-      this.playTone({ freq: f, type: 'triangle', duration: 0.45, gain: 0.26, delay: i * 0.08 });
+      this.playTone({ freq: f, type: 'triangle', duration: 0.45, gain: 0.25, delay: i * 0.08 });
     });
   }
 
   playDefeat() {
     const notes = [329.63, 311.13, 293.66, 261.63, 196.0];
     notes.forEach((f, i) => {
-      this.playTone({ freq: f, type: 'sawtooth', duration: 0.42, gain: 0.24, delay: i * 0.12 });
+      this.playTone({ freq: f, type: 'sawtooth', duration: 0.42, gain: 0.22, delay: i * 0.12 });
     });
   }
 
-  // Procedural Dark-Royal Harpsichord & Bass Ostinato Loop
+  // 16-Step Dynamic Dark-Royal Harpsichord, Cello & Timpani Score
   startMusic() {
     if (this.muted || !this.musicEnabled) return;
     this.init();
     if (!this.ctx || this.musicTimer) return;
 
-    // D minor royal baroque tactical progression
-    const bassLine = [146.83, 146.83, 130.81, 130.81, 116.54, 116.54, 110.0, 138.59];
-    const arpCalm = [293.66, 349.23, 440.0, 587.33, 440.0, 349.23, 329.63, 440.0];
-    const arpIntense = [440.0, 587.33, 698.46, 880.0, 659.25, 587.33, 554.37, 659.25];
+    // D minor -> Bb -> C -> A7 Baroque Progression (16 steps)
+    const bassLine = [
+      146.83, 146.83, 146.83, 220.0,
+      116.54, 116.54, 130.81, 130.81,
+      146.83, 174.61, 130.81, 116.54,
+      110.0, 138.59, 164.81, 110.0
+    ];
+    const arpCalm = [
+      293.66, 349.23, 440.0, 587.33,
+      349.23, 466.16, 523.25, 392.0,
+      293.66, 440.0, 523.25, 466.16,
+      440.0, 554.37, 659.25, 440.0
+    ];
+    const arpIntense = [
+      587.33, 698.46, 880.0, 587.33,
+      466.16, 698.46, 783.99, 523.25,
+      587.33, 880.0, 783.99, 698.46,
+      659.25, 830.61, 880.0, 554.37
+    ];
 
     this.musicTimer = setInterval(() => {
       if (this.muted || !this.musicEnabled || !this.ctx || this.ctx.state !== 'running') return;
+      if (this.musicVolume <= 0.01) return;
 
-      const step = this.musicStep % 8;
-      const bassFreq = bassLine[step];
-      const melodyFreq = this.isIntenseWave ? arpIntense[step] : arpCalm[step];
+      const step = this.musicStep % 16;
+      const mult = Math.pow(2, this.actToneShift / 12);
+      const bassFreq = bassLine[step] * mult;
+      const melodyFreq = (this.isIntenseWave ? arpIntense[step] : arpCalm[step]) * mult;
 
-      // Deep Cello Bass Pulse on even steps
+      // Deep Cello Bass Pulse + Timpani on downbeats
       if (step % 2 === 0) {
-        this.playMusicNote(bassFreq, 'triangle', 0.42, this.musicVolume * 0.9);
+        this.playMusicNote(bassFreq, 'triangle', 0.44, 0.55, step % 4 === 0 ? -0.15 : 0.15);
+      }
+      if (step % 4 === 0 || (this.isIntenseWave && step % 2 === 0)) {
+        this.playTimpaniThump(bassFreq * 0.5, this.isIntenseWave ? 0.35 : 0.18);
       }
 
-      // Harpsichord pluck
-      this.playMusicNote(melodyFreq, 'sine', 0.24, this.musicVolume * 0.65);
+      // Delicate Baroque Pluck
+      this.playMusicNote(melodyFreq, 'sine', 0.25, 0.42, ((step % 4) - 1.5) * 0.22);
       if (this.isIntenseWave && step % 2 === 1) {
-        this.playMusicNote(melodyFreq * 0.5, 'sawtooth', 0.18, this.musicVolume * 0.4);
+        this.playMusicNote(melodyFreq * 0.5, 'sawtooth', 0.18, 0.25, 0);
       }
 
       this.musicStep++;
-    }, 320);
+    }, 280);
   }
 
-  playMusicNote(freq, type, duration, gainVal) {
-    if (!this.ctx) return;
+  playTimpaniThump(freq, gainVal) {
+    if (!this.ctx || !this.musicGain) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(Math.max(45, freq * 1.4), now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(36, freq), now + 0.18);
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(gainVal, now + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+    osc.connect(g);
+    g.connect(this.musicGain);
+    osc.start(now);
+    osc.stop(now + 0.26);
+  }
+
+  playMusicNote(freq, type, duration, gainVal, pan = 0) {
+    if (!this.ctx || !this.musicGain) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
@@ -331,9 +474,9 @@ class RoyalAudioEngine {
     g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     osc.connect(g);
-    g.connect(this.ctx.destination);
+    this.routeToBus(g, pan, 'music');
     osc.start(now);
-    osc.stop(now + duration + 0.02);
+    osc.stop(now + duration + 0.03);
   }
 
   stopMusic() {
