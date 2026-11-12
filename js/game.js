@@ -53,6 +53,7 @@ class RoyalGambitGame {
     this.readyPawnLines = [];
     this.mergeCinematic = null;
     this.activeDecrees = [];
+    this.decreePending = false;
     this.decreeState = this.createDefaultDecreeState();
 
     this.selectedDeckPieceId = 'pawn';
@@ -367,6 +368,7 @@ class RoyalGambitGame {
     const asc = this.gameMode === 'campaign' ? this.getAscension() : { hpMult: 1, spdMult: 1, manaPenalty: 0, eloBonus: 0 };
 
     this.activeDecrees = [];
+    this.decreePending = false;
     this.decreeState = this.createDefaultDecreeState();
     if (cmd.mods.dmgMult) this.decreeState.damageMult *= cmd.mods.dmgMult;
     if (cmd.mods.moveCdMult) this.decreeState.moveCdMult *= cmd.mods.moveCdMult;
@@ -677,15 +679,15 @@ class RoyalGambitGame {
       } else if (key === 'escape') {
         this.selectedBoardPiece = null;
         this.shovelMode = false;
-        if (this.gameOver) {
-          const resultEl = document.getElementById('resultModal');
-          if (resultEl && resultEl.classList.contains('hidden')) {
-            this.openModal('resultModal');
-          }
+        const resultEl = document.getElementById('resultModal');
+        if (this.gameOver && resultEl && !resultEl.classList.contains('hidden')) {
           return;
         }
-        this.hideModals();
-        this.updateHUD();
+        const decreeEl = document.getElementById('decreeModal');
+        if (this.decreePending && decreeEl && !decreeEl.classList.contains('hidden')) {
+          return;
+        }
+        this.closeModalOrReturn();
       }
     });
 
@@ -704,12 +706,6 @@ class RoyalGambitGame {
     bindBtn('shovelBtn', () => this.toggleShovel());
     bindBtn('ultimateBtn', () => this.triggerCheckmateUltimate());
     bindBtn('screenMergeCtaBtn', () => this.tryMergePawnLine(this.selectedBoardPiece));
-    bindBtn('tutorialSkipBtn', () => {
-      this.tutorialStep = -1;
-      this.profile.tutorialDone = true;
-      this.saveProfile();
-      this.updateTutorialBanner();
-    });
     bindBtn('callWaveBtn', () => this.callNextWaveEarly());
     bindBtn('speedBtn', () => this.cycleGameSpeed());
     bindBtn('autoManaBtn', () => {
@@ -726,15 +722,8 @@ class RoyalGambitGame {
       this.updateHUD();
     });
 
-    // Royal Command Menu & Modals
-    const closeOrReturn = () => {
-      if (this.gameOver) {
-        this.hideModals();
-        this.openModal('resultModal');
-      } else {
-        this.hideModals();
-      }
-    };
+    // Royal Command Menu & Modals (Unified Open / Close / Return!)
+    const closeOrReturn = () => this.closeModalOrReturn();
     bindBtn('openMenuBtn', () => this.openModal('commandMenuModal'));
     bindBtn('closeMenuBtn', closeOrReturn);
     bindBtn('menuResumeBtn', closeOrReturn);
@@ -755,28 +744,34 @@ class RoyalGambitGame {
       this.updateHUD();
     });
     bindBtn('menuFullscreenBtn', () => this.toggleFullscreen());
-    bindBtn('menuOpenActsBtn', () => {
-      this.hideModals();
-      this.openModal('actsModal');
-    });
-    bindBtn('menuOpenCodexBtn', () => {
-      this.hideModals();
-      this.openModal('codexModal');
-    });
+    bindBtn('menuOpenActsBtn', () => this.openModal('actsModal'));
+    bindBtn('menuOpenCodexBtn', () => this.openModal('codexModal'));
 
     bindBtn('openCodexBtn', () => this.openModal('codexModal'));
     bindBtn('closeCodexBtn', closeOrReturn);
     bindBtn('openActsBtn', () => this.openModal('actsModal'));
     bindBtn('closeActsBtn', closeOrReturn);
+    bindBtn('closePuzzlesBtn', closeOrReturn);
+
+    // Victory / Defeat Footer Buttons — Always Close Result Modal Cleanly!
     bindBtn('modalRetryBtn', () => this.startAct(this.actIndex, { mode: this.gameMode, puzzleIndex: this.puzzleIndex }));
     bindBtn('modalActsBtn', () => {
-      this.hideModals();
-      this.openModal('actsModal');
+      window.RoyalAudio.playUiClick();
+      this.openModal(this.gameMode === 'puzzle' ? 'puzzlesModal' : 'actsModal');
     });
     bindBtn('modalCodexBtn', () => {
-      this.hideModals();
+      window.RoyalAudio.playUiClick();
       this.openModal('codexModal');
     });
+    bindBtn('modalMainMenuBtn', () => {
+      window.RoyalAudio.playUiClick();
+      this.openModal('commandMenuModal');
+    });
+    bindBtn('modalTitleScreenBtn', () => {
+      window.RoyalAudio.playUiClick();
+      this.returnToTitleScreen();
+    });
+
     // Audio Sliders + Language Switch + Mobile Floating Bar
     const bindSlider = (id, key, setter) => {
       const el = document.getElementById(id);
@@ -799,6 +794,16 @@ class RoyalGambitGame {
     bindBtn('titleLangBtn', () => {
       window.RoyalAudio.playUiClick();
       this.setLanguage(this.lang === 'ar' ? 'en' : 'ar');
+    });
+    bindBtn('titleStagesBtn', () => {
+      window.RoyalAudio.init();
+      window.RoyalAudio.playUiClick();
+      this.openModal('actsModal');
+    });
+    bindBtn('titleCodexBtn', () => {
+      window.RoyalAudio.init();
+      window.RoyalAudio.playUiClick();
+      this.openModal('codexModal');
     });
     bindBtn('titleTrophyToggleBtn', () => {
       window.RoyalAudio.playUiClick();
@@ -825,26 +830,13 @@ class RoyalGambitGame {
     bindBtn('titlePuzzlesBtn', () => {
       window.RoyalAudio.init();
       window.RoyalAudio.playUiClick();
-      window.RoyalAudio.startMusic();
-      const firstUnsolved = (window.CHESS_DATA.PUZZLES || []).findIndex(
-        p => !(this.profile.solvedPuzzles && this.profile.solvedPuzzles[p.id])
-      );
-      this.startAct(0, { mode: 'puzzle', puzzleIndex: firstUnsolved >= 0 ? firstUnsolved : 0 });
+      this.openModal('puzzlesModal');
     });
     bindBtn('menuOpenTitleBtn', () => {
-      this.hideModals();
-      this.onTitleScreen = true;
-      this.paused = true;
-      this.updateTutorialBanner();
-      this.renderTitleScreen();
-      const titleEl = document.getElementById('titleOverlay');
-      if (titleEl) titleEl.classList.remove('hidden');
+      window.RoyalAudio.playUiClick();
+      this.returnToTitleScreen();
     });
 
-    bindBtn('modalMainMenuBtn', () => {
-      this.hideModals();
-      this.openModal('commandMenuModal');
-    });
     bindBtn('modalNextActBtn', () => {
       if (this.gameMode === 'puzzle') {
         const nextPz = (this.puzzleIndex + 1) % window.CHESS_DATA.PUZZLES.length;
@@ -860,21 +852,16 @@ class RoyalGambitGame {
       navBtn.addEventListener('click', () => {
         const targetModalId = navBtn.getAttribute('data-switch-modal');
         if (!targetModalId) return;
-        ['commandMenuModal', 'codexModal', 'actsModal'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.toggle('hidden', id !== targetModalId);
-        });
-        this.paused = true;
-        this.populateActsDrawer();
-        this.updateHUD();
+        window.RoyalAudio.playUiClick();
+        this.openModal(targetModalId);
       });
     });
 
-    // Close modals when clicking the dark backdrop outside the modal window
+    // Close modals cleanly when clicking the dark backdrop outside the modal window
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
       backdrop.addEventListener('click', e => {
-        if (e.target === backdrop && backdrop.id !== 'resultModal') {
-          this.hideModals();
+        if (e.target === backdrop && backdrop.id !== 'resultModal' && backdrop.id !== 'decreeModal') {
+          this.closeModalOrReturn();
         }
       });
     });
@@ -3300,6 +3287,15 @@ class RoyalGambitGame {
   }
 
   togglePause() {
+    if (this.onTitleScreen || this.gameOver || this.decreePending) return;
+    const openSecondary = ['commandMenuModal', 'codexModal', 'actsModal', 'puzzlesModal'].some(id => {
+      const el = document.getElementById(id);
+      return el && !el.classList.contains('hidden');
+    });
+    if (openSecondary) {
+      this.closeModalOrReturn();
+      return;
+    }
     this.paused = !this.paused;
     this.updateHUD();
   }
@@ -3397,6 +3393,9 @@ class RoyalGambitGame {
             ? 2
             : 1;
 
+    const prevUnlocked = this.unlockedActs || 1;
+    const prevProg = this.getProgressionSummary();
+
     // Persist progression, stars, unlocking & achievements
     if (this.gameMode === 'puzzle' && this.currentAct.puzzleDef) {
       this.profile.solvedPuzzles[this.currentAct.puzzleDef.id] = true;
@@ -3422,6 +3421,9 @@ class RoyalGambitGame {
       if (this.ascensionLevel >= 1) this.unlockAchievement('ascension_win');
     }
     this.saveProfile();
+    const newProg = this.getProgressionSummary();
+    const unlockedNewStage = this.gameMode === 'campaign' && this.unlockedActs > prevUnlocked;
+    const rankedUp = newProg.rankIdx > prevProg.rankIdx;
 
     window.RoyalAudio.playVictory();
     window.RoyalAudio.setIntenseMode(false);
@@ -3432,12 +3434,14 @@ class RoyalGambitGame {
     const starsEl = document.getElementById('resultStarsRow');
     const title = document.getElementById('resultModalTitle');
     const sub = document.getElementById('resultModalSubtitle');
+    const unlockBanner = document.getElementById('resultUnlockBanner');
     const breachStrip = document.getElementById('resultBreachStrip');
     const stats = document.getElementById('resultModalStats');
     const advBadge = document.getElementById('resultAdvisorBadge');
     const advText = document.getElementById('resultAdvisorText');
     const nextBtn = document.getElementById('modalNextActBtn');
     const retryBtn = document.getElementById('modalRetryBtn');
+    const actsBtn = document.getElementById('modalActsBtn');
 
     if (modal) {
       modal.classList.add('is-victory');
@@ -3460,7 +3464,34 @@ class RoyalGambitGame {
       title.textContent = isEn ? '♛ ROYAL VICTORY!' : '♛ انتصار ملكي!';
     }
     if (sub) {
-      sub.innerHTML = `<bdi dir="ltr">${this.currentAct.code}</bdi> • ${this.currentAct.name}`;
+      const stageAr = ['أسوار الفجر', 'كسوف الأقطار', 'القلعتان التوأم', 'عرش الأساتذة', 'الحصار الخالد'][this.actIndex] || this.currentAct.name;
+      const modeTitle = this.gameMode === 'puzzle' && this.currentAct.puzzleDef
+        ? (isEn ? this.currentAct.puzzleDef.nameEn : this.currentAct.puzzleDef.nameAr)
+        : (isEn ? this.currentAct.name : stageAr);
+      sub.innerHTML = `<bdi dir="ltr">${this.currentAct.code}</bdi> • ${modeTitle}`;
+    }
+    if (unlockBanner) {
+      const stageNamesAr = ['أسوار الفجر', 'كسوف الأقطار', 'القلعتان التوأم', 'عرش الأساتذة', 'الحصار الخالد'];
+      const nextStageIdx = Math.min(4, this.unlockedActs - 1);
+      const nextActObj = window.CHESS_DATA.ACTS[nextStageIdx];
+      const nextStageName = isEn ? (nextActObj ? nextActObj.name : '') : (stageNamesAr[nextStageIdx] || '');
+      const pills = [];
+      if (unlockedNewStage) {
+        pills.push(
+          `<span class="unlock-pill stage-unlock">${isEn ? `🔓 Stage ${this.unlockedActs} Unlocked: ${nextStageName}!` : `🔓 فُتحت المرحلة ${this.unlockedActs}: ${nextStageName}!`}</span>`
+        );
+      }
+      if (rankedUp) {
+        pills.push(
+          `<span class="unlock-pill rank-up">${isEn ? `👑 Rank Up: ${newProg.rankIcon} ${newProg.rankEn}!` : `👑 ترقية الرتبة: ${newProg.rankIcon} ${newProg.rankAr}!`}</span>`
+        );
+      } else {
+        pills.push(
+          `<span class="unlock-pill progress-chip">${newProg.rankIcon} ${isEn ? newProg.rankEn : newProg.rankAr} • <bdi dir="ltr">★ ${newProg.totalPoints}/${newProg.maxPoints}</bdi></span>`
+        );
+      }
+      unlockBanner.innerHTML = pills.join('');
+      unlockBanner.classList.remove('hidden');
     }
     if (breachStrip) {
       breachStrip.classList.add('hidden');
@@ -3469,7 +3500,7 @@ class RoyalGambitGame {
     if (stats) {
       const sentVal = this.gameMode === 'puzzle' ? '♟ ★' : `♜ ${remainingSentinels}/5`;
       stats.innerHTML = `
-        <div class="stat-pill highlight-sentinel"><span>${isEn ? 'Sentinels' : 'القلاع'}</span><strong dir="ltr">${sentVal}</strong></div>
+        <div class="stat-pill highlight-sentinel"><span>${isEn ? (this.gameMode === 'puzzle' ? 'Puzzle' : 'Sentinels') : (this.gameMode === 'puzzle' ? 'اللغز' : 'القلاع')}</span><strong dir="ltr">${sentVal}</strong></div>
         <div class="stat-pill"><span>${isEn ? 'Score' : 'النقاط'}</span><strong dir="ltr">🏆 ${this.score.toLocaleString()}</strong></div>
         <div class="stat-pill"><span>ELO</span><strong dir="ltr">♛ ${this.eloRating} (+${eloGain})</strong></div>
       `;
@@ -3516,15 +3547,20 @@ class RoyalGambitGame {
         nextBtn.textContent =
           this.gameMode === 'puzzle'
             ? isEn
-              ? '♟ Next →'
+              ? '♟ Next Puzzle →'
               : '♟ اللغز التالي ←'
             : isEn
-              ? '⚔ Next Act →'
-              : '⚔ التالي ←';
+              ? '⚔ Next Stage →'
+              : '⚔ المرحلة التالية ←';
       }
     }
+    if (actsBtn) {
+      actsBtn.textContent = this.gameMode === 'puzzle'
+        ? (isEn ? '♟ Puzzles' : '♟ الألغاز')
+        : (isEn ? '❖ Stages' : '❖ المراحل');
+    }
     if (retryBtn) retryBtn.textContent = isEn ? '↻ Replay' : '↻ إعادة';
-    if (modal) modal.classList.remove('hidden');
+    this.openModal('resultModal');
   }
 
   handleDefeat() {
@@ -3545,11 +3581,13 @@ class RoyalGambitGame {
     const starsEl = document.getElementById('resultStarsRow');
     const title = document.getElementById('resultModalTitle');
     const sub = document.getElementById('resultModalSubtitle');
+    const unlockBanner = document.getElementById('resultUnlockBanner');
     const stats = document.getElementById('resultModalStats');
     const advBadge = document.getElementById('resultAdvisorBadge');
     const advText = document.getElementById('resultAdvisorText');
     const nextBtn = document.getElementById('modalNextActBtn');
     const retryBtn = document.getElementById('modalRetryBtn');
+    const actsBtn = document.getElementById('modalActsBtn');
 
     const enemyArabicNames = {
       thrall: 'جندي الرماد',
@@ -3609,6 +3647,10 @@ class RoyalGambitGame {
     if (sub) {
       sub.textContent = '';
     }
+    if (unlockBanner) {
+      unlockBanner.classList.add('hidden');
+      unlockBanner.innerHTML = '';
+    }
     const breachStrip = document.getElementById('resultBreachStrip');
     if (breachStrip) {
       breachStrip.classList.add('hidden');
@@ -3652,7 +3694,12 @@ class RoyalGambitGame {
     if (retryBtn) {
       retryBtn.textContent = isEn ? '⚔ Retry Now!' : '⚔ أعد الكرّة!';
     }
-    if (modal) modal.classList.remove('hidden');
+    if (actsBtn) {
+      actsBtn.textContent = this.gameMode === 'puzzle'
+        ? (isEn ? '♟ Puzzles' : '♟ الألغاز')
+        : (isEn ? '❖ Stages' : '❖ المراحل');
+    }
+    this.openModal('resultModal');
   }
 
   announceBanner(title, subtitle) {
@@ -4057,35 +4104,209 @@ class RoyalGambitGame {
   }
 
   openModal(id) {
+    const allModalIds = ['commandMenuModal', 'codexModal', 'actsModal', 'puzzlesModal', 'decreeModal', 'resultModal'];
+    allModalIds.forEach(mId => {
+      if (mId !== id) {
+        const other = document.getElementById(mId);
+        if (other) other.classList.add('hidden');
+      }
+    });
+
     this.paused = true;
     this.populateActsDrawer();
     if (id === 'codexModal') this.populateCodexModal();
+    if (id === 'puzzlesModal') this.populatePuzzlesModal();
+
     const el = document.getElementById(id);
-    if (el) el.classList.remove('hidden');
+    if (el) {
+      el.querySelectorAll('[data-switch-modal]').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-switch-modal') === id);
+      });
+      el.classList.remove('hidden');
+    }
+
     const resumeBtn = document.getElementById('menuResumeBtn');
     if (resumeBtn && id === 'commandMenuModal') {
       const isEn = this.lang === 'en';
-      resumeBtn.textContent = this.gameOver
-        ? isEn
-          ? '↺ Report'
-          : '↺ التقرير'
-        : isEn
-          ? '▶ Resume'
-          : '▶ استئناف';
+      if (this.onTitleScreen) {
+        resumeBtn.textContent = isEn ? '♛ Back to Title' : '♛ العودة للرئيسية';
+      } else if (this.gameOver) {
+        resumeBtn.textContent = isEn ? '↺ Back to Report' : '↺ التقرير';
+      } else {
+        resumeBtn.textContent = isEn ? '▶ Resume' : '▶ استئناف';
+      }
     }
     this._lastHudSig = '';
     this.updateHUD();
   }
 
   hideModals() {
-    const modalIds = this.gameOver
-      ? ['commandMenuModal', 'codexModal', 'actsModal', 'decreeModal']
-      : ['commandMenuModal', 'codexModal', 'actsModal', 'decreeModal', 'resultModal'];
+    const modalIds = ['commandMenuModal', 'codexModal', 'actsModal', 'puzzlesModal', 'decreeModal', 'resultModal'];
     modalIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     });
-    if (!this.gameOver && !this.onTitleScreen) this.paused = false;
+    if (!this.gameOver && !this.onTitleScreen && !this.decreePending) {
+      this.paused = false;
+    }
+  }
+
+  closeModalOrReturn() {
+    this.selectedBoardPiece = null;
+    this.shovelMode = false;
+    if (this.onTitleScreen) {
+      this.hideModals();
+      this.paused = true;
+      this.renderTitleScreen();
+      const titleEl = document.getElementById('titleOverlay');
+      if (titleEl) titleEl.classList.remove('hidden');
+      this._lastHudSig = '';
+      this.updateHUD();
+      return;
+    }
+    if (this.gameOver) {
+      this.openModal('resultModal');
+      return;
+    }
+    if (this.decreePending) {
+      this.hideModals();
+      const decEl = document.getElementById('decreeModal');
+      if (decEl) decEl.classList.remove('hidden');
+      this.paused = true;
+      this._lastHudSig = '';
+      this.updateHUD();
+      return;
+    }
+    this.hideModals();
+    this._lastHudSig = '';
+    this.updateHUD();
+  }
+
+  returnToTitleScreen() {
+    this.decreePending = false;
+    this.hideModals();
+    this.onTitleScreen = true;
+    this.paused = true;
+    this.tutorialStep = -1;
+    this.updateTutorialBanner();
+    this.renderTitleScreen();
+    const titleEl = document.getElementById('titleOverlay');
+    if (titleEl) titleEl.classList.remove('hidden');
+    this._lastHudSig = '';
+    this.updateHUD();
+  }
+
+  getProgressionSummary() {
+    const stars = Object.values((this.profile && this.profile.actStars) || {}).reduce((a, b) => a + Number(b || 0), 0);
+    const totalPuzzles = (window.CHESS_DATA.PUZZLES || []).length || 5;
+    const solvedCount = Object.keys((this.profile && this.profile.solvedPuzzles) || {}).length;
+    const maxPoints = 12 + totalPuzzles;
+    const totalPoints = Math.min(maxPoints, stars + solvedCount);
+    const pct = Math.min(100, Math.round((totalPoints / maxPoints) * 100));
+
+    const ranks = [
+      { min: 0, icon: '♟', ar: 'مبتدئ الرقعة', en: 'Novice Tactician' },
+      { min: 3, icon: '♞', ar: 'فارس التاج', en: 'Crown Knight' },
+      { min: 6, icon: '♜', ar: 'قائد الحصون', en: 'Fortress Commander' },
+      { min: 10, icon: '♝', ar: 'حكيم الشطرنج', en: 'Royal Strategist' },
+      { min: 14, icon: '♛', ar: 'الأستاذ الأعظم', en: 'Grandmaster Sovereign' }
+    ];
+
+    let rankIdx = 0;
+    for (let i = 0; i < ranks.length; i++) {
+      if (totalPoints >= ranks[i].min) rankIdx = i;
+    }
+    const cur = ranks[rankIdx];
+    const next = ranks[rankIdx + 1] || null;
+    return {
+      stars,
+      solvedCount,
+      totalPuzzles,
+      totalPoints,
+      maxPoints,
+      pct,
+      rankIdx,
+      rankIcon: cur.icon,
+      rankAr: cur.ar,
+      rankEn: cur.en,
+      nextRankAr: next ? next.ar : null,
+      nextRankEn: next ? next.en : null,
+      pointsToNext: next ? Math.max(1, next.min - totalPoints) : 0
+    };
+  }
+
+  populatePuzzlesModal() {
+    const bannerEl = document.getElementById('puzzlesSummaryBanner');
+    const gridEl = document.getElementById('puzzlesGridContainer');
+    if (!gridEl) return;
+
+    const isEn = this.lang === 'en';
+    const puzzles = window.CHESS_DATA.PUZZLES || [];
+    const solvedMap = (this.profile && this.profile.solvedPuzzles) || {};
+    const solvedCount = Object.keys(solvedMap).length;
+    const pUrls = (window.RoyalSprites && window.RoyalSprites.pieceDataUrls) || {};
+    const eUrls = (window.RoyalSprites && window.RoyalSprites.enemyDataUrls) || {};
+    const romans = ['I', 'II', 'III', 'IV', 'V'];
+
+    if (bannerEl) {
+      bannerEl.innerHTML = `
+        <div class="puzzles-banner-left">
+          <span class="puzzles-solved-pill" dir="ltr">★ ${solvedCount} / ${puzzles.length}</span>
+          <strong>${isEn ? 'Tactical 1-Wave Checkmate Challenges' : 'تحديات كش مات سريعة في موجة واحدة'}</strong>
+        </div>
+        <span class="puzzles-rule-tag">${isEn ? '⚠ Zero Back-Rank Sentinels — Every Move Counts!' : '⚠ دون قلاع حماية خلفية — حرك قطعك بذكاء وانتصر!'}</span>
+      `;
+    }
+
+    gridEl.innerHTML = puzzles
+      .map((pz, idx) => {
+        const solved = Boolean(solvedMap[pz.id]);
+        const isCurrent = this.gameMode === 'puzzle' && this.puzzleIndex === idx && !this.onTitleScreen;
+        const title = isEn ? pz.nameEn : pz.nameAr;
+        const desc = isEn ? pz.descEn : pz.descAr;
+        const uniquePieces = Array.from(new Set((pz.pieces || []).map(p => p.type))).slice(0, 4);
+        const pieceIcons = uniquePieces
+          .map(t => (pUrls[t] ? `<img src="${pUrls[t]}" alt="${t}" class="puzzle-card-sprite" />` : ''))
+          .join('');
+        const mainEnemy = (pz.waves && pz.waves[0] && pz.waves[0].spawns && pz.waves[0].spawns[0] && pz.waves[0].spawns[0].type) || 'buckler';
+        const enemyIcon = eUrls[mainEnemy] ? `<img src="${eUrls[mainEnemy]}" alt="" class="puzzle-card-sprite foe" />` : '';
+
+        return `
+          <div class="puzzle-gallery-card ${solved ? 'is-solved' : ''} ${isCurrent ? 'is-current' : ''}">
+            <div class="puzzle-card-top">
+              <span class="puzzle-roman-badge" dir="ltr">${romans[idx] || idx + 1}</span>
+              <span class="puzzle-status-pill ${solved ? 'solved' : ''}">
+                ${solved ? (isEn ? '★ Solved' : '★ مكتمل') : (isEn ? 'Challenge' : 'تحدي متاح')}
+              </span>
+              <span class="puzzle-mana-chip" dir="ltr">☀ ${pz.startingMana}</span>
+            </div>
+
+            <div class="puzzle-sprites-vs" dir="ltr">
+              <div class="pz-ally-group">${pieceIcons}</div>
+              <span class="pz-vs-bolt">⚡</span>
+              <div class="pz-foe-group">${enemyIcon}</div>
+            </div>
+
+            <h4 class="puzzle-card-title">${title}</h4>
+            <p class="puzzle-card-desc">${desc}</p>
+
+            <button type="button" class="launch-act-btn puzzle-launch-btn" data-launch-puzzle-idx="${idx}">
+              ${solved ? (isEn ? '↻ Replay Puzzle' : '↻ العب مجدداً') : (isEn ? '▶ Start Puzzle' : '▶ ابدأ اللغز')}
+            </button>
+          </div>
+        `;
+      })
+      .join('');
+
+    gridEl.querySelectorAll('[data-launch-puzzle-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.RoyalAudio.init();
+        window.RoyalAudio.playUiClick();
+        window.RoyalAudio.startMusic();
+        const idx = Number(btn.getAttribute('data-launch-puzzle-idx')) || 0;
+        this.startAct(0, { mode: 'puzzle', puzzleIndex: idx });
+      });
+    });
   }
 
   applyVolumeSettings() {
@@ -4100,6 +4321,7 @@ class RoyalGambitGame {
     this.applyLanguage(this.lang);
     this.buildDeckBar();
     this.populateCodexModal();
+    this.populatePuzzlesModal();
     this.renderTitleScreen();
     this.populateActsDrawer();
     this.updateTutorialBanner();
@@ -4127,6 +4349,7 @@ class RoyalGambitGame {
       '#commandMenuModal',
       '#codexModal',
       '#actsModal',
+      '#puzzlesModal',
       '#resultModal',
       '#decreeModal',
       '#titleOverlay'
@@ -4157,6 +4380,8 @@ class RoyalGambitGame {
     swap('matrixCaptionTxt', t.matrixCaption);
     swap('langToggleText', lang === 'ar' ? 'EN' : 'عربي');
     swap('titleLangText', lang === 'ar' ? 'English' : 'العربية');
+    swap('titleStagesBtnTxt', t.actsBtn);
+    swap('titleCodexBtnTxt', t.codexBtn);
     swap('titleSubText', t.titleSub);
     swap('titleLaunchCampaignTxt', t.titleStartCampaign);
     swap('titlePuzzlesTxt', t.titlePuzzles);
@@ -4168,9 +4393,11 @@ class RoyalGambitGame {
     swap('commandMenuTitle', t.cmdMenuTitle);
     swap('codexModalTitle', t.codexTitle);
     swap('actsModalTitle', t.actsTitle);
+    swap('puzzlesModalTitle', t.puzzlesTitle);
     swap('closeMenuBtn', t.closeModalEsc);
     swap('closeCodexBtn', t.closeModalEsc);
     swap('closeActsBtn', t.closeModalEsc);
+    swap('closePuzzlesBtn', t.closeModalEsc);
     swap('landscapeHintTxt', t.rotatePhoneMsg);
 
     // Modal navigation tabs & Codex filter tabs
@@ -4179,6 +4406,9 @@ class RoyalGambitGame {
     });
     document.querySelectorAll('[data-switch-modal="actsModal"]').forEach(el => {
       el.textContent = t.navActs;
+    });
+    document.querySelectorAll('[data-switch-modal="puzzlesModal"]').forEach(el => {
+      el.textContent = t.navPuzzles;
     });
     document.querySelectorAll('[data-switch-modal="codexModal"]').forEach(el => {
       el.textContent = t.navCodex;
@@ -4191,9 +4421,10 @@ class RoyalGambitGame {
     if (tabEnemies) tabEnemies.textContent = t.codexTabEnemies;
 
     // Result modal footer buttons
-    swap('modalActsBtn', isEn ? '❖ Map' : '❖ الخريطة');
+    swap('modalActsBtn', this.gameMode === 'puzzle' ? (isEn ? '♟ Puzzles' : '♟ الألغاز') : (isEn ? '❖ Stages' : '❖ المراحل'));
     swap('modalCodexBtn', isEn ? '◈ Cards' : '◈ البطاقات');
-    swap('modalMainMenuBtn', isEn ? '♚ Hub' : '♚ القيادة');
+    swap('modalMainMenuBtn', isEn ? '⚙ Settings' : '⚙ القيادة');
+    swap('modalTitleScreenBtn', isEn ? '♛ Main Menu' : '♛ الرئيسية');
 
     // Command Menu & Codex concise visual labels
     swap('menuHeroGameTitle', 'CROWN & BLIGHT');
@@ -4207,10 +4438,10 @@ class RoyalGambitGame {
     swap('menuTelSentSub', isEn ? 'Back rank' : 'الصف الأخير');
     swap('menuTelForcesLbl', isEn ? 'Forces' : 'القوات');
     swap('menuRestartBtn', isEn ? '↻ Retry' : '↻ إعادة');
-    swap('menuOpenActsBtn', isEn ? '❖ Map' : '❖ الخريطة');
+    swap('menuOpenActsBtn', isEn ? '❖ Stages' : '❖ المراحل');
     swap('menuOpenCodexBtn', isEn ? '◈ Cards' : '◈ البطاقات');
     swap('menuSettingsHeader', isEn ? '⚙ Quick Controls' : '⚙ الإعدادات السريعة');
-    swap('menuQuickActsHeader', isEn ? '❖ Acts' : '❖ الفصول');
+    swap('menuQuickActsHeader', isEn ? '❖ Stages' : '❖ المراحل');
     swap('menuShortcutsHeader', isEn ? '⌨ Keys' : '⌨ التحكم');
     swap('sfxSliderLbl', '⚔ SFX');
     swap('musicSliderLbl', '♫ Music');
@@ -4247,24 +4478,24 @@ class RoyalGambitGame {
 
   renderTitleScreen() {
     const grid = document.getElementById('titleCommanderGrid');
-    const docGrid = document.getElementById('titleDoctrineGrid');
     const ascGrid = document.getElementById('titleAscensionGrid');
     const summaryEl = document.getElementById('titleCampaignProgress');
-    const puzzleRow = document.getElementById('titlePuzzleList');
+    const progTrackEl = document.getElementById('titleProgressionTrack');
     const achStrip = document.getElementById('titleAchievementsStrip');
     const isEn = this.lang === 'en';
     const cmders = Object.values(window.CHESS_DATA.COMMANDERS || {});
     const pUrls = (window.RoyalSprites && window.RoyalSprites.pieceDataUrls) || {};
     const eUrls = (window.RoyalSprites && window.RoyalSprites.enemyDataUrls) || {};
     const romans = ['I', 'II', 'III', 'IV', 'V'];
+    const prog = this.getProgressionSummary();
 
-    // Populate sculpted 3-Portal sprite compositions
+    // Populate sculpted 3-Portal sprite compositions (Center Hero Campaign Portal enlarged!)
     const campSpritesEl = document.getElementById('portalCampaignSprites');
     if (campSpritesEl && pUrls.queen) {
       campSpritesEl.innerHTML = `
         <img src="${pUrls.rook || ''}" alt="" class="portal-sprite side-left" />
         <img src="${pUrls.queen || ''}" alt="" class="portal-sprite hero-center" />
-        <img src="${pUrls.pawn || ''}" alt="" class="portal-sprite side-right" />
+        <img src="${pUrls.king || pUrls.pawn || ''}" alt="" class="portal-sprite side-right" />
       `;
     }
     const puzSpritesEl = document.getElementById('portalPuzzleSprites');
@@ -4282,18 +4513,23 @@ class RoyalGambitGame {
       `;
     }
 
-    const targetAct = Math.min(this.unlockedActs - 1, Math.max(0, Number(this.profile.lastAct || 0)));
+    const unlockedCount = Math.max(1, Math.min(5, Number(this.unlockedActs || 1)));
+    const targetAct = Math.min(unlockedCount - 1, Math.max(0, Number(this.profile.lastAct || 0)));
     const wmEl = document.getElementById('portalCampaignWatermark');
     if (wmEl) wmEl.textContent = romans[targetAct] || 'I';
     const campPill = document.getElementById('portalCampaignSubPill');
     if (campPill) {
-      campPill.textContent = isEn ? `▶ ACT ${romans[targetAct]}` : `⚔ الفصل ${romans[targetAct]}`;
+      if (targetAct === 4) {
+        campPill.textContent = isEn ? '▶ Stage 5 • Endless' : '▶ المرحلة 5 • الحصار الخالد';
+      } else if (prog.stars === 0 && targetAct === 0) {
+        campPill.textContent = isEn ? '▶ Stage 1 of 5' : '▶ المرحلة 1 من 5';
+      } else {
+        campPill.textContent = isEn ? `▶ Continue Stage ${targetAct + 1}/5` : `▶ تابع المرحلة ${targetAct + 1} من 5`;
+      }
     }
 
-    const totalPuzzles = (window.CHESS_DATA.PUZZLES || []).length;
-    const solvedCount = Object.keys(this.profile.solvedPuzzles || {}).length;
     const puzPill = document.getElementById('portalPuzzleSubPill');
-    if (puzPill) puzPill.textContent = `★ ${solvedCount} / ${totalPuzzles}`;
+    if (puzPill) puzPill.textContent = `★ ${prog.solvedCount} / ${prog.totalPuzzles}`;
 
     const todayKey = new Date().toISOString().slice(0, 10);
     const dailyPill = document.getElementById('portalDailySubPill');
@@ -4311,11 +4547,85 @@ class RoyalGambitGame {
     const achPill = document.getElementById('titleAchCountPill');
     if (achPill) achPill.textContent = `${achCount}/${totalAch}`;
 
-    // 1. Visual Commander Portrait Medallions (Sprites + Pure Stat Badge!)
+    // Motivating Royal Progression Track (Rank + Progress Fill + 5 Stage Stepping Stones!)
+    if (progTrackEl) {
+      const stageShortAr = ['أسوار الفجر', 'كسوف الأقطار', 'القلعتان', 'عرش الأساتذة', 'الخالد'];
+      const stageShortEn = ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Endless'];
+      const nextHint = prog.nextRankAr
+        ? isEn
+          ? `${prog.pointsToNext} ★ to ${prog.nextRankEn}`
+          : `باقي ${prog.pointsToNext} ★ لرتبة ${prog.nextRankAr}`
+        : isEn
+          ? 'Max Sovereign Rank Achieved!'
+          : 'وصلت لأعلى رتبة ملكية!';
+
+      const stageNodesHtml = (window.CHESS_DATA.ACTS || [])
+        .map((act, idx) => {
+          const isLocked = idx >= unlockedCount;
+          const isCurrent = idx === targetAct;
+          const earned = Number((this.profile && this.profile.actStars && this.profile.actStars[String(act.id)]) || 0);
+          const subBadge = isLocked
+            ? '🔒'
+            : act.isEndless
+              ? `∞${this.profile.endlessBestWave ? ` ${this.profile.endlessBestWave}` : ''}`
+              : earned > 0
+                ? '★'.repeat(earned)
+                : isEn
+                  ? 'Ready'
+                  : 'متاح';
+          return `
+            <button type="button" class="stage-step-node ${isCurrent ? 'current' : ''} ${earned > 0 ? 'cleared' : ''} ${isLocked ? 'locked' : ''}" data-title-stage-idx="${idx}" ${isLocked ? 'disabled' : ''} title="${isEn ? act.name : stageShortAr[idx]}">
+              <span class="step-num" dir="ltr">${idx + 1}</span>
+              <span class="step-label">${isEn ? stageShortEn[idx] : stageShortAr[idx]}</span>
+              <small class="step-stars" dir="ltr">${subBadge}</small>
+            </button>
+          `;
+        })
+        .join('');
+
+      progTrackEl.innerHTML = `
+        <div class="prog-header-row">
+          <div class="prog-rank-badge">
+            <span class="prog-rank-icon">${prog.rankIcon}</span>
+            <div>
+              <strong>${isEn ? prog.rankEn : prog.rankAr}</strong>
+              <small>${nextHint}</small>
+            </div>
+          </div>
+          <div class="prog-bar-wrap">
+            <div class="prog-bar-labels">
+              <span>${isEn ? 'Your Royal Progress' : 'تقدّمك في المراحل والألغاز'}</span>
+              <bdi dir="ltr">★ ${prog.totalPoints} / ${prog.maxPoints}</bdi>
+            </div>
+            <div class="prog-bar-track">
+              <div class="prog-bar-fill" style="width: ${Math.max(4, prog.pct)}%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="prog-stages-stepper">
+          ${stageNodesHtml}
+        </div>
+      `;
+
+      progTrackEl.querySelectorAll('[data-title-stage-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-title-stage-idx'));
+          if (idx >= unlockedCount) return;
+          window.RoyalAudio.init();
+          window.RoyalAudio.playUiClick();
+          window.RoyalAudio.startMusic();
+          this.profile.lastAct = idx;
+          this.saveProfile();
+          this.startAct(idx, { mode: 'campaign' });
+        });
+      });
+    }
+
+    // 1. Visual Hero Portrait Medallions (3 Clear Heroes!)
     const cmdVisuals = {
-      bastion: { piece: 'rook', statAr: '+35%♥ صحة', statEn: '+35%♥ HP' },
-      astral: { piece: 'bishop', statAr: '+75☀ بداية', statEn: '+75☀ Mana' },
-      crimson: { piece: 'knight', statAr: '+20%⚔ هجوم', statEn: '+20%⚔ ATK' }
+      bastion: { piece: 'rook', statAr: '+35%♥ صحة ودروع', statEn: '+35%♥ HP & Shield' },
+      astral: { piece: 'bishop', statAr: '+75☀ طاقة بداية', statEn: '+75☀ Start Mana' },
+      crimson: { piece: 'knight', statAr: '+20%⚔ قوة وسرعة', statEn: '+20%⚔ Power & Speed' }
     };
     if (grid) {
       grid.innerHTML = cmders
@@ -4350,46 +4660,20 @@ class RoyalGambitGame {
       });
     }
 
-    // 2. Sculpted Weapon Doctrine Seals
-    const docStats = {
-      phalanx: { ar: '+25❖', en: '+25❖' },
-      halberd: { ar: '×2.4⚡', en: '×2.4⚡' },
-      artillery: { ar: '+1 مدى', en: '+1 RNG' }
-    };
-    if (docGrid) {
-      const docs = Object.values(window.CHESS_DATA.DOCTRINES || {});
-      docGrid.innerHTML = docs
-        .map(d => {
-          const active = d.id === this.doctrineId;
-          const st = docStats[d.id] || { ar: '', en: '' };
-          return `
-            <button type="button" class="doctrine-pill doctrine-seal ${active ? 'selected' : ''}" data-doctrine-id="${d.id}" title="${isEn ? d.descEn : d.descAr}">
-              <span class="doc-icon">${d.icon}</span>
-              <strong>${isEn ? d.nameEn : d.nameAr}</strong>
-              <bdi dir="ltr" class="doc-stat-tag">${isEn ? st.en : st.ar}</bdi>
-            </button>
-          `;
-        })
-        .join('');
-      docGrid.querySelectorAll('[data-doctrine-id]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          this.doctrineId = btn.getAttribute('data-doctrine-id');
-          this.saveProfile();
-          window.RoyalAudio.playUiClick();
-          this.renderTitleScreen();
-        });
-      });
-    }
-
-    // 3. Flame Ascension Gems
+    // 2. Simple, Intuitive 3-Tier Difficulty Selector (Normal / Hard / Legendary — Zero Cryptic Jargon!)
     if (ascGrid) {
-      const ascs = window.CHESS_DATA.ASCENSIONS || [];
-      ascGrid.innerHTML = ascs
-        .map(a => {
-          const active = a.level === this.ascensionLevel;
+      const normalizedLvl = this.ascensionLevel >= 4 ? 4 : this.ascensionLevel >= 2 ? 2 : 0;
+      const tiers = [
+        { lvl: 0, ar: 'عادي', en: 'Normal', tipAr: 'متوازن وممتع للجميع', tipEn: 'Balanced & fun' },
+        { lvl: 2, ar: 'صعب ★', en: 'Hard ★', tipAr: 'تحدي أعلى ومكافأة +30 ELO', tipEn: 'Faster foes +30 ELO' },
+        { lvl: 4, ar: 'أسطوري 🔥', en: 'Legendary 🔥', tipAr: 'للخبراء فقط +75 ELO', tipEn: 'Master challenge +75 ELO' }
+      ];
+      ascGrid.innerHTML = tiers
+        .map(t => {
+          const active = t.lvl === normalizedLvl;
           return `
-            <button type="button" class="ascension-pill ascension-gem ${active ? 'selected' : ''}" data-asc-lvl="${a.level}" title="${isEn ? a.nameEn : a.nameAr}">
-              <strong dir="ltr">${a.level === 0 ? 'A0' : `🔥${a.level}`}</strong>
+            <button type="button" class="difficulty-pill ${active ? 'selected' : ''}" data-asc-lvl="${t.lvl}" title="${isEn ? t.tipEn : t.tipAr}">
+              <strong>${isEn ? t.en : t.ar}</strong>
             </button>
           `;
         })
@@ -4404,34 +4688,7 @@ class RoyalGambitGame {
       });
     }
 
-    // 4. Compact Roman Wax Puzzle Seals
-    if (puzzleRow) {
-      const puzzles = window.CHESS_DATA.PUZZLES || [];
-      puzzleRow.innerHTML = puzzles
-        .map((pz, idx) => {
-          const solved = Boolean(this.profile.solvedPuzzles && this.profile.solvedPuzzles[pz.id]);
-          const shortTitle = (isEn ? pz.nameEn : pz.nameAr).replace(/^(Puzzle \d+:\s*|اللغز \d+:\s*)/i, '');
-          return `
-            <button type="button" class="title-puzzle-chip puzzle-wax-seal ${solved ? 'solved' : ''}" data-puzzle-idx="${idx}" title="${isEn ? pz.descEn : pz.descAr}">
-              <bdi dir="ltr" class="wax-num">${solved ? '★' : romans[idx] || idx + 1}</bdi>
-              <span>${shortTitle}</span>
-            </button>
-          `;
-        })
-        .join('');
-
-      puzzleRow.querySelectorAll('[data-puzzle-idx]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          window.RoyalAudio.init();
-          window.RoyalAudio.playUiClick();
-          window.RoyalAudio.startMusic();
-          const idx = Number(btn.getAttribute('data-puzzle-idx'));
-          this.startAct(0, { mode: 'puzzle', puzzleIndex: idx });
-        });
-      });
-    }
-
-    // 5. Collapsible Trophy Vault Medals
+    // 3. Collapsible Trophy Vault Medals
     if (achStrip) {
       const achs = window.CHESS_DATA.ACHIEVEMENTS || [];
       achStrip.innerHTML = achs
@@ -4449,14 +4706,12 @@ class RoyalGambitGame {
         .join('');
     }
 
-    // 6. Top Floating Jewel Progress Strip (Zero Prose!)
+    // 4. Top Floating Jewel Summary Chips
     if (summaryEl) {
-      const stars = Object.values(this.profile.actStars || {}).reduce((a, b) => a + b, 0);
       summaryEl.innerHTML = `
-        <span class="title-jewel-chip gold" dir="ltr" title="Grandmaster ELO">♛ ${this.eloRating}</span>
-        <span class="title-jewel-chip amber" dir="ltr" title="Campaign Stars">★ ${stars}/12</span>
-        <span class="title-jewel-chip cyan" dir="ltr" title="Checkmate Puzzles">♟ ${solvedCount}/${totalPuzzles}</span>
-        <span class="title-jewel-chip crimson" dir="ltr" title="Endless Best Wave">∞ W${this.profile.endlessBestWave || 0}</span>
+        <span class="title-jewel-chip gold" dir="ltr" title="ELO">♛ ${this.eloRating}</span>
+        <span class="title-jewel-chip amber" dir="ltr" title="Campaign Stars">★ ${prog.stars}/12</span>
+        <span class="title-jewel-chip cyan" dir="ltr" title="Checkmate Puzzles">♟ ${prog.solvedCount}/${prog.totalPuzzles}</span>
       `;
     }
   }
@@ -4493,6 +4748,7 @@ class RoyalGambitGame {
       'HIGH RISK': 'مخاطرة كبرى'
     };
 
+    this.decreePending = true;
     this.paused = true;
     grid.innerHTML = shuffled
       .map(d => {
@@ -4529,6 +4785,7 @@ class RoyalGambitGame {
             true
           );
         }
+        this.decreePending = false;
         modal.classList.add('hidden');
         this.paused = false;
         this.waveCooldownTimer = 1.6;

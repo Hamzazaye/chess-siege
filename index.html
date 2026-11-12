@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f1d" />
   <title>CROWN &amp; BLIGHT: The Royal Siege | التاج والظلام: الحصار الملكي</title>
-  <meta name="description" content="Command Royal Chess Pieces with authentic Chess Attack Geometry, Tactical Board Repositioning, Pawn Promotion, Royal Batteries, Unobstructed Castling, Doctrines, and Ascensions against the Corrupted Ebony Undead Horde." />
+  <meta name="description" content="Command Royal Chess Pieces with authentic Chess Attack Geometry, Tactical Board Repositioning, Pawn Promotion, Royal Batteries, Unobstructed Castling, Royal Heroes, and Checkmate Puzzles against the Corrupted Ebony Undead Horde." />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/royal-crest.png" />
   <link rel="apple-touch-icon" href="assets/royal-crest.png" />
@@ -111,7 +111,7 @@
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openActsBtn">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6zM9 3v15M15 6v15"/></svg>
-          <span id="openActsBtnLabel">الحملة</span>
+          <span id="openActsBtnLabel">المراحل</span>
         </button>
         <button type="button" class="hud-btn gold-outline hide-on-mobile" id="openCodexBtn">
           <svg class="ui-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2V4zm20 0h-7a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h8V4z"/></svg>
@@ -225,10 +225,11 @@
     <div class="modal-window command-menu-window royal-ornate-frame">
       <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="commandMenuTitle">♚ قاعة القيادة</h3>
+          <h3 id="commandMenuTitle">♚ الإعدادات والقيادة</h3>
           <nav class="sanctum-modal-nav">
             <button type="button" class="sanctum-nav-tab active" data-switch-modal="commandMenuModal">⚙ القيادة</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ المراحل</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="puzzlesModal">♟ الألغاز</button>
             <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
         </div>
@@ -376,10 +377,11 @@
     <div class="modal-window royal-ornate-frame">
       <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="codexModalTitle">◈ سجل القطع والخصوم</h3>
+          <h3 id="codexModalTitle">◈ البطاقات والقدرات</h3>
           <nav class="sanctum-modal-nav">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة</button>
-            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ المراحل</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="puzzlesModal">♟ الألغاز</button>
             <button type="button" class="sanctum-nav-tab active" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
           <div class="codex-tabs" role="tablist">
@@ -422,15 +424,16 @@
     </div>
   </div>
 
-  <!-- ================= 3. ILLUSTRATED 5-ACT BIOME CAMPAIGN MAP ================= -->
+  <!-- ================= 3. ILLUSTRATED 5-STAGE CAMPAIGN MAP ================= -->
   <div class="modal-backdrop hidden" id="actsModal" role="dialog" aria-modal="true" aria-labelledby="actsModalTitle">
     <div class="modal-window royal-ornate-frame acts-map-window">
       <div class="modal-header sleek-modal-header">
         <div class="modal-title-and-tabs">
-          <h3 id="actsModalTitle">❖ خريطة الحملة</h3>
+          <h3 id="actsModalTitle">❖ مراحل اللعب</h3>
           <nav class="sanctum-modal-nav">
             <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة</button>
-            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ الخريطة</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="actsModal">❖ المراحل</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="puzzlesModal">♟ الألغاز</button>
             <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ البطاقات</button>
           </nav>
         </div>
@@ -438,6 +441,28 @@
       </div>
       <div class="modal-body">
         <div class="acts-biome-gallery" id="actsListContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 3B. CHECKMATE PUZZLES GALLERY MODAL ================= -->
+  <div class="modal-backdrop hidden" id="puzzlesModal" role="dialog" aria-modal="true" aria-labelledby="puzzlesModalTitle">
+    <div class="modal-window royal-ornate-frame puzzles-gallery-window">
+      <div class="modal-header sleek-modal-header">
+        <div class="modal-title-and-tabs">
+          <h3 id="puzzlesModalTitle">♟ ألغاز الكش مات</h3>
+          <nav class="sanctum-modal-nav">
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="commandMenuModal">⚙ القيادة</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="actsModal">❖ المراحل</button>
+            <button type="button" class="sanctum-nav-tab active" data-switch-modal="puzzlesModal">♟ الألغاز</button>
+            <button type="button" class="sanctum-nav-tab" data-switch-modal="codexModal">◈ البطاقات</button>
+          </nav>
+        </div>
+        <button type="button" class="hud-btn modal-close-pill" id="closePuzzlesBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="puzzles-summary-banner" id="puzzlesSummaryBanner"></div>
+        <div class="puzzles-gallery-grid" id="puzzlesGridContainer"></div>
       </div>
     </div>
   </div>
@@ -457,6 +482,7 @@
         </div>
         <h3 id="resultModalTitle" class="result-modal-heading">♛ انتصار ملكي!</h3>
         <p id="resultModalSubtitle" class="result-modal-sub"></p>
+        <div class="result-unlock-banner hidden" id="resultUnlockBanner"></div>
         <div class="result-breach-strip hidden" id="resultBreachStrip"></div>
       </div>
 
@@ -470,11 +496,12 @@
       <div class="result-stats-grid" id="resultModalStats"></div>
 
       <div class="result-actions">
-        <button type="button" class="launch-act-btn result-primary-cta" id="modalNextActBtn">⚔ التالي ←</button>
+        <button type="button" class="launch-act-btn result-primary-cta" id="modalNextActBtn">⚔ المرحلة التالية ←</button>
         <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalRetryBtn">↻ إعادة</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalActsBtn">❖ الخريطة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalActsBtn">❖ المراحل</button>
         <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalCodexBtn">◈ البطاقات</button>
-        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalMainMenuBtn">♚ القيادة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalMainMenuBtn">⚙ القيادة</button>
+        <button type="button" class="hud-btn gold-outline result-secondary-cta" id="modalTitleScreenBtn">♛ الرئيسية</button>
       </div>
     </div>
   </div>
@@ -483,21 +510,29 @@
   <div class="modal-backdrop hidden" id="decreeModal" role="dialog" aria-modal="true" aria-labelledby="decreeModalTitle">
     <div class="modal-window decree-window royal-ornate-frame">
       <div class="decree-header">
-        <span class="decree-eyebrow" id="decreeEyebrowTxt">✦ اختر مرسوماً ملكياً ✦</span>
+        <span class="decree-eyebrow" id="decreeEyebrowTxt">✦ اختر مكافأة المرحلة ✦</span>
         <h3 id="decreeModalTitle">مراسيم التاج</h3>
       </div>
       <div class="decree-cards-grid" id="decreeCardsGrid"></div>
     </div>
   </div>
 
-  <!-- ================= 6. ICONIC AAA VISUAL TITLE SANCTUARY (PORTALS + SPRITE MEDALLIONS!) ================= -->
+  <!-- ================= 6. ICONIC AAA VISUAL TITLE SANCTUARY (CENTER PLAY + PROGRESSION!) ================= -->
   <div class="title-sanctum-overlay" id="titleOverlay" role="dialog" aria-modal="true" aria-labelledby="titleHeroName">
     <div class="title-atelier-stage">
       <!-- Top Floating Corner Bar -->
       <div class="title-floating-topbar">
         <div class="title-jewel-progress" id="titleCampaignProgress"></div>
         <div class="title-corner-btns">
-          <button type="button" class="title-orb-btn" id="titleTrophyToggleBtn" title="Royal Seals & Achievements">
+          <button type="button" class="title-orb-btn" id="titleStagesBtn" title="Stages Map">
+            <span>❖</span>
+            <small id="titleStagesBtnTxt">المراحل</small>
+          </button>
+          <button type="button" class="title-orb-btn" id="titleCodexBtn" title="Cards & Pieces">
+            <span>◈</span>
+            <small id="titleCodexBtnTxt">البطاقات</small>
+          </button>
+          <button type="button" class="title-orb-btn" id="titleTrophyToggleBtn" title="Achievements">
             <span>🏆</span>
             <small id="titleAchCountPill" dir="ltr">0/10</small>
           </button>
@@ -514,38 +549,12 @@
           <img src="assets/royal-crest.png" alt="Crown & Blight Crest" />
         </div>
         <h1 id="titleHeroName" dir="ltr">CROWN <span>&amp;</span> BLIGHT</h1>
-        <p class="title-tagline-ribbon" id="titleSubText">ملحمة الشطرنج الملكي • 10×5</p>
+        <p class="title-tagline-ribbon" id="titleSubText">ملحمة الشطرنج التكتيكي • 10×5</p>
       </div>
 
-      <!-- 3 Sculpted Gothic/Tarot Mode Portals (Visual Art First!) -->
+      <!-- 3 Mode Portals — HERO PLAY PORTAL CENTERED & ENLARGED! -->
       <div class="title-portals-triptych">
-        <!-- Portal 1: Campaign (Featured Gold Centerpiece) -->
-        <button type="button" class="mode-portal-card portal-campaign" id="titleLaunchCampaignBtn">
-          <div class="portal-arch-glow"></div>
-          <span class="portal-roman-watermark" id="portalCampaignWatermark" dir="ltr">I</span>
-          <div class="portal-art-stage" id="portalCampaignSprites">
-            <span class="portal-fallback-glyph">♛</span>
-          </div>
-          <div class="portal-footer">
-            <strong id="titleLaunchCampaignTxt">الحملة الملكية</strong>
-            <span class="portal-cta-pill" id="portalCampaignSubPill">▶ العب الآن</span>
-          </div>
-        </button>
-
-        <!-- Portal 2: Checkmate Puzzles (Sapphire Geometry) -->
-        <button type="button" class="mode-portal-card portal-puzzles" id="titlePuzzlesBtn">
-          <div class="portal-arch-glow"></div>
-          <span class="portal-roman-watermark" dir="ltr">♟</span>
-          <div class="portal-art-stage" id="portalPuzzleSprites">
-            <span class="portal-fallback-glyph">♞</span>
-          </div>
-          <div class="portal-footer">
-            <strong id="titlePuzzlesTxt">ألغاز الشطرنج</strong>
-            <span class="portal-cta-pill cyan" id="portalPuzzleSubPill" dir="ltr">0 / 5 ★</span>
-          </div>
-        </button>
-
-        <!-- Portal 3: Daily Siege (Solar Astrolabe) -->
+        <!-- Side Portal 1: Daily Challenge (Solar Astrolabe) -->
         <button type="button" class="mode-portal-card portal-daily" id="titleDailyBtn">
           <div class="portal-arch-glow"></div>
           <span class="portal-roman-watermark" dir="ltr">☀</span>
@@ -553,33 +562,57 @@
             <span class="portal-fallback-glyph">⚱</span>
           </div>
           <div class="portal-footer">
-            <strong id="titleDailyTxt">الحصار اليومي</strong>
+            <strong id="titleDailyTxt">تحدي اليوم</strong>
             <span class="portal-cta-pill amber" id="portalDailySubPill">⚡ معركة اليوم</span>
+          </div>
+        </button>
+
+        <!-- CENTER HERO PORTAL: START PLAYING (Featured Gold Centerpiece, Larger!) -->
+        <button type="button" class="mode-portal-card portal-campaign hero-center-portal" id="titleLaunchCampaignBtn">
+          <div class="portal-arch-glow"></div>
+          <span class="portal-crown-crest" aria-hidden="true">♛</span>
+          <span class="portal-roman-watermark" id="portalCampaignWatermark" dir="ltr">I</span>
+          <div class="portal-art-stage" id="portalCampaignSprites">
+            <span class="portal-fallback-glyph">♛</span>
+          </div>
+          <div class="portal-footer">
+            <strong id="titleLaunchCampaignTxt">ابدأ اللعب</strong>
+            <span class="portal-cta-pill hero-play-pill" id="portalCampaignSubPill">▶ المرحلة 1 من 5</span>
+          </div>
+        </button>
+
+        <!-- Side Portal 3: Checkmate Puzzles (Opens Dedicated Puzzles Modal!) -->
+        <button type="button" class="mode-portal-card portal-puzzles" id="titlePuzzlesBtn">
+          <div class="portal-arch-glow"></div>
+          <span class="portal-roman-watermark" dir="ltr">♟</span>
+          <div class="portal-art-stage" id="portalPuzzleSprites">
+            <span class="portal-fallback-glyph">♞</span>
+          </div>
+          <div class="portal-footer">
+            <strong id="titlePuzzlesTxt">ألغاز الكش مات</strong>
+            <span class="portal-cta-pill cyan" id="portalPuzzleSubPill" dir="ltr">★ 0 / 5</span>
           </div>
         </button>
       </div>
 
-      <!-- Collapsible Visual Puzzle Seals Drawer (Opens on Hover/Toggle or Puzzle Click) -->
-      <div class="title-puzzles-drawer" id="titlePuzzleList"></div>
+      <!-- Motivating Royal Journey & Rank Progression Bar (Zero Clutter, Clear Sense of Progress!) -->
+      <div class="title-progression-card" id="titleProgressionTrack"></div>
 
       <!-- Collapsible Trophy Vault Popover (Hidden until 🏆 clicked!) -->
       <div class="title-trophy-drawer hidden" id="titleAchievementsStrip" aria-label="Royal Achievements"></div>
 
-      <!-- Sleek Bottom Visual Loadout Bar (Portraits & Gem Seals — Zero Paragraphs!) -->
+      <!-- Simplified, Friendly Loadout Bar (Hero Choice + Simple Difficulty — Zero Jargon!) -->
       <div class="title-loadout-dock">
-        <div class="loadout-cluster">
-          <span class="loadout-cluster-lbl" id="titleCommanderHeader">♚ القائد</span>
+        <div class="loadout-cluster hero-choice-cluster">
+          <span class="loadout-cluster-lbl" id="titleCommanderHeader">♚ اختر بطلك</span>
           <div class="commander-medallions-row" id="titleCommanderGrid"></div>
         </div>
 
         <div class="loadout-divider"></div>
 
-        <div class="loadout-cluster">
-          <span class="loadout-cluster-lbl" id="titleDoctrineHeader">⚔ العقيدة والمرتبة</span>
-          <div class="doctrine-and-flames-row">
-            <div class="doctrine-seals-row" id="titleDoctrineGrid"></div>
-            <div class="ascension-gems-row" id="titleAscensionGrid"></div>
-          </div>
+        <div class="loadout-cluster difficulty-choice-cluster">
+          <span class="loadout-cluster-lbl" id="titleDoctrineHeader">⚔ مستوى الصعوبة</span>
+          <div class="ascension-gems-row" id="titleAscensionGrid"></div>
         </div>
       </div>
     </div>
