@@ -162,7 +162,7 @@ function runTests() {
     assert.ok(execMatch && execMatch[1].includes('moveCdMult'), 'executeChessMove must apply decreeState.moveCdMult');
 
     // Seeded Mulberry32 PRNG + deterministic decree shuffle
-    assert.ok(gameJs.includes('initSeededRng('), 'Seeded RNG must exist for Daily Gambit & Puzzles');
+    assert.ok(gameJs.includes('initSeededRng('), 'Seeded RNG must exist for Daily Siege & Puzzles');
     const decreeMatch = gameJs.match(/openDecreeDraft\(\)\s*\{([\s\S]*?)^\s{2}\}/m);
     assert.ok(decreeMatch && !decreeMatch[1].includes('Math.random()'), 'openDecreeDraft must use seeded this.rand()');
 

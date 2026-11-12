@@ -1,5 +1,5 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (Ultra-Visual & UX Edition)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (Ultra-Visual & UX Edition)
  * High-DPI 60FPS Tactical Canvas Renderer:
  * - Winged Golden Rook Sentinels (Back-Rank Sweepers replacing Lawnmowers)
  * - Multi-layered Corrupted Ebony Chess Monsters with Afterimages, Runic Shields & Weapon Swings
@@ -213,7 +213,7 @@ class RoyalBoardRenderer {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    // Volumetric Cathedral God-Rays slanting across the Sanctum
+    // Volumetric Sunbeams slanting across the Royal Keep
     ctx.save();
     for (let i = 0; i < 3; i++) {
       const rayX = this.boardLeft + i * this.tileSize * 3.1 + Math.sin(t * 0.4 + i) * 18;
@@ -451,7 +451,7 @@ class RoyalBoardRenderer {
     const boardW = this.cols * this.tileSize;
     const boardH = this.rows * this.tileSize;
 
-    // 1. Deep 3D Carved Cathedral Stone Sanctuary Plinth (#242733 -> #0D111B) + 3D Stepped Front Lip
+    // 1. Deep 3D Carved Royal Citadel Stone Plinth (#242733 -> #0D111B) + 3D Stepped Front Lip
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
     ctx.shadowBlur = 46;

@@ -1,20 +1,20 @@
-# ♟ CROWN & BLIGHT: The Royal Gambit | حرب التاج والظلام
+# ♟ CROWN & BLIGHT: The Royal Siege | التاج والظلام: الحصار الملكي
 
-**AAA Tactical Chess Geometry × Real-Time Lane Defense (`v4.0` Commercial Edition)**  
-لعبة استراتيجية تجمع بين **هندسة وحركات قطع الشطرنج الحقيقية على رقعة `10×5`** وأسلوب **الدفاع التكتيكي وإدارة الاقتصاد وبناء التشكيلات**.
+**AAA Tactical Chess Geometry × Real-Time Lane Defense (`v4.2` Commercial Edition)**  
+لعبة استراتيجية تجمع بين **هندسة وحركات قطع الشطرنج الحقيقية على رقعة `10×5`** وأسلوب **الدفاع التكتيكي وإدارة الخزينة وبناء التشكيلات**.
 
 Live Demo: https://hamzazaye.github.io/chess-siege/
 
 ---
 
-## ✨ أبرز مزايا الإصدار التجاري (`v4.0` Commercial Edition)
+## ✨ أبرز مزايا الإصدار التجاري (`v4.2` Commercial Edition)
 
-1. **Title Sanctuary, Commanders, Doctrines & Ascensions**:
+1. **القلعة الرئيسية، القادة، العقائد والمراتب**:
    - **Campaign Mode (الحملة الملكية — 5 فصول تفتح تدريجياً)**: حفظ النجوم (`★/★★★`) وأعلى النقاط وتدرّج فتح الفصول.
-   - **Checkmate Puzzles (5 ألغاز كش مات حتمية بدون قلاع حارسة)**: حلول تكتيكية تعتمد على الشوكة الملكية، الدمج الخماسي، تطهير اللعنات، التبييت غير المعاق، والبطارية الملكية.
-   - **Seeded Daily Gambit (المقامرة اليومية ببذرة موحّدة `Mulberry32`)**: نفس تسلسل الوحوش والمراسيم لجميع اللاعبين حول العالم يومياً.
-   - **3 قادة ميدان (`Iron Bastion`, `Astral Order`, `Crimson Gambit`)** + **3 عقائد جيش (`Shield Phalanx`, `Halberd Vanguard`, `Siege Artillery`)** + **6 مستويات صعود (`Ascension 0–5`)**.
-   - **20 مرسوماً ملكياً ومقامرات ملعونة (`Royal Decrees & Cursed Gambits`)** + **10 أوسمة ملكية (`Royal Achievements`)**.
+   - **Checkmate Puzzles (5 ألغاز شطرنج حتمية دون قلاع خلفية)**: حلول تكتيكية تعتمد على شوكة الفرسان، التتويج الخماسي، أقطار الضياء، التبييت الحاسم، والبطارية الملكية.
+   - **Seeded Daily Siege (الحصار اليومي ببذرة موحّدة `Mulberry32`)**: نفس تسلسل الأعداء والمراسيم لجميع اللاعبين حول العالم يومياً.
+   - **3 قادة ميدان (`Lord of Bastions`, `Astral Archon`, `Crimson Vanguard`)** + **3 عقائد جيش (`Aegis Phalanx`, `Spearhead Vanguard`, `Crown Artillery`)** + **6 مراتب ارتقاء (`Ascension 0–5`)**.
+   - **20 مرسوماً ملكياً (`Royal Decrees`)** + **10 أوسمة ملكية (`Royal Achievements`)**.
 
 2. **هندسة شطرنج حقيقية وحركات تكتيكية حيّة**:
    - **التبييت الملكي الحقيقي (`Unobstructed Castling`)**: يتطلب خلو المربعات بين الملك والقلعة من القطع والوحوش ليمنح الصف درعاً ذهبياً شاملاً.

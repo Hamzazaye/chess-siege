@@ -47,5 +47,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`♟ CROWN & BLIGHT: The Royal Gambit running at http://localhost:${PORT}`);
+  console.log(`♟ CROWN & BLIGHT: The Royal Siege running at http://localhost:${PORT}`);
 });

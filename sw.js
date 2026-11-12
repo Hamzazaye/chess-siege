@@ -1,8 +1,8 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (v4.0 PWA Offline Service Worker)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (v4.2 PWA Offline Service Worker)
  * Stale-while-revalidate asset caching for zero-latency offline & mobile play.
  */
-const CACHE_NAME = 'crown-blight-v4.1';
+const CACHE_NAME = 'crown-blight-v4.2';
 const CORE_ASSETS = [
   './',
   './index.html',

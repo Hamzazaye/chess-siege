@@ -1,5 +1,5 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (AAA Balanced & Ultra-UX Edition)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (AAA Balanced & Ultra-UX Edition)
  * Core Real-Time Tactical Simulation Engine:
  * - Authentic Chess Geometry + Balanced Queen & Counter-Play
  * - Winged Golden Rook Sentinels (Back-Rank Sweepers)
@@ -228,13 +228,13 @@ class RoyalGambitGame {
 
     const isEn = this.lang === 'en';
     const stepsEn = [
-      '🛡 Place Shield-Pawn [2] on a front square',
-      '⚔ Place Rook [3] or Bishop [5] behind it',
+      '🛡 Place Aegis Shield-Pawn [2] on a front square',
+      '⚔ Place Bastion Rook [3] or Bishop [5] behind it',
       '♟ Click any deployed Piece to slide or jump!'
     ];
     const stepsAr = [
-      '🛡 ضع الجندي المدرع [2] في مربع أمامي',
-      '⚔ ضع قلعة [3] أو فيلاً [5] خلف الجندي',
+      '🛡 ضع البيدق المدرّع [2] في مربع أمامي',
+      '⚔ ضع القلعة [3] أو الفيل [5] خلف البيدق',
       '♟ انقر على أي قطعة لتحريكها فوق الرقعة!'
     ];
 
@@ -355,7 +355,7 @@ class RoyalGambitGame {
         ...window.CHESS_DATA.ACTS[2],
         id: 80,
         code: 'DAILY',
-        name: 'Daily Royal Gambit',
+        name: 'Daily Royal Siege',
         subtitle: new Date().toISOString().slice(0, 10),
         startingMana: 200,
         isDaily: true
@@ -1645,8 +1645,8 @@ class RoyalGambitGame {
     this.spawnParticles(center.x, center.y, '#facc15', 28);
     this.addFloatingText(
       targetType === 'queen'
-        ? (this.lang === 'en' ? '♛ PROMOTED TO SOVEREIGN QUEEN!' : '♛ تمت الترقية إلى الوزير الملكي!')
-        : (this.lang === 'en' ? '⚡ PROMOTED TO TEMPEST KNIGHT! (MAX 2 QUEENS)' : '⚡ تمت الترقية إلى فارس العاصفة! (الحد 2 وزير)'),
+        ? (this.lang === 'en' ? '♛ PROMOTED TO SOVEREIGN QUEEN!' : '♛ تمت الترقية إلى الوزير المتوّج!')
+        : (this.lang === 'en' ? '⚡ PROMOTED TO TEMPEST KNIGHT! (MAX 2 QUEENS)' : '⚡ تمت الترقية إلى فارس الصاعقة! (الحد 2 وزير)'),
       center.x,
       center.y - 24,
       '#fef08a',
@@ -1714,7 +1714,7 @@ class RoyalGambitGame {
     window.RoyalAudio.playUltimate();
 
     this.announceBanner(
-      this.lang === 'en' ? '⚡ CHECKMATE OVERLOAD!' : '⚡ كش مات الشاملة!',
+      this.lang === 'en' ? '⚡ ROYAL CHECKMATE!' : '⚡ كش ملك القاضية!',
       this.lang === 'en'
         ? 'Sovereign Sky-Spears Strike Every Rank!'
         : 'رماح السماء الذهبية تطهّر جميع الصفوف!'
@@ -2237,7 +2237,7 @@ class RoyalGambitGame {
       }
     }
     return {
-      label: isFlag ? `IMMORTAL GAMBIT WAVE ${waveNum}` : `Endless Wave ${waveNum}`,
+      label: isFlag ? `IMMORTAL SIEGE WAVE ${waveNum}` : `Endless Wave ${waveNum}`,
       isFlag,
       spawns
     };
@@ -2393,8 +2393,8 @@ class RoyalGambitGame {
 
         this.addFloatingText(
           isHalberd
-            ? (this.lang === 'en' ? '⚔ HALBERD THRUST!' : '⚔ طعنة المطارد!')
-            : (this.lang === 'en' ? '❖ SHIELD PUSH!' : '❖ دفع بالدرع!'),
+            ? (this.lang === 'en' ? '⚔ SPEAR THRUST!' : '⚔ طعنة الرمح!')
+            : (this.lang === 'en' ? '❖ SHIELD PUSH!' : '❖ صدّ بالدرع!'),
           center.x + 18,
           center.y - 18,
           isHalberd ? '#fda4af' : '#7dd3fc',
@@ -2886,7 +2886,7 @@ class RoyalGambitGame {
         e.hasThrownImp = true;
         const impDef = window.CHESS_DATA.ENEMIES.imp;
         const impRow = Math.floor(this.rand() * this.rows);
-        this.addTelegraphZone(2, impRow, 0.75, this.lang === 'en' ? '⚠ IMP!' : '⚠ عفريت!');
+        this.addTelegraphZone(2, impRow, 0.75, this.lang === 'en' ? '⚠ IMP!' : '⚠ مارد!');
         this.enemies.push({
           id: this.entityIdCounter++,
           type: 'imp',
@@ -2909,7 +2909,7 @@ class RoyalGambitGame {
         const ex = this.renderer.boardLeft + e.colPos * this.renderer.tileSize;
         const ey = this.renderer.boardTop + (e.row + 0.5) * this.renderer.tileSize;
         this.addFloatingText(
-          this.lang === 'en' ? 'IMP LAUNCHED!' : 'قذف عفريت الوباء!',
+          this.lang === 'en' ? 'SPARK-IMP HURLED!' : 'قذف مارد الهاوية!',
           ex,
           ey - 32,
           '#f97316',
@@ -3552,28 +3552,28 @@ class RoyalGambitGame {
     const retryBtn = document.getElementById('modalRetryBtn');
 
     const enemyArabicNames = {
-      thrall: 'بيدق الظلام',
-      buckler: 'حامل الدرع',
-      sprinter: 'المتسلل الوثّاب',
-      assassin: 'الفارس الشبح',
-      necro: 'كاهن الفيل',
-      imp: 'عفريت الوباء',
-      gargantua: 'عملاق الحصار',
-      plague_queen: 'الوزيرة الطيفية'
+      thrall: 'جندي الرماد',
+      buckler: 'مدرّع الحديد الأسود',
+      sprinter: 'الوثّاب المظلم',
+      assassin: 'فارس الظل',
+      necro: 'فيل الظلام',
+      imp: 'مارد الهاوية',
+      gargantua: 'عملاق القلاع',
+      plague_queen: 'وزيرة الكسوف'
     };
 
     const counterMap = {
-      thrall: { piece: 'pawn', tagAr: 'يدفعه بالدرع للخلف!', tagEn: 'Shoves foes backward!' },
-      buckler: { piece: 'bishop', tagAr: 'يتجاوز 50% من الدرع!', tagEn: 'Pierces 50% shield!' },
-      sprinter: { piece: 'rook', tagAr: 'جندي أمامي + شعاع قلعة!', tagEn: 'Pawn bait + Rook beam!' },
+      thrall: { piece: 'pawn', tagAr: 'يصدّه بالدرع للخلف!', tagEn: 'Shoves foes backward!' },
+      buckler: { piece: 'bishop', tagAr: 'يخترق 50% من الدرع!', tagEn: 'Pierces 50% shield!' },
+      sprinter: { piece: 'rook', tagAr: 'بيدق أمامي + شعاع قلعة!', tagEn: 'Pawn bait + Rook beam!' },
       assassin: { piece: 'rook', tagAr: 'القلعة توقف قفزة L!', tagEn: 'Hard-stops L-jump!' },
-      necro: { piece: 'bishop', tagAr: 'يطهّر اللعنات ويعالج!', tagEn: 'Cleanses Hex & heals!' },
+      necro: { piece: 'bishop', tagAr: 'يطهّر اللعنات ويشفي!', tagEn: 'Cleanses Hex & heals!' },
       imp: { piece: 'king', tagAr: 'هالة الملك تمحو السرب!', tagEn: 'Shockwave clears swarm!' },
-      gargantua: { piece: 'queen', tagAr: '[M] ادمج 5 جنود لوزير!', tagEn: '[M] Fuse 5 Pawns ➔ Queen!' },
+      gargantua: { piece: 'queen', tagAr: '[M] ادمج 5 بيادق لوزير!', tagEn: '[M] Fuse 5 Pawns ➔ Queen!' },
       plague_queen: { piece: 'knight', tagAr: 'راقب CHECK! واضرب بحرف L!', tagEn: 'Watch CHECK! + L-strike!' }
     };
 
-    const bInfo = this.breachInfo || { enemyType: 'thrall', enemyName: 'Shambling Pawn-Thrall', row: 2 };
+    const bInfo = this.breachInfo || { enemyType: 'thrall', enemyName: 'Ashen Footman', row: 2 };
     const rankNum = 5 - bInfo.row;
     const totalW = this.currentAct.isEndless ? '∞' : this.currentAct.totalWaves;
     const arEnemyName = enemyArabicNames[bInfo.enemyType] || bInfo.enemyName;
@@ -3775,34 +3775,34 @@ class RoyalGambitGame {
 
     const enemyMeta = {
       thrall: {
-        arName: 'بيدق الظلام',
+        arName: 'جندي الرماد',
         tierAr: '♟ مشاة',
         tierEn: '♟ Footman',
         tierClass: 'tier-emerald',
         counterPiece: 'pawn',
-        counterAr: 'الجندي المدرع يدفعه للخلف',
+        counterAr: 'البيدق المدرّع يصدّه للخلف',
         counterEn: 'Shield-Pawn shoves back'
       },
       buckler: {
-        arName: 'حامل الدرع',
+        arName: 'مدرّع الحديد الأسود',
         tierAr: '♜ مدرع',
         tierEn: '♜ Shielded',
         tierClass: 'tier-emerald',
         counterPiece: 'bishop',
-        counterAr: 'فيل الأشعة يتجاوز 50% درع',
+        counterAr: 'فيل الضياء يخترق 50% درع',
         counterEn: 'Bishop pierces 50% shield'
       },
       sprinter: {
-        arName: 'المتسلل الوثّاب',
+        arName: 'الوثّاب المظلم',
         tierAr: '♞ وثّاب',
         tierEn: '♞ Vaulter',
         tierClass: 'tier-crimson',
         counterPiece: 'rook',
-        counterAr: 'جندي طُعم + شعاع قلعة',
+        counterAr: 'بيدق أمامي + شعاع قلعة',
         counterEn: 'Pawn bait + Rook beam'
       },
       assassin: {
-        arName: 'الفارس الشبح',
+        arName: 'فارس الظل',
         tierAr: '⚔ صائد',
         tierEn: '⚔ Hunter',
         tierClass: 'tier-crimson',
@@ -3811,16 +3811,16 @@ class RoyalGambitGame {
         counterEn: 'Rook hard-stops L-jump!'
       },
       necro: {
-        arName: 'كاهن الفيل',
-        tierAr: '♝ لعنات',
+        arName: 'فيل الظلام',
+        tierAr: '♝ ظلال',
         tierEn: '♝ Hexer',
         tierClass: 'tier-crimson',
         counterPiece: 'bishop',
-        counterAr: 'فيل الأشعة يطهّر اللعنات',
+        counterAr: 'فيل الضياء يبدّد التباطؤ',
         counterEn: 'Bishop cleanses Hexes'
       },
       imp: {
-        arName: 'عفريت الوباء',
+        arName: 'مارد الهاوية',
         tierAr: '⚡ سرب',
         tierEn: '⚡ Swarm',
         tierClass: 'tier-emerald',
@@ -3829,16 +3829,16 @@ class RoyalGambitGame {
         counterEn: 'King shockwave clears swarm'
       },
       gargantua: {
-        arName: 'عملاق الحصار',
+        arName: 'عملاق القلاع',
         tierAr: '♚ زعيم',
         tierEn: '♚ Boss',
         tierClass: 'tier-boss',
         counterPiece: 'queen',
-        counterAr: '[M] دمج 5 جنود ➔ وزير!',
+        counterAr: '[M] دمج 5 بيادق ➔ وزير!',
         counterEn: '[M] Fuse 5 Pawns ➔ Queen!'
       },
       plague_queen: {
-        arName: 'الوزيرة الطيفية',
+        arName: 'وزيرة الكسوف',
         tierAr: '♛ زعيمة',
         tierEn: '♛ Boss',
         tierClass: 'tier-boss',
@@ -3850,12 +3850,12 @@ class RoyalGambitGame {
 
     const pieceTagAr = {
       chalice: '☀ +25 طاقة / 8ث • +15% سرعة هجوم للجوار',
-      pawn: '🛡 دفع بالدرع • صفّ 5 واضغط [M] لوزير!',
-      rook: '♜ شعاع متعامد خارق • يوقف الفارس الشبح',
-      knight: '♞ ضربات حرجة بحرف L تتجاوز الدروع',
-      bishop: '♝ أشعة قطرية خارقة + علاج وتطهير',
-      king: '♚ موجة محيطة + هالة +30% ضرر + تبييت',
-      queen: '♛ 8 اتجاهات صائدة (حد أقصى 2)'
+      pawn: '🛡 صدّ بالدرع • صفّ 5 واضغط [M] لوزير!',
+      rook: '♜ شعاع متعامد خارق • يوقف فارس الظل',
+      knight: '♞ وثبات رعدية بحرف L تخترق الدروع',
+      bishop: '♝ أشعة قطرية خارقة + شفاء الحلفاء',
+      king: '♚ هالة قيادة +30% سرعة + تبييت حصين',
+      queen: '♛ أشعة التاج النجمية (حد أقصى 2)'
     };
     const pieceTagEn = {
       chalice: '☀ +25 Mana / 8s • +15% nearby haste',
@@ -3949,11 +3949,11 @@ class RoyalGambitGame {
 
     const romans = ['I', 'II', 'III', 'IV', 'V'];
     const actArabicShort = [
-      'الفناء الملكي',
+      'أسوار الفجر',
       'كسوف الأقطار',
       'القلعتان التوأم',
-      'حصار العمالقة',
-      'المناورة الخالدة'
+      'عرش الأساتذة',
+      'الحصار الخالد'
     ];
     const actHeroEnemies = ['buckler', 'necro', 'assassin', 'gargantua', 'plague_queen'];
 
@@ -4115,8 +4115,8 @@ class RoyalGambitGame {
     document.documentElement.lang = lang;
     document.documentElement.dir = t.dir;
     document.title = isEn
-      ? 'CROWN & BLIGHT: The Royal Gambit — Tactical Chess Defense'
-      : 'CROWN & BLIGHT: The Royal Gambit | حرب التاج والظلام';
+      ? 'CROWN & BLIGHT: The Royal Siege — Tactical Chess Defense'
+      : 'التاج والظلام: الحصار الملكي | CROWN & BLIGHT';
 
     // Synchronize direction on key containers so RTL/LTR never clash
     [
@@ -4227,12 +4227,12 @@ class RoyalGambitGame {
     swap('setTitleHubTitle', isEn ? 'Title' : 'الرئيسية');
     swap('setTitleHubSub', isEn ? 'Modes' : 'الأطوار');
     swap('codexRulesHeader', isEn ? '♛ Chess Synergies' : '♛ معادلات الشطرنج');
-    swap('codexRulesDesc', isEn ? '5×Pawn ➔ Queen' : '5 جنود ➔ وزير');
-    swap('formulaMergeLbl', isEn ? '[M] 5 Pawns ➔ Queen' : '[M] دمج 5 جنود ➔ وزير');
+    swap('codexRulesDesc', isEn ? '5×Pawn ➔ Queen' : '5 بيادق ➔ وزير');
+    swap('formulaMergeLbl', isEn ? '[M] 5 Pawns ➔ Queen' : '[M] دمج 5 بيادق ➔ وزير متوّج');
     swap('formulaBatteryLbl', isEn ? 'Aligned Royal Battery' : 'بطارية ملكية متصلة');
-    swap('formulaCastleLbl', isEn ? 'Clear-Path Castling' : 'تبييت ملكي دفاعي');
+    swap('formulaCastleLbl', isEn ? 'Clear-Path Castling' : 'تبييت حصين (مسار خالٍ)');
     swap('codexPiecesHeader', isEn ? '♟ Royal Defenders' : '♟ القطع الملكية');
-    swap('codexEnemiesHeader', isEn ? '⚔ Blight Bestiary' : '⚔ وحوش الظلام');
+    swap('codexEnemiesHeader', isEn ? '⚔ Blight Bestiary' : '⚔ جحافل الظلام');
   }
 
   updateTipTicker() {
@@ -4302,8 +4302,8 @@ class RoyalGambitGame {
         this.profile.dailyDateKey === todayKey && this.profile.dailyBestScore > 0
           ? `🏆 ${this.profile.dailyBestScore.toLocaleString()}`
           : isEn
-            ? '⚡ Play Seed'
-            : '⚡ تحدي اليوم';
+            ? '⚡ Daily Trial'
+            : '⚡ معركة اليوم';
     }
 
     const achCount = Object.keys(this.profile.achievements || {}).length;
@@ -4313,8 +4313,8 @@ class RoyalGambitGame {
 
     // 1. Visual Commander Portrait Medallions (Sprites + Pure Stat Badge!)
     const cmdVisuals = {
-      bastion: { piece: 'rook', statAr: '+25%🛡 صحة', statEn: '+25%🛡 HP' },
-      astral: { piece: 'bishop', statAr: '-10%☀ تكلفة', statEn: '-10%☀ Cost' },
+      bastion: { piece: 'rook', statAr: '+35%♥ صحة', statEn: '+35%♥ HP' },
+      astral: { piece: 'bishop', statAr: '+75☀ بداية', statEn: '+75☀ Mana' },
       crimson: { piece: 'knight', statAr: '+20%⚔ هجوم', statEn: '+20%⚔ ATK' }
     };
     if (grid) {
@@ -4468,7 +4468,7 @@ class RoyalGambitGame {
       return;
     }
 
-    // Seeded Fisher-Yates shuffle so Daily Gambit drafts are 100% deterministic across players
+    // Seeded Fisher-Yates shuffle so Daily Siege drafts are 100% deterministic across players
     const copy = [...pool];
     for (let i = copy.length - 1; i > 0; i--) {
       const j = Math.floor(this.rand() * (i + 1));
@@ -4481,20 +4481,33 @@ class RoyalGambitGame {
     const grid = document.getElementById('decreeCardsGrid');
     if (!modal || !grid) return;
 
+    const tierLabelsAr = {
+      OFFENSE: 'هجوم',
+      DEFENSE: 'تحصين',
+      ECONOMY: 'خزينة',
+      TEMPO: 'إيقاع',
+      SYNERGY: 'تناغم',
+      SIEGE: 'حصار',
+      ROYALTY: 'سيادة',
+      TACTICS: 'تكتيك',
+      'HIGH RISK': 'مخاطرة كبرى'
+    };
+
     this.paused = true;
     grid.innerHTML = shuffled
       .map(d => {
         const title = this.lang === 'en' ? d.nameEn : d.nameAr;
         const desc = this.lang === 'en' ? d.descEn : d.descAr;
-        const isCursed = d.tier === 'CURSED GAMBIT';
+        const isCursed = d.tier === 'HIGH RISK';
         const tierSlug = `tier-${String(d.tier || 'offense').toLowerCase().replace(/[^a-z]+/g, '-')}`;
+        const tierLabel = this.lang === 'en' ? d.tier : (tierLabelsAr[d.tier] || d.tier);
         return `
           <button type="button" class="decree-draft-card tarot-decree-card ${tierSlug} ${isCursed ? 'cursed-card' : ''}" data-decree-id="${d.id}">
-            <span class="decree-tier-badge" dir="ltr">${d.tier}</span>
+            <span class="decree-tier-badge">${tierLabel}</span>
             <div class="decree-icon-orb"><span>${d.icon}</span></div>
             <h4>${title}</h4>
             <p>${desc}</p>
-            <span class="decree-pick-cta">${this.lang === 'en' ? '✦ Select' : '✦ اختيار'}</span>
+            <span class="decree-pick-cta">${this.lang === 'en' ? '✦ Select' : '✦ اعتماد'}</span>
           </button>
         `;
       })

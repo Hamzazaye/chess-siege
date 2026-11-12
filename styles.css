@@ -1,5 +1,5 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (Bespoke Royal Reliquary UI Edition)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (Bespoke Royal Atelier UI Edition)
  * Diegetic Floating Forged-Gold & Obsidian Grandmaster Command Architecture
  */
 
@@ -3492,7 +3492,7 @@ body {
   border-color: rgba(250, 204, 21, 0.55);
 }
 
-/* Cursed Gambit Decree Card & Locked Campaign Acts */
+/* High-Risk Decree Card & Locked Campaign Acts */
 .decree-draft-card.cursed-card {
   border-color: rgba(244, 63, 94, 0.6);
   background: linear-gradient(170deg, rgba(56, 14, 30, 0.92), rgba(13, 12, 24, 0.98));

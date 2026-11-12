@@ -1,13 +1,13 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (AAA Art Director Edition — ChatGPT Spec)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (AAA Art Director Edition — ChatGPT Spec)
  * High-Definition 256x256 Multi-Layered Dark-Fantasy Sprite & Texture Atlas
  *
  * Art Direction Palette (ChatGPT Principal Art Director Spec):
- *  - Royal Defenders: Sanctified Ivory (#F2E8CE -> #8C8276), Forged Gold (#FFF0B2 -> #C79A38),
+ *  - Royal Defenders: Polished Ivory (#F2E8CE -> #8C8276), Forged Gold (#FFF0B2 -> #C79A38),
  *    Lapis Lazuli Inlay (#234DAB), Upper-Right Starlight Rim (#CDEEFF)
  *  - Corrupted Ebony Undead: Polished Obsidian (#15131C -> #383342),
  *    Necrotic Emerald (#39D98A / #126348), Specialist Crimson (#A5253D), Boss Hellfire (#FF742B)
- *  - 10x5 Cathedral Board Tiles: Light Stone (#817D79), Dark Slate (#34323C), Grout (#201F28), Sacred Inlay (#B58E48)
+ *  - 10x5 Citadel Board Tiles: Light Stone (#817D79), Dark Slate (#34323C), Grout (#201F28), Gold Inlay (#B58E48)
  */
 
 class RoyalSpriteAtlas {
@@ -115,8 +115,8 @@ class RoyalSpriteAtlas {
 
   generateBoardTileTextures() {
     // ChatGPT Art Director Spec:
-    // Light squares #817D79, Dark squares #34323C, Grout #201F28, Sacred Inlay #B58E48
-    const createCathedralTile = isLight => {
+    // Light squares #817D79, Dark squares #34323C, Grout #201F28, Gold Inlay #B58E48
+    const createCitadelTile = isLight => {
       const c = document.createElement('canvas');
       c.width = 160;
       c.height = 160;
@@ -140,7 +140,7 @@ class RoyalSpriteAtlas {
       ctx.fillStyle = grad;
       ctx.fillRect(2, 2, 156, 156);
 
-      // 3. Soft Diagonal Cathedral Specular Wash (kept below piece highlight intensity)
+      // 3. Soft Diagonal Citadel Specular Wash (kept below piece highlight intensity)
       const sheen = ctx.createLinearGradient(0, 0, 160, 160);
       sheen.addColorStop(0, isLight ? 'rgba(242, 232, 206, 0.14)' : 'rgba(72, 83, 101, 0.14)');
       sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
@@ -216,8 +216,8 @@ class RoyalSpriteAtlas {
       return c;
     };
 
-    this.tileTextures.light = createCathedralTile(true);
-    this.tileTextures.dark = createCathedralTile(false);
+    this.tileTextures.light = createCitadelTile(true);
+    this.tileTextures.dark = createCitadelTile(false);
   }
 
   // Winged Golden Rook Sentinel (Sanctified Ivory, Forged Gold #C79A38, Lapis #234DAB & Starlight #CDEEFF)
@@ -379,7 +379,7 @@ class RoyalSpriteAtlas {
           ${commonDefs}
           <g filter="url(#dropGlow)">
             ${steppedPedestal()}
-            <!-- Classic Staunton-Cathedral Pawn Tapered Ivory Column -->
+            <!-- Classic Staunton Royal Pawn Tapered Ivory Column -->
             <path d="M62,152 C66,114 75,92 82,76 L112,76 C119,92 128,114 132,152 Z" fill="url(#ivoryCyl)" stroke="url(#goldGrad)" stroke-width="3"/>
             <!-- Forged-Gold Collar Ring -->
             <ellipse cx="97" cy="76" rx="24" ry="7" fill="url(#goldGrad)" stroke="#FFF0B2" stroke-width="1.8"/>

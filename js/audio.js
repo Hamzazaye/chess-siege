@@ -1,7 +1,7 @@
 /**
- * CROWN & BLIGHT: THE ROYAL GAMBIT (AAA Spatial & Cathedral Web Audio Engine)
+ * CROWN & BLIGHT: THE ROYAL SIEGE (AAA Spatial & Citadel Hall Web Audio Engine)
  * Zero external audio assets required:
- * - DynamicsCompressor + Procedural Cathedral Convolver Reverb
+ * - DynamicsCompressor + Procedural Citadel Hall Convolver Reverb
  * - Separate Master / SFX / Music Gain Buses with live sliders
  * - Column-based Stereo Panning across the 10x5 Chessboard
  * - 16-Step Dynamic Baroque Harpsichord, Cello & Timpani Soundtrack
@@ -49,9 +49,9 @@ class RoyalAudioEngine {
         this.musicGain = this.ctx.createGain();
         this.musicGain.gain.value = this.musicVolume;
 
-        // Synthesize warm 1.35s Cathedral impulse response
+        // Synthesize warm 1.35s Citadel Hall impulse response
         this.reverbNode = this.ctx.createConvolver();
-        this.reverbNode.buffer = this.buildCathedralImpulse(1.35, 2.4);
+        this.reverbNode.buffer = this.buildCitadelImpulse(1.35, 2.4);
         this.reverbSend = this.ctx.createGain();
         this.reverbSend.gain.value = 0.26;
 
@@ -72,7 +72,7 @@ class RoyalAudioEngine {
     }
   }
 
-  buildCathedralImpulse(duration = 1.35, decay = 2.4) {
+  buildCitadelImpulse(duration = 1.35, decay = 2.4) {
     const rate = this.ctx.sampleRate;
     const length = Math.floor(rate * duration);
     const impulse = this.ctx.createBuffer(2, length, rate);
@@ -433,9 +433,9 @@ class RoyalAudioEngine {
     this.init();
     if (!this.ctx || this.musicTimer) return;
 
-    // 4-Bar (64-step) Baroque & Dark Cathedral Progression (~18.6s cycle, zero loop fatigue)
+    // 4-Bar (64-step) Baroque & Royal Citadel Progression (~18.6s cycle, zero loop fatigue)
     const bass64 = [
-      // Movement A: D minor Cathedral Prelude
+      // Movement A: D minor Royal Prelude
       146.83, 146.83, 220.0, 146.83, 116.54, 116.54, 174.61, 116.54,
       130.81, 130.81, 196.0, 130.81, 110.0, 138.59, 164.81, 110.0,
       // Movement B: Descending Lament (Gm -> Dm -> A7 -> Dm)
@@ -504,7 +504,7 @@ class RoyalAudioEngine {
           // Warm Harpsichord Harmonic Overtone
           this.scheduleMusicNote(t, melodyFreq * 2, 'triangle', 0.09, 0.08, ((step % 4) - 1.5) * -0.2);
         }
-        // Cathedral Organ / Choir Pad Fifth on Bar Downbeats during Intense/Boss Waves
+        // Orchestral Brass / Pad Fifth on Bar Downbeats during Intense/Boss Waves
         if (this.isIntenseWave && step % 8 === 0) {
           this.scheduleMusicNote(t, bassFreq * 1.5, 'sawtooth', 1.6, 0.12, -0.35);
           this.scheduleMusicNote(t, bassFreq * 2.0, 'triangle', 1.6, 0.14, 0.35);
