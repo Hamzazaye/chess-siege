@@ -5433,3 +5433,147 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ================= v4.4 STAGE REWARDS, PAWN MERGE CONDITION & RTL ZERO-OVERLAP POLISH ================= */
+.tactical-inspector {
+  overflow: hidden;
+}
+
+.inspector-title-row {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.inspector-stat-chip {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (max-width: 1560px) {
+  .tactical-inspector:has(.inspector-quick-actions:not(:empty)) .mini-matrix-wrap {
+    display: none;
+  }
+}
+
+.synergy-pill.charging {
+  border-color: #38bdf8;
+  background: linear-gradient(135deg, rgba(12, 28, 52, 0.95), rgba(15, 23, 42, 0.96));
+  color: #bae6fd;
+}
+
+.screen-merge-cta.needs-mana {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98));
+  border-color: rgba(250, 204, 21, 0.72);
+  color: #fef08a;
+  animation: none;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.78);
+}
+
+.screen-merge-cta.needs-mana .merge-cta-text strong {
+  color: #fef08a;
+}
+
+.screen-merge-cta.needs-mana .merge-cta-text small {
+  color: #cbd5e1;
+}
+
+/* Stage & Puzzle Permanent Boons Banner (#actsModal) */
+.acts-rewards-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(46, 36, 14, 0.78), rgba(13, 20, 34, 0.94));
+  border: 1px solid rgba(242, 198, 109, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 243, 209, 0.16);
+}
+
+.acts-rewards-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #fff3d1;
+}
+
+.acts-rewards-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.boon-summary-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.58);
+  color: #a7f3d0;
+}
+
+.boon-summary-empty {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fde68a;
+}
+
+/* Per-Stage Permanent Reward Pill on Stage Cards */
+.biome-reward-pill {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 9px;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px dashed rgba(250, 204, 21, 0.45);
+  color: #fde68a;
+  text-align: center;
+}
+
+.biome-reward-pill small {
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.biome-reward-pill.unlocked {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(52, 211, 153, 0.62);
+  color: #a7f3d0;
+}
+
+/* Puzzle Mastery Boon Pill, Victory Boon Pill, Title Boon Chip & Decree Wave Subtitle */
+.puzzles-reward-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(250, 204, 21, 0.15);
+  border: 1px solid rgba(250, 204, 21, 0.52);
+  color: #fef08a;
+}
+
+.unlock-pill.reward-boon-pill {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(6, 78, 59, 0.65));
+  border: 1px solid rgba(52, 211, 153, 0.68);
+  color: #d1fae5;
+}
+
+.title-jewel-chip.emerald {
+  border-color: rgba(52, 211, 153, 0.58);
+  color: #a7f3d0;
+}
+
+.decree-sub-info {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+}

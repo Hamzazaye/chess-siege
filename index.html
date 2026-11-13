@@ -78,7 +78,7 @@
 
           <button type="button" class="early-wave-btn" id="callWaveBtn">
             <span id="nextWaveLabelText">⚔ الموجة التالية</span>
-            <small id="earlyBonusSubTxt">+25☀</small>
+            <small id="earlyBonusSubTxt" dir="ltr">+25☀</small>
           </button>
 
           <div class="elo-score-cluster">
@@ -170,7 +170,7 @@
       <span class="merge-cta-crown">♛</span>
       <span class="merge-cta-text">
         <strong id="mergeCtaTitleTxt">تتويج الوزير جاهز!</strong>
-        <small id="mergeCtaSubTxt">[M] ♟×5 ➔ ♛</small>
+        <small id="mergeCtaSubTxt" dir="ltr">[M] ♟×5 • 100☀ ➔ ♛</small>
       </span>
     </button>
 
@@ -398,8 +398,8 @@
           <span class="sr-only" id="codexRulesHeader"></span>
           <span class="sr-only" id="codexRulesDesc"></span>
           <div class="formula-card gold">
-            <div class="formula-equation" dir="ltr"><span>♟ × 5</span><span class="f-arrow">➔</span><span class="f-crown">♛</span></div>
-            <strong id="formulaMergeLbl">[M] دمج 5 بيادق ➔ وزير متوّج</strong>
+            <div class="formula-equation" dir="ltr"><span>♟ × 5</span><span class="f-arrow">+</span><span>150⚔</span><span class="f-arrow">➔</span><span class="f-crown">♛</span></div>
+            <strong id="formulaMergeLbl">[M] 5 بيادق + قتال + 100☀ ➔ وزير</strong>
           </div>
           <div class="formula-card cyan">
             <div class="formula-equation" dir="ltr"><span>♜ + ♛</span><span class="f-arrow">➔</span><span class="f-boost">+30%⚡</span></div>
@@ -440,6 +440,7 @@
         <button type="button" class="hud-btn modal-close-pill" id="closeActsBtn">✕</button>
       </div>
       <div class="modal-body">
+        <div class="acts-rewards-banner" id="actsRewardsBanner"></div>
         <div class="acts-biome-gallery" id="actsListContainer"></div>
       </div>
     </div>
@@ -512,6 +513,7 @@
       <div class="decree-header">
         <span class="decree-eyebrow" id="decreeEyebrowTxt">✦ اختر مكافأة المرحلة ✦</span>
         <h3 id="decreeModalTitle">مراسيم التاج</h3>
+        <p class="decree-sub-info" id="decreeSubInfo"></p>
       </div>
       <div class="decree-cards-grid" id="decreeCardsGrid"></div>
     </div>

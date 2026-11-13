@@ -178,7 +178,56 @@ function runTests() {
     assert.ok(rendererJs.includes('drawFloorDecals(') && rendererJs.includes('drawTelegraphZones('));
   });
 
-  console.log(`\nAll ${passed} v4.0 Commercial Edition integrity & simulation tests passed cleanly.`);
+  // 7. v4.4 Pawn-to-Queen Merge Condition, Stage Rewards, Economy Caps & Vocabulary Guard
+  check('v4.4 Pawn-Line Merge Condition (150 XP + 100☀), Stage Rewards, Anti-Stall Caps & Vocabulary Guard', () => {
+    const pawn = CHESS_DATA.PIECES.pawn;
+    const chalice = CHESS_DATA.PIECES.chalice;
+    assert.equal(pawn.mergeCost, 100, 'Pawn 5-line merge must cost 100 Mana');
+    assert.equal(pawn.mergeLineXpReq, 150, 'Pawn 5-line merge must require 150 collective combat XP');
+    assert.equal(chalice.maxWaveHarvests, 3, 'Chalice must cap wave harvests at 3 per wave');
+
+    for (const act of CHESS_DATA.ACTS) {
+      assert.ok(
+        act.stageReward && act.stageReward.shortAr && act.stageReward.shortEn,
+        `Stage ${act.id} must define bilingual stageReward`
+      );
+    }
+
+    // Verify bastion_repair grants +80 Mana when all Sentinels are intact
+    const intactGame = {
+      mana: 100,
+      totalManaEarned: 100,
+      pieces: [],
+      chariots: [{ row: 0, active: false, used: false, x: -20 }],
+      renderer: { chariotX: -20 }
+    };
+    const bState = { batteryBonus: 0 };
+    const bastionDecree = CHESS_DATA.DECREES.find(d => d.id === 'bastion_repair');
+    bastionDecree.apply(bState, intactGame);
+    assert.equal(intactGame.mana, 180, 'bastion_repair must grant +80 Mana when no Sentinel is broken');
+
+    // Verify swift_promotion halves mergeCost to 50
+    const spState = { promoteCost: 125, mergeCost: 100, queenDmgMult: 1 };
+    const swiftDecree = CHESS_DATA.DECREES.find(d => d.id === 'swift_promotion');
+    swiftDecree.apply(spState, intactGame);
+    assert.equal(spState.mergeCost, 50, 'swift_promotion must discount mergeCost to 50');
+
+    const gameJs = fs.readFileSync(path.join(ROOT, 'js', 'game.js'), 'utf8');
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    assert.ok(gameJs.includes('formingPawnLines') && gameJs.includes('getStageBoons('));
+    assert.ok(html.includes('id="actsRewardsBanner"') && html.includes('id="decreeSubInfo"'));
+
+    // Forbidden words guard across all runtime files
+    const forbidden = ['مقامرة', 'مقامر', 'قامر', 'قمار', 'رهان', 'كاتدرائية', 'الكاتدرائية', 'Cathedral', 'العقيدة', 'الصعود'];
+    for (const rel of ['index.html', 'styles.css', 'js/data.js', 'js/game.js', 'js/renderer.js']) {
+      const content = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+      for (const word of forbidden) {
+        assert.equal(content.includes(word), false, `Forbidden word "${word}" found in ${rel}`);
+      }
+    }
+  });
+
+  console.log(`\nAll ${passed} v4.4 Royal Edition integrity & simulation tests passed cleanly.`);
 }
 
 runTests();

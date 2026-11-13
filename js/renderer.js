@@ -602,6 +602,7 @@ class RoyalBoardRenderer {
           const coord = this.algebraicLabel(c, r);
           ctx.font = '700 9.5px "JetBrains Mono", monospace';
           ctx.fillStyle = isLight ? 'rgba(242, 232, 206, 0.55)' : 'rgba(184, 180, 175, 0.36)';
+          ctx.direction = 'ltr';
           ctx.textAlign = 'left';
           ctx.fillText(coord, x + 5, y + this.tileSize - 5);
         }
@@ -661,6 +662,7 @@ class RoyalBoardRenderer {
 
       ctx.font = '800 10.5px "Orbitron", sans-serif';
       ctx.fillStyle = '#fef08a';
+      ctx.direction = 'ltr';
       ctx.textAlign = 'center';
       ctx.fillText(colChar, cx, cy + 3.8);
     }
@@ -681,6 +683,7 @@ class RoyalBoardRenderer {
 
       ctx.font = '800 10.5px "Orbitron", sans-serif';
       ctx.fillStyle = '#fef08a';
+      ctx.direction = 'ltr';
       ctx.textAlign = 'center';
       ctx.fillText(`${rankNum}`, rx, ry + 3.8);
     }
@@ -722,9 +725,65 @@ class RoyalBoardRenderer {
       ctx.restore();
     }
 
-    // 3. Ready 5-Pawn Line Convergence Beam (سطر جنود جاهز للدمج إلى وزير!)
-    if (this.game.readyPawnLines && this.game.readyPawnLines.length > 0) {
+    // 2.5 Forming 5-Pawn Line Charging Conduit (سطر جنود يكتسب خبرة قتال للوصول إلى التتويج)
+    if (this.game.formingPawnLines && this.game.formingPawnLines.length > 0) {
       ctx.save();
+      for (const line of this.game.formingPawnLines) {
+        const first = this.tileCenter(line.pawns[0].col, line.pawns[0].row);
+        const last = this.tileCenter(
+          line.pawns[line.pawns.length - 1].col,
+          line.pawns[line.pawns.length - 1].row
+        );
+
+        ctx.strokeStyle = `rgba(56, 189, 248, ${0.55 + Math.sin(t * 5) * 0.18})`;
+        ctx.lineWidth = 4.5;
+        ctx.setLineDash([9, 5]);
+        ctx.lineDashOffset = -t * 24;
+        ctx.beginPath();
+        ctx.moveTo(first.x, first.y);
+        ctx.lineTo(last.x, last.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const midPawn = line.pawns[Math.floor(line.pawns.length / 2)];
+        const midPt = this.tileCenter(midPawn.col, midPawn.row);
+        const bobY = midPt.y - this.tileSize * 0.56 + Math.sin(t * 4.5) * 2.2;
+        const curXp = Math.min(line.reqXp, Math.floor(line.sumXp));
+
+        ctx.fillStyle = 'rgba(12, 24, 44, 0.94)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.6;
+        this.roundRect(ctx, midPt.x - 74, bobY - 12, 148, 20, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Progress fill bar along bottom of pill
+        const pct = Math.max(0.06, Math.min(1, curXp / Math.max(1, line.reqXp)));
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
+        this.roundRect(ctx, midPt.x - 68, bobY + 4, 136 * pct, 2.5, 1.2);
+        ctx.fill();
+
+        ctx.font = '800 10px "Cairo", "JetBrains Mono", sans-serif';
+        ctx.fillStyle = '#e0f2fe';
+        ctx.direction = 'ltr';
+        ctx.textAlign = 'center';
+        const chargeTxt =
+          this.game.lang === 'en'
+            ? `⚔ Line XP ${curXp}/${line.reqXp}`
+            : `⚔ ${curXp}/${line.reqXp} قتال التتويج`;
+        ctx.fillText(chargeTxt, midPt.x, bobY + 1.5);
+      }
+      ctx.restore();
+    }
+
+    // 3. Ready 5-Pawn Line Convergence Beam (سطر جنود جاهز للدمج إلى وزير!)
+    if (
+      this.game.readyPawnLines &&
+      this.game.readyPawnLines.length > 0 &&
+      this.game.countPiecesOfType('queen') < 2
+    ) {
+      ctx.save();
+      const mergeCost = this.game.getMergeCost ? this.game.getMergeCost() : 100;
       for (const line of this.game.readyPawnLines) {
         const first = this.tileCenter(line.pawns[0].col, line.pawns[0].row);
         const last = this.tileCenter(
@@ -749,24 +808,29 @@ class RoyalBoardRenderer {
         ctx.lineTo(last.x, last.y);
         ctx.stroke();
 
-        // Floating Golden Merge Banner above the center Pawn of the line
+        // Single clean Golden Merge Pill above the center Pawn (no per-Pawn overlap!)
         const midPawn = line.pawns[Math.floor(line.pawns.length / 2)];
         const midPt = this.tileCenter(midPawn.col, midPawn.row);
-        const bobY = midPt.y - this.tileSize * 0.56 + Math.sin(t * 6) * 3.5;
+        const bobY = midPt.y - this.tileSize * 0.58 + Math.sin(t * 6) * 3.0;
 
         ctx.shadowBlur = 10;
-        ctx.fillStyle = 'rgba(120, 53, 15, 0.95)';
+        ctx.fillStyle = 'rgba(120, 53, 15, 0.96)';
         ctx.strokeStyle = '#fef08a';
         ctx.lineWidth = 2;
-        this.roundRect(ctx, midPt.x - 76, bobY - 13, 152, 22, 11);
+        this.roundRect(ctx, midPt.x - 78, bobY - 13, 156, 22, 11);
         ctx.fill();
         ctx.stroke();
 
         ctx.shadowBlur = 0;
         ctx.font = '800 10.5px "Cairo", "Orbitron", sans-serif';
         ctx.fillStyle = '#fef08a';
+        ctx.direction = 'ltr';
         ctx.textAlign = 'center';
-        const mergeBannerTxt = this.game.lang === 'en' ? '♛ CLICK OR [M] TO FUSE QUEEN' : '♛ اضغط لدمج السطر ← وزير [M]';
+        const costSuffix = mergeCost > 0 ? ` • ${mergeCost}☀` : '';
+        const mergeBannerTxt =
+          this.game.lang === 'en'
+            ? `♛ Fuse Queen [M]${costSuffix}`
+            : `♛ [M]${costSuffix} تتويج الوزير`;
         ctx.fillText(mergeBannerTxt, midPt.x, bobY + 2);
       }
       ctx.restore();
@@ -1096,6 +1160,16 @@ class RoyalBoardRenderer {
       ctx.fill();
       ctx.stroke();
       ctx.restore();
+    } else if (piece.inFormingPawnLine) {
+      ctx.save();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.ellipse(0, this.tileSize * 0.25, this.tileSize * 0.4, this.tileSize * 0.17, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     } else if (piece.buffedByKing || piece.inBattery || piece.inPawnChain) {
       ctx.strokeStyle = piece.inBattery ? '#facc15' : piece.buffedByKing ? '#f43f5e' : '#38bdf8';
       ctx.lineWidth = 2.5;
@@ -1165,7 +1239,7 @@ class RoyalBoardRenderer {
       ctx.restore();
     }
 
-    // 3. Pawn XP / Line-Merge Status Bar
+    // 3. Pawn XP Bar & Chalice Wave-Harvest Sun Pips
     if (piece.type === 'pawn') {
       const xpRatio = Math.min(1, piece.xp / 100);
       const barW = this.tileSize * 0.56;
@@ -1175,24 +1249,28 @@ class RoyalBoardRenderer {
       ctx.fillStyle = piece.inReadyPawnLine || xpRatio >= 1 ? '#facc15' : '#38bdf8';
       ctx.fillRect(-barW / 2, barY, barW * (piece.inReadyPawnLine ? 1 : xpRatio), 5);
 
-      const isEn = this.game.lang === 'en';
-      if (piece.inReadyPawnLine) {
-        ctx.font = '800 9px "Orbitron", "Cairo", sans-serif';
-        ctx.fillStyle = '#fef08a';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0,0,0,0.95)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(isEn ? '♛ MERGE [M]' : '♛ دمج [M]', 0, -this.tileSize * 0.41);
-        ctx.shadowBlur = 0;
-      } else if (xpRatio >= 1) {
+      if (xpRatio >= 1 && !piece.inReadyPawnLine && !piece.inFormingPawnLine) {
+        const isEn = this.game.lang === 'en';
         const pCost = (this.game.decreeState && this.game.decreeState.promoteCost) || 125;
         ctx.font = '800 9px "Orbitron", "Cairo", sans-serif';
         ctx.fillStyle = '#fef08a';
+        ctx.direction = 'ltr';
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.95)';
         ctx.shadowBlur = 4;
-        ctx.fillText(isEn ? `♛ CROWN (${pCost}☀)` : `♛ تتويج (${pCost}☀)`, 0, -this.tileSize * 0.41);
+        ctx.fillText(isEn ? `♛ [U] ${pCost}☀` : `♛ ${pCost}☀ تتويج`, 0, -this.tileSize * 0.45);
         ctx.shadowBlur = 0;
+      }
+    } else if (piece.type === 'chalice') {
+      const maxH = 3;
+      const rem = Math.max(0, maxH - (piece.waveHarvests || 0));
+      const pipY = this.tileSize * 0.35;
+      for (let i = 0; i < maxH; i++) {
+        const px = (i - 1) * 9;
+        ctx.fillStyle = i < rem ? '#facc15' : 'rgba(71, 85, 105, 0.55)';
+        ctx.beginPath();
+        ctx.arc(px, pipY, 3, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -1471,6 +1549,7 @@ class RoyalBoardRenderer {
 
       ctx.font = '800 10px "JetBrains Mono", monospace';
       ctx.fillStyle = '#78350f';
+      ctx.direction = 'ltr';
       ctx.textAlign = 'center';
       ctx.fillText(`+${orb.value}`, 0, 3.5);
       ctx.restore();
@@ -1480,12 +1559,14 @@ class RoyalBoardRenderer {
   drawFloatingTexts(ctx) {
     for (const ft of this.game.floatingTexts) {
       const alpha = Math.min(1, ft.life / (ft.maxLife * 0.6));
+      const hasArabic = /[\u0600-\u06FF]/.test(ft.text || '');
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.font = ft.big
-        ? '800 15px "Orbitron", sans-serif'
-        : '700 12px "JetBrains Mono", monospace';
+        ? '800 15px "Cairo", "Orbitron", sans-serif'
+        : '700 12px "JetBrains Mono", "Cairo", monospace';
       ctx.fillStyle = ft.color || '#fef08a';
+      ctx.direction = hasArabic ? 'rtl' : 'ltr';
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0,0,0,0.92)';
       ctx.shadowBlur = 6;

@@ -274,6 +274,7 @@ class RoyalGambitGame {
       batteryBonus: 0,
       killManaBonus: 0,
       promoteCost: 125,
+      mergeCost: 100,
       queenDmgMult: 1.0,
       queenBonusRange: 0,
       ultChargeMult: 1.0,
@@ -284,6 +285,51 @@ class RoyalGambitGame {
       kingExpandedAura: false,
       chaliceShieldPulse: 0,
       deathExplosionDmg: 0
+    };
+  }
+
+  getMergeXpReq() {
+    return (window.CHESS_DATA.PIECES.pawn && window.CHESS_DATA.PIECES.pawn.mergeLineXpReq) || 150;
+  }
+
+  getMergeCost() {
+    if (this.gameMode === 'puzzle') return 0;
+    return (this.decreeState && this.decreeState.mergeCost) || 100;
+  }
+
+  getStageBoons() {
+    const starsMap = (this.profile && this.profile.actStars) || {};
+    const solvedCount = Object.keys((this.profile && this.profile.solvedPuzzles) || {}).length;
+    const endlessBest = Number((this.profile && this.profile.endlessBestWave) || 0);
+
+    const s1 = Number(starsMap['1'] || 0) > 0;
+    const s2 = Number(starsMap['2'] || 0) > 0;
+    const s3 = Number(starsMap['3'] || 0) > 0;
+    const s4 = Number(starsMap['4'] || 0) > 0;
+    const s5 = endlessBest >= 10;
+
+    const activePills = [];
+    if (s1) activePills.push({ ar: '+20☀ طاقة بداية', en: '+20☀ Start Mana' });
+    if (s2) activePills.push({ ar: '+20% شحن كش ملك', en: '+20% Checkmate' });
+    if (s3) activePills.push({ ar: '+25🛡 درع القطع', en: '+25🛡 Shield' });
+    if (s4) activePills.push({ ar: '-12% انتظار الحركة', en: '-12% Move CD' });
+    if (s5) activePills.push({ ar: '+10%⚡ البطارية', en: '+10%⚡ Battery' });
+    if (solvedCount > 0) {
+      activePills.push({
+        ar: `+${solvedCount * 2}%⚔ الألغاز`,
+        en: `+${solvedCount * 2}%⚔ Puzzles`
+      });
+    }
+
+    return {
+      startManaBonus: s1 ? 20 : 0,
+      startUltBonus: s2 ? 20 : 0,
+      startShieldBonus: s3 ? 25 : 0,
+      moveCdMult: s4 ? 0.88 : 1.0,
+      batteryBonus: s5 ? 0.1 : 0,
+      puzzleDmgMult: 1 + solvedCount * 0.02,
+      solvedCount,
+      activePills
     };
   }
 
@@ -370,8 +416,16 @@ class RoyalGambitGame {
     this.activeDecrees = [];
     this.decreePending = false;
     this.decreeState = this.createDefaultDecreeState();
+    const boons = this.gameMode === 'puzzle'
+      ? { startManaBonus: 0, startUltBonus: 0, startShieldBonus: 0, moveCdMult: 1, batteryBonus: 0, puzzleDmgMult: 1 }
+      : this.getStageBoons();
+    this.stageShieldBonus = boons.startShieldBonus || 0;
+
     if (cmd.mods.dmgMult) this.decreeState.damageMult *= cmd.mods.dmgMult;
+    if (boons.puzzleDmgMult > 1) this.decreeState.damageMult *= boons.puzzleDmgMult;
     if (cmd.mods.moveCdMult) this.decreeState.moveCdMult *= cmd.mods.moveCdMult;
+    if (boons.moveCdMult < 1) this.decreeState.moveCdMult *= boons.moveCdMult;
+    if (boons.batteryBonus > 0) this.decreeState.batteryBonus += boons.batteryBonus;
     if (this.doctrineId === 'halberd') {
       this.decreeState.pawnKnockbackMult *= 0.55;
     } else if (this.doctrineId === 'artillery') {
@@ -379,10 +433,12 @@ class RoyalGambitGame {
       this.decreeState.casterDmgMult *= 1.18;
     }
 
-    const baseStartMana = (this.currentAct.startingMana || 150) + (this.gameMode === 'puzzle' ? 0 : (cmd.mods.startingManaBonus || 0));
+    const baseStartMana =
+      (this.currentAct.startingMana || 150) +
+      (this.gameMode === 'puzzle' ? 0 : (cmd.mods.startingManaBonus || 0) + (boons.startManaBonus || 0));
     this.mana = Math.max(50, baseStartMana - (asc.manaPenalty || 0));
     this.score = 0;
-    this.ultimateCharge = this.gameMode === 'puzzle' ? 0 : 25;
+    this.ultimateCharge = this.gameMode === 'puzzle' ? 0 : Math.min(100, 25 + (boons.startUltBonus || 0));
     this.onTitleScreen = keepTitle;
     this.paused = keepTitle;
     this.gameOver = false;
@@ -391,6 +447,7 @@ class RoyalGambitGame {
     this.totalManaEarned = this.mana;
     this.breachInfo = null;
     this.waveClearRewarded = false;
+    this.waveSkyDrops = 0;
     this.hitStopTimer = 0;
 
     this.pieces = [];
@@ -405,6 +462,7 @@ class RoyalGambitGame {
     this.floatingTexts = [];
     this.batteryLinks = [];
     this.pawnChainLinks = [];
+    this.formingPawnLines = [];
     this.readyPawnLines = [];
     this.mergeCinematic = null;
 
@@ -472,7 +530,10 @@ class RoyalGambitGame {
   spawnStarterFormation() {
     if (this.gameMode === 'puzzle' && this.currentAct.puzzleDef) {
       for (const p of this.currentAct.puzzleDef.pieces) {
-        this.placePieceInternal(p.type, p.col, p.row, true);
+        const spawned = this.placePieceInternal(p.type, p.col, p.row, true);
+        if (spawned && p.type === 'pawn') {
+          spawned.xp = 45; // Veteran puzzle Pawns so Puzzle II 5-Pawn Coronation triggers cleanly!
+        }
       }
       this.recalculateSynergies();
       return;
@@ -950,8 +1011,8 @@ class RoyalGambitGame {
       return;
     }
 
-    // One-click merge if clicking a Pawn that belongs to a ready 5-Pawn Line (when Queen slot available)
-    if (existing && existing.type === 'pawn' && existing.inReadyPawnLine) {
+    // One-click merge if clicking a Pawn that belongs to a ready 5-Pawn Line (when affordable & Queen slot open)
+    if (existing && existing.type === 'pawn' && existing.inReadyPawnLine && this.mana >= this.getMergeCost()) {
       this.tryMergePawnLine(existing);
       return;
     }
@@ -1023,7 +1084,9 @@ class RoyalGambitGame {
 
     if (def.maxCount && this.countPiecesOfType(pieceId) >= def.maxCount) {
       this.addFloatingText(
-        `MAX ${def.maxCount} ${def.name.toUpperCase()}S!`,
+        this.lang === 'en'
+          ? `MAX ${def.maxCount} ${def.name.toUpperCase()}S!`
+          : `الحد الأقصى (${def.maxCount}) مكتمل!`,
         center.x,
         center.y,
         '#f43f5e',
@@ -1034,13 +1097,25 @@ class RoyalGambitGame {
 
     const cd = this.cardCooldowns[pieceId] || 0;
     if (cd > 0) {
-      this.addFloatingText('RECHARGING!', center.x, center.y, '#f43f5e', false);
+      this.addFloatingText(
+        this.lang === 'en' ? 'RECHARGING!' : 'قيد التجهيز!',
+        center.x,
+        center.y,
+        '#f43f5e',
+        false
+      );
       return;
     }
 
     if (this.mana < cost) {
       this.flashManaWarning();
-      this.addFloatingText(`NEED ${cost} MANA!`, center.x, center.y, '#fbbf24', false);
+      this.addFloatingText(
+        this.lang === 'en' ? `NEED ${cost}☀ MANA!` : `تحتاج ${cost}☀ طاقة!`,
+        center.x,
+        center.y,
+        '#fbbf24',
+        false
+      );
       return;
     }
 
@@ -1067,6 +1142,7 @@ class RoyalGambitGame {
     const hpMult = (cmd.mods && cmd.mods.hpMult) || 1.0;
     const bonusShield = (cmd.mods && cmd.mods.bonusShield) || 0;
     const doctrinePawnShield = pieceId === 'pawn' && this.doctrineId === 'phalanx' ? 25 : 0;
+    const stageShield = this.stageShieldBonus || 0;
     const maxHp = Math.round(def.maxHp * hpMult);
     const piece = {
       id: this.entityIdCounter++,
@@ -1075,9 +1151,10 @@ class RoyalGambitGame {
       row,
       hp: maxHp,
       maxHp,
-      shieldHp: (def.startingShield || 0) + bonusShield + doctrinePawnShield,
+      shieldHp: (def.startingShield || 0) + bonusShield + doctrinePawnShield + stageShield,
       dmgBonusMult: 1.0,
       attackTimer: isFreeStarter ? 2.5 : def.attackInterval * 0.5,
+      waveHarvests: 0,
       moveCd: 0,
       xp: 0,
       hexTimer: 0,
@@ -1092,6 +1169,7 @@ class RoyalGambitGame {
       buffedByChalice: false,
       inBattery: false,
       inPawnChain: false,
+      inFormingPawnLine: false,
       inReadyPawnLine: false
     };
     this.pieces.push(piece);
@@ -1457,19 +1535,47 @@ class RoyalGambitGame {
   // Full-Screen Cinematic 5-Pawn Line Merge into an Ascended Sovereign Queen!
   tryMergePawnLine(anchorPawn = null) {
     if (this.mergeCinematic) return false;
-    if (!this.readyPawnLines || this.readyPawnLines.length === 0) return false;
 
     const queenDef = window.CHESS_DATA.PIECES.queen;
     if (this.countPiecesOfType('queen') >= (queenDef.maxCount || 2)) {
-      const anchor = anchorPawn || this.readyPawnLines[0].pawns[0];
-      const center = this.renderer.tileCenter(anchor.col, anchor.row);
-      this.addFloatingText(
-        this.lang === 'en' ? 'MAX QUEENS REACHED (2/2)!' : 'الحد الأقصى للوزراء مكتمل (2/2)!',
-        center.x,
-        center.y - 20,
-        '#f87171',
-        true
-      );
+      const refPawn =
+        anchorPawn ||
+        (this.readyPawnLines && this.readyPawnLines[0] && this.readyPawnLines[0].pawns[2]) ||
+        (this.formingPawnLines && this.formingPawnLines[0] && this.formingPawnLines[0].pawns[2]);
+      if (refPawn) {
+        const center = this.renderer.tileCenter(refPawn.col, refPawn.row);
+        this.addFloatingText(
+          this.lang === 'en' ? 'MAX QUEENS REACHED (2/2)!' : 'الحد الأقصى للوزراء مكتمل (2/2)!',
+          center.x,
+          center.y - 20,
+          '#f87171',
+          true
+        );
+      }
+      return false;
+    }
+
+    if (!this.readyPawnLines || this.readyPawnLines.length === 0) {
+      if (this.formingPawnLines && this.formingPawnLines.length > 0) {
+        let fLine = this.formingPawnLines[0];
+        if (anchorPawn) {
+          const matchF = this.formingPawnLines.find(l => l.pawns.some(p => p.id === anchorPawn.id));
+          if (matchF) fLine = matchF;
+        }
+        const midPawn = fLine.pawns[Math.floor(fLine.pawns.length / 2)];
+        const center = this.renderer.tileCenter(midPawn.col, midPawn.row);
+        const xpNow = Math.floor(fLine.sumXp || 0);
+        const xpReq = fLine.reqXp || this.getMergeXpReq();
+        this.addFloatingText(
+          this.lang === 'en'
+            ? `⚔ Line Combat XP ${xpNow}/${xpReq} — Fight First!`
+            : `⚔ خبرة قتال الفيلق ${xpNow}/${xpReq} — اشتبك أولاً!`,
+          center.x,
+          center.y - 24,
+          '#7dd3fc',
+          true
+        );
+      }
       return false;
     }
 
@@ -1490,6 +1596,25 @@ class RoyalGambitGame {
         : pawnsToMerge[Math.floor(pawnsToMerge.length / 2)];
 
     const queenCenter = this.renderer.tileCenter(targetPawn.col, targetPawn.row);
+    const mergeCost = this.getMergeCost();
+
+    if (this.mana < mergeCost) {
+      this.flashManaWarning();
+      this.addFloatingText(
+        this.lang === 'en'
+          ? `NEED ${mergeCost}☀ TO CROWN QUEEN!`
+          : `تحتاج ${mergeCost}☀ لتتويج الوزير!`,
+        queenCenter.x,
+        queenCenter.y - 24,
+        '#fbbf24',
+        true
+      );
+      return false;
+    }
+
+    if (mergeCost > 0) {
+      this.mana -= mergeCost;
+    }
 
     const sources = pawnsToMerge.map((p, idx) => {
       const pc = this.renderer.tileCenter(p.col, p.row);
@@ -1608,7 +1733,13 @@ class RoyalGambitGame {
 
     if (this.mana < promoteCost) {
       this.flashManaWarning();
-      this.addFloatingText(`NEED ${promoteCost} MANA TO CROWN!`, center.x, center.y - 18, '#fbbf24', true);
+      this.addFloatingText(
+        this.lang === 'en' ? `NEED ${promoteCost}☀ TO CROWN!` : `تحتاج ${promoteCost}☀ للترقية!`,
+        center.x,
+        center.y - 18,
+        '#fbbf24',
+        true
+      );
       return;
     }
 
@@ -1738,6 +1869,7 @@ class RoyalGambitGame {
   recalculateSynergies() {
     this.batteryLinks = [];
     this.pawnChainLinks = [];
+    this.formingPawnLines = [];
     this.readyPawnLines = [];
 
     for (const p of this.pieces) {
@@ -1745,6 +1877,7 @@ class RoyalGambitGame {
       p.buffedByChalice = false;
       p.inBattery = false;
       p.inPawnChain = false;
+      p.inFormingPawnLine = false;
       p.inReadyPawnLine = false;
     }
 
@@ -1798,28 +1931,39 @@ class RoyalGambitGame {
       }
     }
 
-    // Check Vertical Columns & Horizontal Rows (ONLY highlight merge lines when Queen cap < maxCount!)
+    // Check Vertical Columns & Horizontal Rows (Requires 5 Pawns + Combat XP >= 150 + Queen cap < maxCount!)
     const queenMax = (window.CHESS_DATA.PIECES.queen && window.CHESS_DATA.PIECES.queen.maxCount) || 2;
     const canMergeQueen = this.countPiecesOfType('queen') < queenMax;
     if (canMergeQueen) {
+      const reqXp = this.getMergeXpReq();
       const allPawns = this.pieces.filter(p => p.type === 'pawn');
+      const evaluateLine = (kind, index, linePawns) => {
+        const five = linePawns.slice(0, 5);
+        const sumXp = five.reduce((sum, p) => sum + (p.xp || 0), 0);
+        if (sumXp >= reqXp) {
+          this.readyPawnLines.push({ kind, index, pawns: five, sumXp, reqXp });
+          five.forEach(p => {
+            p.inReadyPawnLine = true;
+          });
+        } else {
+          this.formingPawnLines.push({ kind, index, pawns: five, sumXp, reqXp });
+          five.forEach(p => {
+            p.inFormingPawnLine = true;
+          });
+        }
+      };
+
       for (let c = 0; c < this.cols; c++) {
         const colPawns = allPawns.filter(p => p.col === c).sort((a, b) => a.row - b.row);
         if (colPawns.length >= 5) {
-          this.readyPawnLines.push({ kind: 'col', index: c, pawns: colPawns.slice(0, 5) });
-          colPawns.slice(0, 5).forEach(p => {
-            p.inReadyPawnLine = true;
-          });
+          evaluateLine('col', c, colPawns);
         }
       }
 
       for (let r = 0; r < this.rows; r++) {
         const rowPawns = allPawns.filter(p => p.row === r).sort((a, b) => a.col - b.col);
         if (rowPawns.length >= 5) {
-          this.readyPawnLines.push({ kind: 'row', index: r, pawns: rowPawns.slice(0, 5) });
-          rowPawns.slice(0, 5).forEach(p => {
-            p.inReadyPawnLine = true;
-          });
+          evaluateLine('row', r, rowPawns);
         }
       }
     }
@@ -2024,11 +2168,12 @@ class RoyalGambitGame {
       }
     }
 
-    // Deterministic Puzzles skip random Sky Mana drops so resource math is 100% pure!
-    if (this.gameMode !== 'puzzle') {
+    // Deterministic Puzzles skip random Sky Mana drops; Campaign/Endless cap at 3 sky drops per wave to prevent stall-farming!
+    if (this.gameMode !== 'puzzle' && (this.waveSkyDrops || 0) < 3) {
       this.skyManaTimer -= dt;
       if (this.skyManaTimer <= 0) {
         this.skyManaTimer = this.currentAct.skyDropInterval || 6.8;
+        this.waveSkyDrops = (this.waveSkyDrops || 0) + 1;
         const randCol = 1 + Math.floor(this.rand() * (this.cols - 2));
         const randRow = Math.floor(this.rand() * this.rows);
         const target = this.renderer.tileCenter(randCol, randRow);
@@ -2121,7 +2266,17 @@ class RoyalGambitGame {
 
     this.waveIndex++;
     this.waveClearRewarded = false;
+    this.waveSkyDrops = 0;
     this.waveCooldownTimer = 3.8;
+    for (const p of this.pieces) {
+      if (p.type === 'chalice') p.waveHarvests = 0;
+    }
+    if (this.waveIndex >= 2 && this.tutorialStep >= 0 && this.pieces.length >= 4) {
+      this.tutorialStep = -1;
+      this.profile.tutorialDone = true;
+      this.saveProfile();
+      this.updateTutorialBanner();
+    }
 
     this.waveSpawnQueue = [];
     for (const group of waveDef.spawns) {
@@ -2336,6 +2491,13 @@ class RoyalGambitGame {
 
     switch (piece.type) {
       case 'chalice': {
+        const maxHarv = def.maxWaveHarvests || 3;
+        if (this.waveIndex >= 1 && (piece.waveHarvests || 0) >= maxHarv) {
+          return false;
+        }
+        if (this.waveIndex >= 1) {
+          piece.waveHarvests = (piece.waveHarvests || 0) + 1;
+        }
         const yieldVal = piece.buffedByKing ? 30 : def.manaYield || 25;
         this.spawnManaOrb(center.x, center.y - 12, center.y + 10, yieldVal);
         const pulseShield = (this.decreeState && this.decreeState.chaliceShieldPulse) || 0;
@@ -2387,7 +2549,11 @@ class RoyalGambitGame {
           isHalberd ? '#fda4af' : '#7dd3fc',
           false
         );
+        const prevXp = piece.xp;
         piece.xp = Math.min(100, piece.xp + (isHalberd ? 23 : 15));
+        if (piece.xp !== prevXp) {
+          this.recalculateSynergies();
+        }
         window.RoyalAudio.playAttack('pawn', piece.col);
         return true;
       }
@@ -3032,10 +3198,17 @@ class RoyalGambitGame {
       this.unlockAchievement('queen_slayer');
     }
 
-    const lanePawn = this.pieces.find(p => p.type === 'pawn' && p.row === Math.round(enemy.row));
+    const rowPawns = this.pieces
+      .filter(p => p.type === 'pawn' && p.row === Math.round(enemy.row))
+      .sort((a, b) => b.col - a.col);
+    const lanePawn = rowPawns.find(p => (p.xp || 0) < 100) || rowPawns[0];
     if (lanePawn) {
       const xpGain = this.doctrineId === 'halberd' ? 27 : 18;
-      lanePawn.xp = Math.min(100, lanePawn.xp + xpGain);
+      const prevXp = lanePawn.xp || 0;
+      lanePawn.xp = Math.min(100, prevXp + xpGain);
+      if (lanePawn.xp !== prevXp) {
+        this.recalculateSynergies();
+      }
     }
 
     this.enemiesKilled = (this.enemiesKilled || 0) + 1;
@@ -3476,6 +3649,16 @@ class RoyalGambitGame {
       const nextActObj = window.CHESS_DATA.ACTS[nextStageIdx];
       const nextStageName = isEn ? (nextActObj ? nextActObj.name : '') : (stageNamesAr[nextStageIdx] || '');
       const pills = [];
+      if (this.gameMode === 'puzzle') {
+        pills.push(
+          `<span class="unlock-pill reward-boon-pill">🎁 ${isEn ? 'Puzzle Boon: +2%⚔ Attack Power' : 'مكافأة اللغز: +2%⚔ قوة هجوم دائمة'}</span>`
+        );
+      } else if (this.currentAct && this.currentAct.stageReward) {
+        const rw = this.currentAct.stageReward;
+        pills.push(
+          `<span class="unlock-pill reward-boon-pill">🎁 ${isEn ? `Stage Boon: ${rw.shortEn}` : `مكافأة المرحلة: ${rw.shortAr}`}</span>`
+        );
+      }
       if (unlockedNewStage) {
         pills.push(
           `<span class="unlock-pill stage-unlock">${isEn ? `🔓 Stage ${this.unlockedActs} Unlocked: ${nextStageName}!` : `🔓 فُتحت المرحلة ${this.unlockedActs}: ${nextStageName}!`}</span>`
@@ -3509,11 +3692,11 @@ class RoyalGambitGame {
       advBadge.innerHTML =
         earnedStars === 3
           ? isEn
-            ? '♛ FLAWLESS 3/3 ★'
-            : '♛ دفاع مثالي 3/3 ★'
+            ? '♛ FLAWLESS 3/3 ★ (5/5 Sentinels Intact)'
+            : '♛ دفاع مثالي 3/3 ★ (5/5 قلاع سليمة)'
           : isEn
-            ? `♚ TACTICAL CLEAR ${earnedStars}/3 ★`
-            : `♚ فوز تكتيكي ${earnedStars}/3 ★`;
+            ? `♚ TACTICAL CLEAR ${earnedStars}/3 ★ • Keep 5/5 Sentinels for ★★★`
+            : `♚ فوز تكتيكي ${earnedStars}/3 ★ • حافظ على 5/5 قلاع لـ ★★★`;
     }
     if (advText) {
       const rankOrder = ['queen', 'king', 'rook', 'knight', 'bishop', 'chalice', 'pawn'];
@@ -3881,8 +4064,8 @@ class RoyalGambitGame {
         tierEn: '♚ Boss',
         tierClass: 'tier-boss',
         counterPiece: 'queen',
-        counterAr: '[M] دمج 5 بيادق ➔ وزير!',
-        counterEn: '[M] Fuse 5 Pawns ➔ Queen!'
+        counterAr: '[M] 5 بيادق + قتال + 100☀ ➔ وزير!',
+        counterEn: '[M] 5 Pawns + 150⚔ + 100☀ ➔ Queen!'
       },
       plague_queen: {
         arName: 'وزيرة الكسوف',
@@ -3896,8 +4079,8 @@ class RoyalGambitGame {
     };
 
     const pieceTagAr = {
-      chalice: '☀ +25 طاقة / 8ث • +15% سرعة هجوم للجوار',
-      pawn: '🛡 صدّ بالدرع • صفّ 5 واضغط [M] لوزير!',
+      chalice: '☀ +25 طاقة (3×/موجة) • +15% سرعة هجوم للجوار',
+      pawn: '🛡 صدّ بالدرع • صفّ 5 + قتال (150⚔) + 100☀ [M] ➔ ♛',
       rook: '♜ شعاع متعامد خارق • يوقف فارس الظل',
       knight: '♞ وثبات رعدية بحرف L تخترق الدروع',
       bishop: '♝ أشعة قطرية خارقة + شفاء الحلفاء',
@@ -3905,8 +4088,8 @@ class RoyalGambitGame {
       queen: '♛ أشعة التاج النجمية (حد أقصى 2)'
     };
     const pieceTagEn = {
-      chalice: '☀ +25 Mana / 8s • +15% nearby haste',
-      pawn: '🛡 Shield push • Align 5 + [M] ➔ Queen!',
+      chalice: '☀ +25 Mana (3×/wave) • +15% nearby haste',
+      pawn: '🛡 Shield push • 5× + 150⚔ + 100☀ [M] ➔ ♛',
       rook: '♜ Orthogonal laser • Stops Assassins',
       knight: '♞ 8-square L-strike • Pierces shields',
       bishop: '♝ Diagonal beam + Heal & Hex cleanse',
@@ -3990,9 +4173,26 @@ class RoyalGambitGame {
 
   populateActsDrawer() {
     const container = document.getElementById('actsListContainer');
+    const rewardsBanner = document.getElementById('actsRewardsBanner');
     const quickMenuContainer = document.getElementById('menuQuickActsGrid');
     const isEn = this.lang === 'en';
     const unlockedCount = Math.max(1, this.unlockedActs || 1);
+    const boons = this.getStageBoons();
+
+    if (rewardsBanner) {
+      const pillsHtml = boons.activePills.length
+        ? boons.activePills
+            .map(p => `<span class="boon-summary-chip">✓ ${isEn ? p.en : p.ar}</span>`)
+            .join('')
+        : `<span class="boon-summary-empty">${isEn ? 'Clear any Stage or Puzzle to unlock permanent army upgrades!' : 'أكمل أي مرحلة أو لغز لفتح مكافآت وترقيات دائمة لجيشك!'}</span>`;
+      rewardsBanner.innerHTML = `
+        <div class="acts-rewards-title">
+          <span>🎁</span>
+          <strong>${isEn ? 'Permanent Stage & Puzzle Boons' : 'المكافآت الدائمة للمراحل والألغاز'}</strong>
+        </div>
+        <div class="acts-rewards-chips">${pillsHtml}</div>
+      `;
+    }
 
     const romans = ['I', 'II', 'III', 'IV', 'V'];
     const actArabicShort = [
@@ -4009,6 +4209,12 @@ class RoyalGambitGame {
         const isCurrent = idx === this.actIndex && this.gameMode === 'campaign';
         const isLocked = idx >= unlockedCount;
         const earned = Number((this.profile && this.profile.actStars && this.profile.actStars[String(act.id)]) || 0);
+        const rewardUnlocked = act.isEndless
+          ? Number((this.profile && this.profile.endlessBestWave) || 0) >= 10
+          : earned > 0;
+        const rw = act.stageReward || { shortAr: 'مكافأة ملكية', shortEn: 'Royal Boon', fullAr: '', fullEn: '' };
+        const rewardShortTxt = isEn ? rw.shortEn : rw.shortAr;
+        const rewardFullTxt = isEn ? rw.fullEn : rw.fullAr;
         const starsHtml = act.isEndless
           ? `<span class="biome-endless-pill" dir="ltr">∞ W${this.profile.endlessBestWave || 0}</span>`
           : `<span class="biome-stars-row" dir="ltr">${[0, 1, 2].map(s => `<i class="${s < earned ? 'on' : ''}">★</i>`).join('')}</span>`;
@@ -4061,6 +4267,10 @@ class RoyalGambitGame {
           <div class="biome-stats-strip" dir="ltr">
             <span>${wavesChip}</span>
             <span>☀ ${act.startingMana || 150}</span>
+          </div>
+          <div class="biome-reward-pill ${rewardUnlocked ? 'unlocked' : ''}" title="${rewardFullTxt}">
+            <span>${rewardUnlocked ? '✓' : '🎁'}</span>
+            <small>${rewardShortTxt}</small>
           </div>
           <button type="button" class="launch-act-btn biome-play-btn" data-launch-idx="${idx}" ${isLocked ? 'disabled' : ''}>
             ${btnLabel}
@@ -4254,7 +4464,7 @@ class RoyalGambitGame {
           <span class="puzzles-solved-pill" dir="ltr">★ ${solvedCount} / ${puzzles.length}</span>
           <strong>${isEn ? 'Tactical 1-Wave Checkmate Challenges' : 'تحديات كش مات سريعة في موجة واحدة'}</strong>
         </div>
-        <span class="puzzles-rule-tag">${isEn ? '⚠ Zero Back-Rank Sentinels — Every Move Counts!' : '⚠ دون قلاع حماية خلفية — حرك قطعك بذكاء وانتصر!'}</span>
+        <span class="puzzles-reward-pill">🎁 ${isEn ? `Permanent Boon: +2%⚔ DMG per puzzle (+${solvedCount * 2}%⚔)` : `المكافأة الدائمة: +2%⚔ هجوم لكل لغز مكتمل (+${solvedCount * 2}%⚔)`}</span>
       `;
     }
 
@@ -4458,8 +4668,8 @@ class RoyalGambitGame {
     swap('setTitleHubTitle', isEn ? 'Title' : 'الرئيسية');
     swap('setTitleHubSub', isEn ? 'Modes' : 'الأطوار');
     swap('codexRulesHeader', isEn ? '♛ Chess Synergies' : '♛ معادلات الشطرنج');
-    swap('codexRulesDesc', isEn ? '5×Pawn ➔ Queen' : '5 بيادق ➔ وزير');
-    swap('formulaMergeLbl', isEn ? '[M] 5 Pawns ➔ Queen' : '[M] دمج 5 بيادق ➔ وزير متوّج');
+    swap('codexRulesDesc', isEn ? '5×Pawn + 150⚔ ➔ Queen' : '5 بيادق + قتال ➔ وزير');
+    swap('formulaMergeLbl', isEn ? '[M] 5 Pawns + 150⚔ + 100☀ ➔ Queen' : '[M] 5 بيادق + قتال + 100☀ ➔ وزير');
     swap('formulaBatteryLbl', isEn ? 'Aligned Royal Battery' : 'بطارية ملكية متصلة');
     swap('formulaCastleLbl', isEn ? 'Clear-Path Castling' : 'تبييت حصين (مسار خالٍ)');
     swap('codexPiecesHeader', isEn ? '♟ Royal Defenders' : '♟ القطع الملكية');
@@ -4573,8 +4783,10 @@ class RoyalGambitGame {
                 : isEn
                   ? 'Ready'
                   : 'متاح';
+          const rw = act.stageReward || { shortAr: '', shortEn: '' };
+          const rwTip = rw.shortAr ? ` — 🎁 ${isEn ? rw.shortEn : rw.shortAr}` : '';
           return `
-            <button type="button" class="stage-step-node ${isCurrent ? 'current' : ''} ${earned > 0 ? 'cleared' : ''} ${isLocked ? 'locked' : ''}" data-title-stage-idx="${idx}" ${isLocked ? 'disabled' : ''} title="${isEn ? act.name : stageShortAr[idx]}">
+            <button type="button" class="stage-step-node ${isCurrent ? 'current' : ''} ${earned > 0 ? 'cleared' : ''} ${isLocked ? 'locked' : ''}" data-title-stage-idx="${idx}" ${isLocked ? 'disabled' : ''} title="${isEn ? act.name : stageShortAr[idx]}${rwTip}">
               <span class="step-num" dir="ltr">${idx + 1}</span>
               <span class="step-label">${isEn ? stageShortEn[idx] : stageShortAr[idx]}</span>
               <small class="step-stars" dir="ltr">${subBadge}</small>
@@ -4708,16 +4920,27 @@ class RoyalGambitGame {
 
     // 4. Top Floating Jewel Summary Chips
     if (summaryEl) {
+      const boons = this.getStageBoons();
+      const boonTip = boons.activePills.map(p => (isEn ? p.en : p.ar)).join(' • ');
+      const boonChip = boons.activePills.length
+        ? `<span class="title-jewel-chip emerald" dir="ltr" title="${boonTip}">🎁 +${boons.activePills.length}</span>`
+        : '';
       summaryEl.innerHTML = `
         <span class="title-jewel-chip gold" dir="ltr" title="ELO">♛ ${this.eloRating}</span>
         <span class="title-jewel-chip amber" dir="ltr" title="Campaign Stars">★ ${prog.stars}/12</span>
         <span class="title-jewel-chip cyan" dir="ltr" title="Checkmate Puzzles">♟ ${prog.solvedCount}/${prog.totalPuzzles}</span>
+        ${boonChip}
       `;
     }
   }
 
   openDecreeDraft() {
-    const pool = (window.CHESS_DATA.DECREES || []).filter(d => !this.activeDecrees.includes(d.id));
+    const intactSentinels = (this.chariots || []).filter(c => !c.used && !c.active).length;
+    const pool = (window.CHESS_DATA.DECREES || []).filter(d => {
+      if (this.activeDecrees.includes(d.id)) return false;
+      if (d.id === 'cursed_crown' && intactSentinels < 2) return false;
+      return true;
+    });
     if (pool.length === 0) {
       this.waveCooldownTimer = 1.6;
       return;
@@ -4734,7 +4957,15 @@ class RoyalGambitGame {
     const shuffled = copy.slice(0, 3);
     const modal = document.getElementById('decreeModal');
     const grid = document.getElementById('decreeCardsGrid');
+    const subInfoEl = document.getElementById('decreeSubInfo');
     if (!modal || !grid) return;
+
+    if (subInfoEl) {
+      subInfoEl.textContent =
+        this.lang === 'en'
+          ? `Wave ${this.waveIndex} Clear Reward — Choose 1 Permanent Upgrade for This Siege`
+          : `مكافأة إتمام الموجة ${this.waveIndex} — اختر ترقية واحدة دائمة لهذه المعركة`;
+    }
 
     const tierLabelsAr = {
       OFFENSE: 'هجوم',
@@ -4807,12 +5038,20 @@ class RoyalGambitGame {
     const p = this.selectedBoardPiece;
     const def = window.CHESS_DATA.PIECES[p.type];
     const promoteCost = (this.decreeState && this.decreeState.promoteCost) || 125;
+    const mergeCost = this.getMergeCost();
     const isEn = this.lang === 'en';
     const buttons = [];
 
     if (p.inReadyPawnLine && this.countPiecesOfType('queen') < 2) {
+      const canMerge = this.mana >= mergeCost;
+      const costLbl = mergeCost > 0 ? ` (${mergeCost}☀)` : '';
       buttons.push(
-        `<button type="button" class="mob-act-btn gold" data-mob-act="merge">♛ ${isEn ? 'Merge [M]' : 'دمج [M]'}</button>`
+        `<button type="button" class="mob-act-btn ${canMerge ? 'gold' : ''}" data-mob-act="merge">♛ ${isEn ? 'Merge [M]' : 'دمج [M]'}${costLbl}</button>`
+      );
+    } else if (p.inFormingPawnLine && this.formingPawnLines && this.formingPawnLines.length > 0) {
+      const fl = this.formingPawnLines.find(l => l.pawns.some(x => x.id === p.id)) || this.formingPawnLines[0];
+      buttons.push(
+        `<button type="button" class="mob-act-btn" data-mob-act="merge">⚔ ${Math.floor(fl.sumXp)}/${fl.reqXp}</button>`
       );
     }
     if (p.type === 'pawn' && p.xp >= 100) {
@@ -4885,7 +5124,9 @@ class RoyalGambitGame {
     }
 
     const readyLinesCount = this.readyPawnLines ? this.readyPawnLines.length : 0;
+    const formingLinesCount = this.formingPawnLines ? this.formingPawnLines.length : 0;
     const promoteCost = (this.decreeState && this.decreeState.promoteCost) || 125;
+    const mergeCost = this.getMergeCost();
 
     if (boardPiece) {
       const coord = this.renderer.algebraicLabel(boardPiece.col, boardPiece.row);
@@ -4894,33 +5135,44 @@ class RoyalGambitGame {
 
       let extraInfo = '';
       if (boardPiece.type === 'pawn') {
-        const colPawns = this.pieces.filter(p => p.type === 'pawn' && p.col === boardPiece.col).length;
-        const rowPawns = this.pieces.filter(p => p.type === 'pawn' && p.row === boardPiece.row).length;
-        const bestLine = Math.max(colPawns, rowPawns);
-        extraInfo = ` • ${bestLine}/5♟ • ${Math.floor(boardPiece.xp)}%`;
+        const activeLine =
+          (this.readyPawnLines || []).find(l => l.pawns.some(x => x.id === boardPiece.id)) ||
+          (this.formingPawnLines || []).find(l => l.pawns.some(x => x.id === boardPiece.id));
+        if (activeLine) {
+          extraInfo = ` • ⚔${Math.min(activeLine.reqXp, Math.floor(activeLine.sumXp))}/${activeLine.reqXp}`;
+        } else {
+          const colPawns = this.pieces.filter(p => p.type === 'pawn' && p.col === boardPiece.col).length;
+          const rowPawns = this.pieces.filter(p => p.type === 'pawn' && p.row === boardPiece.row).length;
+          const bestLine = Math.max(colPawns, rowPawns);
+          extraInfo = ` • ${bestLine}/5♟ • ${Math.floor(boardPiece.xp)}%`;
+        }
+      } else if (boardPiece.type === 'chalice') {
+        const cap = def.maxWaveHarvests || 3;
+        const left = Math.max(0, cap - (boardPiece.waveHarvests || 0));
+        extraInfo = ` • ☀${left}/${cap}`;
       }
       const shieldTxt = boardPiece.shieldHp > 0 ? `+${Math.ceil(boardPiece.shieldHp)}❖` : '';
       statsEl.textContent = `♥${Math.ceil(boardPiece.hp)}${shieldTxt}${extraInfo}`;
       ruleEl.textContent = this.lang === 'en' ? def.roleBadge : (def.roleBadgeAr || def.roleBadge);
 
-      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}-${readyLinesCount}-${promoteCost}-${this.lang}`;
+      const lineXpKey = this.formingPawnLines && this.formingPawnLines[0] ? Math.floor(this.formingPawnLines[0].sumXp) : 0;
+      const key = `board-${boardPiece.id}-${Math.floor(boardPiece.xp)}-${Math.floor(this.mana)}-${readyLinesCount}-${formingLinesCount}-${lineXpKey}-${promoteCost}-${mergeCost}-${this.lang}`;
       if (this.lastInspectedKey !== key) {
         this.lastInspectedKey = key;
         actionsEl.innerHTML = '';
 
-        if (readyLinesCount > 0) {
+        if (boardPiece.inReadyPawnLine && this.countPiecesOfType('queen') < 2) {
           const mergeBtn = document.createElement('button');
           mergeBtn.type = 'button';
           mergeBtn.className = 'quick-action-btn';
-          mergeBtn.innerHTML =
-            this.lang === 'en'
-              ? '♛ Merge [M]'
-              : '♛ دمج [M]';
+          mergeBtn.disabled = this.mana < mergeCost;
+          const mCostHtml = mergeCost > 0 ? ` <bdi dir="ltr">${mergeCost}☀</bdi>` : '';
+          mergeBtn.innerHTML = (this.lang === 'en' ? '♛ [M]' : '♛ دمج [M]') + mCostHtml;
           mergeBtn.addEventListener('click', () => this.tryMergePawnLine(boardPiece));
           actionsEl.appendChild(mergeBtn);
         }
 
-        if (boardPiece.type === 'pawn') {
+        if (boardPiece.type === 'pawn' && !boardPiece.inReadyPawnLine) {
           const crownBtn = document.createElement('button');
           crownBtn.type = 'button';
           crownBtn.className = 'quick-action-btn';
@@ -4953,22 +5205,23 @@ class RoyalGambitGame {
       }
     } else {
       const effCost = this.getPieceCost(typeId);
+      const cmd = window.CHESS_DATA.COMMANDERS[this.commanderId];
+      const doc = window.CHESS_DATA.DOCTRINES[this.doctrineId];
+      const hpMult = (cmd && cmd.hpMult) || 1;
+      const effHp = Math.round(def.maxHp * hpMult);
+      const effShield =
+        (def.startingShield || 0) +
+        ((cmd && cmd.bonusShield) || 0) +
+        (this.stageShieldBonus || 0) +
+        (typeId === 'pawn' && doc && doc.pawnBonusShield ? doc.pawnBonusShield : 0);
       nameEl.textContent = this.lang === 'en' ? def.name : (def.arabicTitle || def.name);
-      const shieldInfo = def.startingShield ? `+${def.startingShield}❖` : '';
-      statsEl.textContent = `♥${def.maxHp}${shieldInfo} • ${effCost}☀`;
+      const shieldInfo = effShield > 0 ? `+${effShield}❖` : '';
+      statsEl.textContent = `♥${effHp}${shieldInfo} • ${effCost}☀`;
       ruleEl.textContent = this.lang === 'en' ? def.roleBadge : (def.roleBadgeAr || def.roleBadge);
-      const deckKey = `deck-${typeId}-${readyLinesCount}-${this.lang}-${effCost}`;
+      const deckKey = `deck-${typeId}-${this.lang}-${effCost}-${effHp}-${effShield}`;
       if (this.lastInspectedKey !== deckKey) {
         this.lastInspectedKey = deckKey;
         actionsEl.innerHTML = '';
-        if (readyLinesCount > 0) {
-          const mergeBtn = document.createElement('button');
-          mergeBtn.type = 'button';
-          mergeBtn.className = 'quick-action-btn';
-          mergeBtn.innerHTML = this.lang === 'en' ? '♛ Merge [M]' : '♛ دمج [M]';
-          mergeBtn.addEventListener('click', () => this.tryMergePawnLine(null));
-          actionsEl.appendChild(mergeBtn);
-        }
       }
     }
   }
@@ -4992,6 +5245,10 @@ class RoyalGambitGame {
     const selKey = this.selectedBoardPiece
       ? `${this.selectedBoardPiece.id}:${Math.ceil(this.selectedBoardPiece.hp)}:${Math.floor(this.selectedBoardPiece.xp)}:${Math.ceil(this.selectedBoardPiece.moveCd * 5)}`
       : `d:${this.selectedDeckPieceId}`;
+    const formingXpSig =
+      this.formingPawnLines && this.formingPawnLines.length > 0
+        ? this.formingPawnLines.map(l => Math.floor(l.sumXp)).join(',')
+        : '';
     const sig = [
       Math.floor(this.mana),
       this.score,
@@ -5015,6 +5272,8 @@ class RoyalGambitGame {
       this.batteryLinks.length,
       this.pawnChainLinks.length,
       this.readyPawnLines.length,
+      this.formingPawnLines ? this.formingPawnLines.length : 0,
+      formingXpSig,
       this.activeDecrees.length,
       selKey,
       cdSig,
@@ -5046,7 +5305,10 @@ class RoyalGambitGame {
     );
 
     const totalW = this.currentAct.isEndless ? '∞' : this.currentAct.totalWaves;
-    setTxt('waveCounterText', `${t.wavePrefix} ${Math.max(1, this.waveIndex)} / ${totalW}`);
+    const waveEl = document.getElementById('waveCounterText');
+    if (waveEl) {
+      waveEl.innerHTML = `${t.wavePrefix} <bdi dir="ltr">${Math.max(1, this.waveIndex)} / ${totalW}</bdi>`;
+    }
 
     const waveBar = document.getElementById('waveProgressBar');
     if (waveBar) {
@@ -5065,18 +5327,44 @@ class RoyalGambitGame {
       callWaveBtn.disabled = !canCall;
     }
 
+    const mergeCost = this.getMergeCost();
     const mergeCtaBtn = document.getElementById('screenMergeCtaBtn');
     if (mergeCtaBtn) {
       const showMergeCta =
-        Boolean(this.readyPawnLines && this.readyPawnLines.length > 0) && !this.mergeCinematic;
+        Boolean(this.readyPawnLines && this.readyPawnLines.length > 0) &&
+        !this.mergeCinematic &&
+        this.countPiecesOfType('queen') < 2;
       mergeCtaBtn.classList.toggle('hidden', !showMergeCta);
+      mergeCtaBtn.classList.toggle('needs-mana', showMergeCta && this.mana < mergeCost);
+      const mergeSubEl = document.getElementById('mergeCtaSubTxt');
+      if (mergeSubEl && showMergeCta) {
+        mergeSubEl.textContent =
+          mergeCost > 0
+            ? `[M] ♟×5 • ${mergeCost}☀ ➔ ♛`
+            : '[M] ♟×5 ➔ ♛';
+      }
+      const tutEl = document.getElementById('tutorialBanner');
+      if (tutEl) {
+        if (showMergeCta) {
+          tutEl.classList.add('hidden');
+        } else if (this.tutorialStep >= 0 && this.tutorialStep <= 2 && !this.onTitleScreen) {
+          tutEl.classList.remove('hidden');
+        }
+      }
     }
 
     const synRow = document.getElementById('activeSynergiesRow');
     if (synRow) {
       const pills = [];
-      if (this.readyPawnLines && this.readyPawnLines.length > 0) {
-        pills.push(`<span class="synergy-pill" dir="ltr">♛ [M] ♟×5</span>`);
+      if (this.readyPawnLines && this.readyPawnLines.length > 0 && this.countPiecesOfType('queen') < 2) {
+        pills.push(
+          `<span class="synergy-pill" dir="ltr">♛ [M] ${mergeCost > 0 ? `${mergeCost}☀` : '♟×5'}</span>`
+        );
+      } else if (this.formingPawnLines && this.formingPawnLines.length > 0) {
+        const bestFl = this.formingPawnLines.reduce((a, b) => (b.sumXp > a.sumXp ? b : a), this.formingPawnLines[0]);
+        pills.push(
+          `<span class="synergy-pill charging" dir="ltr">♟×5 ⚔ ${Math.floor(bestFl.sumXp)}/${bestFl.reqXp}</span>`
+        );
       }
       if (this.batteryLinks.length > 0) {
         const pct = Math.round((0.3 + ((this.decreeState && this.decreeState.batteryBonus) || 0)) * 100);

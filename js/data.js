@@ -16,17 +16,18 @@ const CHESS_PIECES = {
     moveCooldown: 4.0,
     maxHp: 320,
     maxCount: 6,
-    attackInterval: 8.0, // Balanced: produces +25 mana every 8.0s (+30 when buffed)
+    attackInterval: 8.0, // Balanced: produces +25 mana every 8.0s (+30 when buffed), up to 3 harvests per wave
+    maxWaveHarvests: 3,
     manaYield: 25,
     damage: 0,
     accentColor: '#fbbf24',
     secondaryColor: '#f59e0b',
-    roleBadge: 'TREASURY • +15% SPD',
-    roleBadgeAr: 'خزينة التاج • +15% سرعة',
-    chessRule: 'Steps 1 Square Any Direction • Produces +25☀ Every 8s & Grants +15% Attack Speed to Adjacent Pieces',
+    roleBadge: 'TREASURY (3×/W) • +15% SPD',
+    roleBadgeAr: 'خزينة (3×/موجة) • +15% سرعة',
+    chessRule: 'Steps 1 Square Any Direction • Produces +25☀ Every 8s (Up to 3×/Wave) & Grants +15% Attack Speed to Adjacent Pieces',
     description:
-      'Gilded royal vessel that crystallizes +25 Crown Mana every 8.0s (+30☀ when inspired by the King) and buffs adjacent Chess Pieces (+15% Attack Speed). Max 6 on the board.',
-    attackPatternText: 'Generates +25 Sovereign Mana & buffs 8 surrounding squares.',
+      'Gilded royal vessel that crystallizes +25 Crown Mana every 8.0s (+30☀ when inspired by the King, up to 3 harvests per wave) and buffs adjacent Chess Pieces (+15% Attack Speed). Max 6 on the board.',
+    attackPatternText: 'Generates +25 Sovereign Mana (3×/wave) & buffs 8 surrounding squares.',
     movePatternType: 'king_step'
   },
 
@@ -45,14 +46,16 @@ const CHESS_PIECES = {
     attackInterval: 2.35, // Balanced interval so a single Pawn cannot infinite-stall a lane alone
     damage: 14, // Physical shield push impact only (NEVER shoots lasers or bullets!)
     promoteCost: 125,
+    mergeCost: 100,
+    mergeLineXpReq: 150,
     accentColor: '#38bdf8',
     secondaryColor: '#0284c7',
-    roleBadge: 'SHIELD PUSH • LINE MERGE → ♛',
-    roleBadgeAr: 'صدّ بالدرع • دمج 5 ← ♛',
-    chessRule: 'Pure Shield Pusher (No Lasers/Shots) • Repels Foes & Regenerates Shield in Pawn Chains • Align 5 Pawns to Merge → ♛!',
+    roleBadge: 'SHIELD PUSH • 5× + 150⚔ → ♛',
+    roleBadgeAr: 'صدّ بالدرع • 5× + قتال ← ♛',
+    chessRule: 'Pure Shield Pusher • Align 5 Pawns + Earn 150 Combat XP + 100☀ [M] to Fuse Queen!',
     description:
-      'Frontline Phalanx Defender with 640 HP + 65 Aegis Shield. Never fires lasers or projectiles — physically shoves adjacent enemies backward with its tower shield! Align 5 Pawns in a row or column for a Full-Screen Cinematic Merge into an Ascended Sovereign Queen!',
-    attackPatternText: 'Physical Shield Push (Repels adjacent enemies) + 5-Pawn Cinematic Merge → Queen.',
+      'Frontline Phalanx Defender with 640 HP + 65 Aegis Shield. Physically shoves adjacent enemies backward with its tower shield! Align 5 Pawns in a row or column, earn 150 combined Combat XP holding the line, and spend 100☀ [M] to fuse an Ascended Sovereign Queen!',
+    attackPatternText: 'Physical Shield Push + 5-Pawn Veteran Coronation (150 XP + 100☀) → Queen.',
     movePatternType: 'pawn_move'
   },
 
@@ -366,6 +369,13 @@ const CAMPAIGN_ACTS = [
     difficulty: 'Tactical Initiate',
     startingMana: 150,
     skyDropInterval: 8.5,
+    stageReward: {
+      icon: '☀',
+      shortAr: '+20☀ طاقة بداية',
+      shortEn: '+20☀ Start Mana',
+      fullAr: '+20☀ طاقة بداية دائمة في كل معركة',
+      fullEn: '+20☀ Permanent Starting Mana in every match'
+    },
     boardTheme: {
       lightSquare: 'rgba(54, 64, 96, 0.72)',
       darkSquare: 'rgba(18, 23, 38, 0.80)',
@@ -392,6 +402,13 @@ const CAMPAIGN_ACTS = [
     difficulty: 'Knight & Bishop Mastery',
     startingMana: 175,
     skyDropInterval: 8.2,
+    stageReward: {
+      icon: '♛',
+      shortAr: '+20% شحن كش ملك',
+      shortEn: '+20% Checkmate Charge',
+      fullAr: '+20% شحن ضربة كش ملك عند بداية المعركة',
+      fullEn: '+20% Starting Checkmate Ultimate Charge'
+    },
     boardTheme: {
       lightSquare: 'rgba(58, 48, 92, 0.72)',
       darkSquare: 'rgba(20, 16, 38, 0.82)',
@@ -419,6 +436,13 @@ const CAMPAIGN_ACTS = [
     difficulty: 'Royal Battery & Castling',
     startingMana: 200,
     skyDropInterval: 7.8,
+    stageReward: {
+      icon: '🛡',
+      shortAr: '+25🛡 درع القطع',
+      shortEn: '+25🛡 Piece Shield',
+      fullAr: '+25🛡 درع حماية إضافي لكل قطعة عند النشر',
+      fullEn: '+25🛡 Bonus Starting Shield for all deployed pieces'
+    },
     boardTheme: {
       lightSquare: 'rgba(64, 44, 78, 0.72)',
       darkSquare: 'rgba(22, 14, 32, 0.82)',
@@ -447,6 +471,13 @@ const CAMPAIGN_ACTS = [
     difficulty: 'Grandmaster (2400 ELO)',
     startingMana: 250,
     skyDropInterval: 7.5,
+    stageReward: {
+      icon: '⚡',
+      shortAr: '-12% انتظار الحركة',
+      shortEn: '-12% Move Cooldown',
+      fullAr: '-12% وقت انتظار تحريك القطع + فتح الحصار الخالد',
+      fullEn: '-12% Chess Move Cooldown + Unlocks Endless Siege'
+    },
     boardTheme: {
       lightSquare: 'rgba(72, 38, 48, 0.72)',
       darkSquare: 'rgba(26, 12, 18, 0.82)',
@@ -476,6 +507,13 @@ const CAMPAIGN_ACTS = [
     startingMana: 225,
     skyDropInterval: 7.2,
     isEndless: true,
+    stageReward: {
+      icon: '👑',
+      shortAr: '+10%⚡ بطارية (موجة 10)',
+      shortEn: '+10%⚡ Battery (W10)',
+      fullAr: '+10% قوة البطارية الملكية عند بلوغ الموجة 10',
+      fullEn: '+10% Royal Battery Damage upon reaching Wave 10'
+    },
     boardTheme: {
       lightSquare: 'rgba(42, 56, 94, 0.72)',
       darkSquare: 'rgba(16, 22, 42, 0.82)',
@@ -627,14 +665,17 @@ const ROYAL_DECREES = [
     tier: 'DEFENSE',
     nameEn: 'Winged Sentinel Forge',
     nameAr: 'إعمار القلاع المجنحة',
-    descEn: 'Restore 1 destroyed Winged Sentinel on Rank A & boost Royal Battery +15%.',
-    descAr: 'تعيد بناء قلعة مجنحة محطمة في الصف الأخير وتزيد قوة البطارية الملكية +15%.',
+    descEn: 'Restore 1 destroyed Sentinel (or +80☀ if all intact) & boost Royal Battery +15%.',
+    descAr: 'تعيد بناء قلعة مجنحة محطمة (أو تمنح +80☀ إن كانت سليمة) وتقوّي البطارية +15%.',
     apply(state, game) {
       const broken = (game.chariots || []).find(c => c.used && !c.active);
       if (broken) {
         broken.used = false;
         broken.active = false;
         broken.x = (game.renderer && game.renderer.chariotX) || -20;
+      } else {
+        game.mana += 80;
+        game.totalManaEarned += 80;
       }
       state.batteryBonus += 0.15;
     }
@@ -655,10 +696,11 @@ const ROYAL_DECREES = [
     tier: 'ROYALTY',
     nameEn: 'Royal Coronation Writ',
     nameAr: 'مرسوم التتويج السامي',
-    descEn: 'Pawn Promotions cost 65 Mana instead of 125, and Queens deal +25% damage.',
-    descAr: 'تصبح ترقية البيدق إلى وزير بـ 65 طاقة فقط، والوزراء أقوى بـ +25%.',
+    descEn: '5-Pawn Merge costs 50☀, single Promotion costs 65☀, and Queens deal +25% damage.',
+    descAr: 'دمج 5 بيادق بـ 50☀، ترقية البيدق بـ 65☀، وتزداد قوة الوزراء +25%.',
     apply(state) {
       state.promoteCost = 65;
+      state.mergeCost = 50;
       state.queenDmgMult *= 1.25;
     }
   },
@@ -767,9 +809,9 @@ const ROYAL_DECREES = [
     tier: 'SIEGE',
     nameEn: 'Shatterfire Detonation',
     nameAr: 'انفجار الشظايا النارية',
-    descEn: 'Slain enemies explode for 45 AoE damage to nearby undead in the same rank.',
-    descAr: 'ينفجر كل وحش يُهزم مسبباً 45 ضرراً جماعياً للأعداء المجاورين في مساره.',
-    apply(state) { state.deathExplosionDmg = (state.deathExplosionDmg || 0) + 45; }
+    descEn: 'Slain enemies explode for 85 AoE damage to nearby undead in the same rank.',
+    descAr: 'ينفجر كل وحش يُهزم مسبباً 85 ضرراً جماعياً للأعداء المجاورين في مساره.',
+    apply(state) { state.deathExplosionDmg = (state.deathExplosionDmg || 0) + 85; }
   }
 ];
 
@@ -953,8 +995,8 @@ const CHESS_PUZZLES = [
 ];
 
 const CHESS_TIPS = [
-  'تتويج السطر الخماسي (PAWN-LINE MERGE): صفّ 5 بيادق مدرّعة في نفس العمود أو الصف واضغط [M] لدمجهم سينمائياً إلى وزير متوّج (820 HP + 300🛡)!',
-  'البيدق المدرّع (AEGIS PAWN): لا يطلق الليزر — يصدّ الوحوش للخلف بدرعه، ويتحرك بحرية حتى عند 100 XP (اضغط [U] للترقية)!',
+  'تتويج الفيلق الخماسي: صفّ 5 بيادق مدرّعة + اجمع 150 خبرة قتال في الاشتباك + 100☀ واضغط [M] لدمجهم إلى وزير متوّج (820 HP + 300🛡)!',
+  'مكافآت المراحل الدائمة: إتمام كل مرحلة أو لغز كش مات يفتح مكافأة دائمة لجيشك في المراحل التالية!',
   'البطارية الملكية (ROYAL BATTERY): اصطفاف القلعة أو الفيل أو الوزير على نفس الخط يمنح +30% قوة هجوم إضافية!',
   'تطهير اللعنات (HEX CLEANSE): فيل الظلام يبطئ سرعة هجوم أقوى قطعك — ضع فيل الضياء على قطره لتطهيره فوراً!',
   'التبييت الحصين (CASTLING): تأكد من خلو المربعات بين الملك المهيب والقلعة ثم نفّذ التبييت لمنح الصف درعاً ذهبياً شاملاً!',
@@ -962,8 +1004,8 @@ const CHESS_TIPS = [
 ];
 
 const CHESS_TIPS_EN = [
-  'PAWN-LINE MERGE: Align 5 Aegis Pawns on any Rank or File and press [M] for a Full-Screen Cinematic Queen Ascension (820 HP + 300🛡)!',
-  'AEGIS PAWN: Pure melee shieldbearer that shoves foes back — even at 100 XP you can freely slide it or press [U] to Promote!',
+  '5-PAWN CORONATION: Align 5 Shield-Pawns + earn 150 Line Combat XP + spend 100☀ [M] to fuse an Ascended Queen (820 HP + 300🛡)!',
+  'STAGE REWARDS: Clearing each Campaign Stage and Checkmate Puzzle unlocks permanent Royal Treasury bonuses!',
   'ROYAL BATTERY: Align Rook + Queen or Bishop + Queen along orthogonal/diagonal sightlines for +30% Royal Battery Damage!',
   'HEX CLEANSE: Ebony Hex-Bishops slow your Queens from diagonals — align a Radiant Bishop diagonally to cleanse the curse and boost DPS!',
   'FORTRESS CASTLING: Keep the squares between King and Rook clear to trigger Royal Castling and grant +220 Golden Shield!',
@@ -987,7 +1029,7 @@ const I18N = {
     sacrificeHint: '+60%☀',
     ultCrownTitle: '♛ كش ملك',
     mergeCtaTitle: 'تتويج الوزير جاهز!',
-    mergeCtaSub: '[M] ♟×5 ➔ ♛',
+    mergeCtaSub: '[M] ♟×5 • 100☀ ➔ ♛',
     matrixCaption: 'المدى',
     endlessLabel: 'الحصار الخالد',
     titleSub: 'ملحمة الشطرنج التكتيكي • 10×5',
@@ -1028,7 +1070,7 @@ const I18N = {
     sacrificeHint: '+60%☀',
     ultCrownTitle: '♛ Checkmate',
     mergeCtaTitle: 'Queen Merge Ready!',
-    mergeCtaSub: '[M] ♟×5 ➔ ♛',
+    mergeCtaSub: '[M] ♟×5 • 100☀ ➔ ♛',
     matrixCaption: 'Matrix',
     endlessLabel: 'Immortal Siege',
     titleSub: '10×5 Tactical Chess Defense',
